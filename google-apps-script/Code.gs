@@ -4,6 +4,10 @@
  * ==============================================================================
  * Google Apps Script for Google Sheets Database & Automated Drive Backup Service
  * 
+ * Generates exact files as required:
+ * 1. latest_system_state.json (Overwritten with latest snapshot)
+ * 2. backup_state_YYYY-MM-DD_HH-mm-ss.json (Historical timestamped backups)
+ * 
  * Sheets Supported:
  * - Activities
  * - Registrations
@@ -13,7 +17,8 @@
  */
 
 const CONFIG = {
-  DRIVE_FOLDER_ID: 'YOUR_GOOGLE_DRIVE_FOLDER_ID_HERE', // เช่น '1A2b3C4d5E6f7G8h9I0j'
+  FOLDER_NAME: 'KKU_FIS_StudentUnion_Backup', // โฟลเดอร์จัดเก็บสำรองใน Google Drive
+  DRIVE_FOLDER_ID: '', // ระบุ ID โฟลเดอร์หากมี (ปล่อยว่างไว้ให้สร้างโฟลเดอร์อัตโนมัติได้)
   SHEET_ACTIVITIES: 'Activities',
   SHEET_REGISTRATIONS: 'Registrations',
   SHEET_STAFF: 'StaffUsers',
@@ -26,7 +31,6 @@ const CONFIG = {
  * เรียกใช้งานฟังก์ชันนี้ 1 ครั้งใน Apps Script Editor เพื่อตั้งค่าสำรองข้อมูลเข้า Google Drive อัตโนมัติทุกวัน
  */
 function setupAutomatedDailyDriveBackupTrigger() {
-  // ลบ Trigger เก่าที่ซ้ำซ้อนออกก่อน
   const triggers = ScriptApp.getProjectTriggers();
   triggers.forEach(t => {
     if (t.getHandlerFunction() === 'performGoogleDriveBackup') {
@@ -34,7 +38,6 @@ function setupAutomatedDailyDriveBackupTrigger() {
     }
   });
 
-  // สร้าง Time-Driven Trigger ใหม่ สำรองข้อมูลทุกวัน เวลา 01:00 น.
   ScriptApp.newTrigger('performGoogleDriveBackup')
     .timeBased()
     .everyDays(1)
@@ -45,7 +48,7 @@ function setupAutomatedDailyDriveBackupTrigger() {
 }
 
 function doGet(e) {
-  const action = e.parameter.action || 'getActivities';
+  const action = e ? e.parameter.action : 'getActivities';
   let responseData = { status: 'error', message: 'Invalid Action' };
 
   try {
@@ -77,12 +80,10 @@ function doPost(e) {
 
     if (action === 'registerStaff') {
       const result = saveRegistration(postData.data);
-      // Auto Backup into Drive after registration
       performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'approveHours') {
       const result = approveHoursRecord(postData.regId, postData.checkInTime);
-      // Auto Backup into Drive after hours approval
       performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'createActivity') {
@@ -98,7 +99,7 @@ function doPost(e) {
       performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'createDriveBackup') {
-      const backupResult = performGoogleDriveBackup();
+      const backupResult = performGoogleDriveBackup(postData.data);
       responseData = { 
         status: 'success', 
         backupId: backupResult.backupId, 
@@ -116,22 +117,28 @@ function doPost(e) {
 
 /**
  * --- GOOGLE DRIVE BACKUP ENGINE ---
+ * Creates two exact files:
+ * 1. latest_system_state.json (Overwritten each time)
+ * 2. backup_state_YYYY-MM-DD_HH-mm-ss.json (Point-in-time historical file)
  */
-function performGoogleDriveBackup() {
+function performGoogleDriveBackup(clientPayload) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const activities = getActivitiesData();
-  const registrations = getRegistrationsData();
-  const staffUsers = getStaffUsersData();
-  const adminUsers = getAdminUsersData();
+  const activities = (clientPayload && clientPayload.activities) || getActivitiesData();
+  const registrations = (clientPayload && clientPayload.registrations) || getRegistrationsData();
+  const staffUsers = (clientPayload && clientPayload.staffUsers) || getStaffUsersData();
+  const adminUsers = (clientPayload && clientPayload.adminUsers) || getAdminUsersData();
 
-  const timestamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd_HH-mm-ss');
+  const now = new Date();
+  const timeStr = Utilities.formatDate(now, Session.getScriptTimeZone(), 'yyyy-MM-dd_HH-mm-ss');
   const backupId = 'DRV-BAK-' + Date.now().toString().slice(-8);
-  const fileName = `SmoStaff_Backup_${timestamp}.json`;
+
+  const timestampedFileName = `backup_state_${timeStr}.json`;
+  const latestFileName = 'latest_system_state.json';
 
   const backupContent = {
     backupId: backupId,
-    timestamp: new Date().toISOString(),
-    system: 'Smo-Staff Activity Registration System',
+    timestamp: now.toISOString(),
+    system: 'Smo-Staff Activity Registration System (KKU_FIS_StudentUnion)',
     spreadsheetId: ss.getId(),
     summary: {
       totalActivities: activities.length,
@@ -147,25 +154,54 @@ function performGoogleDriveBackup() {
     }
   };
 
+  const jsonString = JSON.stringify(backupContent, null, 2);
   let fileUrl = '#';
+
   try {
-    let folder;
-    if (CONFIG.DRIVE_FOLDER_ID && CONFIG.DRIVE_FOLDER_ID !== 'YOUR_GOOGLE_DRIVE_FOLDER_ID_HERE') {
-      folder = DriveApp.getFolderById(CONFIG.DRIVE_FOLDER_ID);
+    let folder = getTargetDriveFolder();
+
+    // 1. Create / Overwrite latest_system_state.json
+    const existingLatestFiles = folder.getFilesByName(latestFileName);
+    if (existingLatestFiles.hasNext()) {
+      const latestFile = existingLatestFiles.next();
+      latestFile.setContent(jsonString);
     } else {
-      folder = DriveApp.getRootFolder();
+      folder.createFile(latestFileName, jsonString, MimeType.PLAIN_TEXT);
     }
 
-    const file = folder.createFile(fileName, JSON.stringify(backupContent, null, 2), MimeType.PLAIN_TEXT);
-    fileUrl = file.getUrl();
+    // 2. Create Historical Timestamped Backup File backup_state_YYYY-MM-DD_HH-mm-ss.json
+    const timeFile = folder.createFile(timestampedFileName, jsonString, MimeType.PLAIN_TEXT);
+    fileUrl = timeFile.getUrl();
+
   } catch (e) {
-    Logger.log('Drive Folder Error: ' + e.toString());
+    Logger.log('Drive Backup Error: ' + e.toString());
   }
 
+  // Record log in Backups Sheet
   const backupSheet = getOrCreateSheet(CONFIG.SHEET_BACKUPS, ['BackupID', 'Timestamp', 'FileName', 'FileUrl', 'RecordCount', 'Status']);
-  backupSheet.appendRow([backupId, timestamp, fileName, fileUrl, registrations.length, 'success']);
+  backupSheet.appendRow([backupId, timeStr, timestampedFileName, fileUrl, registrations.length, 'success']);
 
-  return { backupId, fileName, fileUrl };
+  return { backupId, fileName: timestampedFileName, fileUrl };
+}
+
+/**
+ * Get or Create Target Google Drive Folder
+ */
+function getTargetDriveFolder() {
+  if (CONFIG.DRIVE_FOLDER_ID && CONFIG.DRIVE_FOLDER_ID.trim() !== '') {
+    try {
+      return DriveApp.getFolderById(CONFIG.DRIVE_FOLDER_ID.trim());
+    } catch (e) {
+      Logger.log('Folder ID search error, fallback to folder name: ' + e.toString());
+    }
+  }
+
+  const folderName = CONFIG.FOLDER_NAME || 'KKU_FIS_StudentUnion_Backup';
+  const folders = DriveApp.getFoldersByName(folderName);
+  if (folders.hasNext()) {
+    return folders.next();
+  }
+  return DriveApp.createFolder(folderName);
 }
 
 /**

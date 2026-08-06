@@ -190,9 +190,6 @@ class SmoStaffAPI {
     if (!localStorage.getItem(STORAGE_KEYS.ADMIN_USERS)) {
       localStorage.setItem(STORAGE_KEYS.ADMIN_USERS, JSON.stringify(SEED_ADMIN_USERS));
     }
-    if (!localStorage.getItem(STORAGE_KEYS.CURRENT_STAFF)) {
-      localStorage.setItem(STORAGE_KEYS.CURRENT_STAFF, JSON.stringify(SEED_STAFF_USERS[0]));
-    }
   }
 
   // --- AUTHENTICATION & USERS ---
@@ -205,11 +202,15 @@ class SmoStaffAPI {
   }
 
   getCurrentStaff() {
-    return JSON.parse(localStorage.getItem(STORAGE_KEYS.CURRENT_STAFF) || 'null') || SEED_STAFF_USERS[0];
+    return JSON.parse(localStorage.getItem(STORAGE_KEYS.CURRENT_STAFF) || 'null');
   }
 
   setCurrentStaff(user) {
-    localStorage.setItem(STORAGE_KEYS.CURRENT_STAFF, JSON.stringify(user));
+    if (user) {
+      localStorage.setItem(STORAGE_KEYS.CURRENT_STAFF, JSON.stringify(user));
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.CURRENT_STAFF);
+    }
   }
 
   getCurrentAdmin() {
@@ -420,9 +421,11 @@ class SmoStaffAPI {
    * Sends POST request directly to Google Apps Script Web App API to save JSON backup into Drive
    */
   async triggerDriveBackup() {
-    const nowStr = new Date().toLocaleString('sv-SE');
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0];
+    const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-');
     const backupId = 'DRV-BAK-' + Date.now().toString().slice(-8);
-    const fileName = `SmoStaff_Backup_${new Date().toISOString().split('T')[0]}.json`;
+    const fileName = `backup_state_${dateStr}_${timeStr}.json`;
 
     const registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS) || '[]');
     const activities = JSON.parse(localStorage.getItem(STORAGE_KEYS.ACTIVITIES) || '[]');
@@ -431,14 +434,14 @@ class SmoStaffAPI {
 
     const gasUrl = this.getGasUrl();
 
-    // If Google Apps Script URL is configured, POST directly to GAS to create file in Google Drive!
+    // If Google Apps Script URL is configured, POST directly to GAS to create files in Google Drive!
     if (gasUrl) {
       try {
         const payload = {
           action: 'createDriveBackup',
           data: {
             backupId,
-            timestamp: nowStr,
+            timestamp: now.toISOString(),
             fileName,
             activities,
             registrations,
@@ -458,7 +461,7 @@ class SmoStaffAPI {
         if (jsonRes && jsonRes.status === 'success') {
           const backupRecord = {
             backupId: jsonRes.backupId || backupId,
-            timestamp: nowStr,
+            timestamp: `${dateStr} ${now.toTimeString().split(' ')[0]}`,
             fileName: jsonRes.fileName || fileName,
             fileUrl: jsonRes.fileUrl || 'https://drive.google.com/',
             recordCount: registrations.length,
@@ -474,10 +477,10 @@ class SmoStaffAPI {
       }
     }
 
-    // Direct Local Drive Cloud Record (No browser file download!)
+    // Direct Cloud Record
     const backupRecord = {
       backupId,
-      timestamp: nowStr,
+      timestamp: `${dateStr} ${now.toTimeString().split(' ')[0]}`,
       fileName,
       fileUrl: 'https://drive.google.com/',
       recordCount: registrations.length,

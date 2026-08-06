@@ -65,8 +65,26 @@
     <!-- =================================================================== -->
     <section id="staffViewSection">
       
-      <!-- ส่วนที่ 1: ข้อมูลผู้ปฏิบัติงาน (HERO INFO CARD) -->
-      <div class="user-hero-card">
+      <!-- Guest Banner (Shown when not logged in) -->
+      <div class="user-hero-card" id="staffLoggedOutHero" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #ffffff; border: 1px solid #334155;">
+        <div class="user-hero-left">
+          <div style="width: 56px; height: 56px; border-radius: 12px; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #60a5fa; flex-shrink: 0;">
+            <i class="fa-solid fa-user-lock"></i>
+          </div>
+          <div>
+            <h2 style="font-size: 1.25rem; font-weight: 700; color: #ffffff; margin-bottom: 0.2rem;">กรุณาเข้าสู่ระบบผู้ปฏิบัติงาน</h2>
+            <p style="font-size: 0.85rem; color: #94a3b8;">เข้าสู่ระบบด้วยรหัสนักศึกษาเพื่อดูข้อมูลส่วนบุคคล, เป้าหมายชั่วโมงกิจกรรม และประวัติสะสมชั่วโมงรายบุคคล</p>
+          </div>
+        </div>
+        <div>
+          <button class="btn-register" id="openStaffLoginHeroBtn" style="background: #2563eb; width: auto; padding: 0.6rem 1.5rem; white-space: nowrap;">
+            <i class="fa-solid fa-right-to-bracket"></i> เข้าสู่ระบบด้วยรหัสนักศึกษา
+          </button>
+        </div>
+      </div>
+
+      <!-- ส่วนที่ 1: ข้อมูลผู้ปฏิบัติงาน (HERO INFO CARD - SHOWN WHEN LOGGED IN) -->
+      <div class="user-hero-card" id="staffLoggedInHero" style="display: none;">
         <div class="user-hero-left">
           <div class="hero-avatar-box" id="staffHeroAvatarBox">
             <i class="fa-solid fa-user-graduate"></i>
@@ -89,7 +107,7 @@
         <!-- HOURS STATS COUNTER BOX -->
         <div class="hours-stats-box">
           <div class="hours-stat-col">
-            <div class="hours-num" id="accumulatedHours">2</div>
+            <div class="hours-num" id="accumulatedHours">0</div>
             <div class="hours-label">ชั่วโมงสะสม</div>
           </div>
           <div class="hours-stat-col">
@@ -97,7 +115,7 @@
             <div class="hours-label">เป้าหมาย (ชม.)</div>
           </div>
           <div class="hours-stat-col">
-            <div class="hours-num pending" id="pendingHours">27</div>
+            <div class="hours-num pending" id="pendingHours">0</div>
             <div class="hours-label">ชั่วโมงที่รออนุมัติ</div>
           </div>
         </div>

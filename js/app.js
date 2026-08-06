@@ -299,15 +299,47 @@ document.addEventListener('DOMContentLoaded', async () => {
         switchToStaffView();
         showToast('ออกจากระบบเจ้าหน้าที่เรียบร้อย', 'info');
       } else {
-        staffLoginModal.classList.add('active');
+        const staff = api.getCurrentStaff();
+        if (staff) {
+          api.setCurrentStaff(null);
+          loadAllData();
+          showToast('ออกจากระบบผู้ปฏิบัติงานเรียบร้อยแล้ว', 'info');
+        } else {
+          staffLoginModal.classList.add('active');
+        }
       }
+    });
+  }
+
+  const openStaffLoginHeroBtn = document.getElementById('openStaffLoginHeroBtn');
+  if (openStaffLoginHeroBtn) {
+    openStaffLoginHeroBtn.addEventListener('click', () => {
+      staffLoginModal.classList.add('active');
     });
   }
 
   // RENDER HEADERS & AVATARS
   function renderStaffHeaderInfo() {
     const staff = api.getCurrentStaff();
-    if (!staff) return;
+    const staffLoggedOutHero = document.getElementById('staffLoggedOutHero');
+    const staffLoggedInHero = document.getElementById('staffLoggedInHero');
+
+    if (!staff) {
+      // LOGGED OUT STATE
+      if (staffLoggedOutHero) staffLoggedOutHero.style.display = 'flex';
+      if (staffLoggedInHero) staffLoggedInHero.style.display = 'none';
+
+      if (navUserName) navUserName.textContent = 'กรุณาเข้าสู่ระบบ';
+      if (navUserCode) navUserCode.textContent = '';
+      if (navUserAvatar) navUserAvatar.innerHTML = '<i class="fa-solid fa-user-slash"></i>';
+      if (logoutBtn) logoutBtn.textContent = 'เข้าสู่ระบบ';
+      return;
+    }
+
+    // LOGGED IN STATE
+    if (staffLoggedOutHero) staffLoggedOutHero.style.display = 'none';
+    if (staffLoggedInHero) staffLoggedInHero.style.display = 'flex';
+    if (logoutBtn) logoutBtn.textContent = 'ออกจากระบบ';
 
     const directAvatar = convertDriveUrlToDirectLink(staff.avatar);
     const cleanName = staff.fullName ? staff.fullName.replace(/\s*\([^)]*\)/g, '').trim() : 'ผู้ปฏิบัติงาน';
@@ -433,7 +465,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function renderMySummaryView() {
     const staff = api.getCurrentStaff();
-    if (!staff) return;
+    if (!staff) {
+      if (summaryEarnedHours) summaryEarnedHours.textContent = '0';
+      if (summaryPendingHours) summaryPendingHours.textContent = '0';
+      if (summaryRegisteredCount) summaryRegisteredCount.textContent = '0';
+      if (meterPercentText) meterPercentText.textContent = '0%';
+      if (meterFillBar) meterFillBar.style.width = '0%';
+      if (meterEarnedText) meterEarnedText.textContent = 'สะสมแล้ว 0 / 200 ชั่วโมง';
+      if (meterRemainingText) meterRemainingText.textContent = 'กรุณาเข้าสู่ระบบ';
+      if (historyTableBody) {
+        historyTableBody.innerHTML = `
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 2.5rem; color: var(--text-gray);">
+              <i class="fa-solid fa-lock" style="font-size: 2rem; margin-bottom: 0.5rem; color: #cbd5e1; display: block;"></i>
+              <strong>กรุณาเข้าสู่ระบบผู้ปฏิบัติงานเพื่อดูสรุปชั่วโมงกิจกรรมและประวัติสะสมชั่วโมงส่วนบุคคล</strong>
+              <div style="margin-top: 1rem;">
+                <button class="btn-register" onclick="document.getElementById('staffLoginModal').classList.add('active')" style="display: inline-flex; width: auto; padding: 0.5rem 1.25rem;">
+                  <i class="fa-solid fa-right-to-bracket"></i> เข้าสู่ระบบด้วยรหัสนักศึกษา
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }
+      return;
+    }
 
     const myRegs = currentRegistrations.filter(r => r.staffId === staff.studentId);
 
