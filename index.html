@@ -935,23 +935,35 @@
     </div>
   </div>
 
-  <!-- MODAL 8: GAS SETTINGS -->
+  <!-- MODAL 8: GAS SETTINGS & GOOGLE DRIVE BACKUP SETUP -->
   <div class="modal-backdrop" id="gasSettingsModal">
-    <div class="modal-content">
+    <div class="modal-content" style="max-width: 580px;">
       <div class="modal-header">
-        <h3><i class="fa-solid fa-gear" style="color: var(--primary-navy);"></i> ตั้งค่า Google Sheets & Drive API</h3>
+        <h3><i class="fa-brands fa-google-drive" style="color: #0f9d58;"></i> เชื่อมต่อ Google Drive & Sheets Auto Backup</h3>
         <button class="close-btn" id="closeGasModalBtn">&times;</button>
       </div>
+      
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; font-size: 0.85rem; color: #166534;">
+        <strong style="display: block; margin-bottom: 0.35rem;"><i class="fa-solid fa-circle-info"></i> คำแนะนำการเชื่อมต่อ Google Drive อัตโนมัติ:</strong>
+        <ol style="margin-left: 1.25rem; line-height: 1.6;">
+          <li>คัดลอกซอร์สโค้ดจากไฟล์ <code>google-apps-script/Code.gs</code> ไปวางใน <a href="https://script.google.com" target="_blank" style="color: #15803d; font-weight: 700; text-decoration: underline;">Google Apps Script</a></li>
+          <li>กดปุ่ม <strong>Deploy > New deployment</strong> (เลือกประเภท <code>Web app</code>)</li>
+          <li>ตั้งค่า <strong>Execute as: Me</strong> และ <strong>Who has access: Anyone</strong></li>
+          <li>นำ Web App URL ที่ได้ (ลงท้ายด้วย <code>/exec</code>) มาวางในช่องด้านล่างนี้</li>
+        </ol>
+      </div>
+
       <div class="form-group">
-        <label class="form-label">Google Apps Script Web App URL</label>
-        <input type="url" class="form-control" id="gasUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
+        <label class="form-label">Google Apps Script Web App URL <span style="color:red">*</span></label>
+        <input type="url" class="form-control" id="gasUrlInput" placeholder="https://script.google.com/macros/s/AKfycb.../exec">
         <small style="color: var(--text-gray); margin-top: 0.4rem; display: block;">
-          นำ Web App URL ที่ได้จากการ Deploy สคริปต์ Code.gs มาวางเพื่อเชื่อมต่อฐานข้อมูล Google Sheets และ Drive โดยตรง
+          💡 ระบบจะใช้ URL นี้สร้างไฟล์ <code>latest_system_state.json</code> และ <code>backup_state_...json</code> ลงใน Google Drive ของคุณอัตโนมัติ
         </small>
       </div>
+      
       <div style="margin-top: 1.25rem; text-align: right;">
-        <button class="btn-register" id="saveGasUrlBtn" style="width: auto; padding: 0.5rem 1.5rem;">
-          บันทึกการตั้งค่า
+        <button class="btn-register" id="saveGasUrlBtn" style="width: auto; padding: 0.55rem 1.5rem; background: #0f9d58;">
+          <i class="fa-solid fa-link"></i> บันทึกการเชื่อมต่อ Google Drive
         </button>
       </div>
     </div>

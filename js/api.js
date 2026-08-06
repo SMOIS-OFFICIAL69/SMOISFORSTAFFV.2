@@ -1,6 +1,6 @@
 /**
  * API Bridge for Smo-Staff Activity Registration App
- * Supports Direct Google Drive API Backup (No Browser File Downloads), CRUD for Activities, Staff Users, Admin Users, Registrations, and Hours Approvals
+ * Supports 100% Real-time Live Google Sheets Synchronization & Direct Google Drive Backups
  */
 
 const STORAGE_KEYS = {
@@ -170,8 +170,12 @@ class SmoStaffAPI {
     return localStorage.getItem(STORAGE_KEYS.GAS_URL) || '';
   }
 
-  setGasUrl(url) {
-    localStorage.setItem(STORAGE_KEYS.GAS_URL, url.trim());
+  async setGasUrl(url) {
+    url = url.trim();
+    localStorage.setItem(STORAGE_KEYS.GAS_URL, url);
+    if (url) {
+      await this.syncDataFromGoogleSheets();
+    }
   }
 
   initLocalStorage() {
@@ -189,6 +193,56 @@ class SmoStaffAPI {
     }
     if (!localStorage.getItem(STORAGE_KEYS.ADMIN_USERS)) {
       localStorage.setItem(STORAGE_KEYS.ADMIN_USERS, JSON.stringify(SEED_ADMIN_USERS));
+    }
+  }
+
+  /**
+   * LIVE SYNC: ดึงข้อมูลจริงทั้งหมดจาก Google Sheets ผ่าน Web App API
+   */
+  async syncDataFromGoogleSheets() {
+    const gasUrl = this.getGasUrl();
+    if (!gasUrl) return false;
+
+    try {
+      // 1. Fetch Real Live Activities Sheet
+      const actRes = await fetch(`${gasUrl}?action=getActivities`);
+      const actJson = await actRes.json();
+      if (actJson && actJson.status === 'success' && Array.isArray(actJson.data)) {
+        localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(actJson.data));
+      }
+
+      // 2. Fetch Real Live Registrations Sheet
+      const regRes = await fetch(`${gasUrl}?action=getRegistrations`);
+      const regJson = await regRes.json();
+      if (regJson && regJson.status === 'success' && Array.isArray(regJson.data)) {
+        localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(regJson.data));
+      }
+
+      // 3. Fetch Real Live StaffUsers Sheet
+      const staffRes = await fetch(`${gasUrl}?action=getStaffUsers`);
+      const staffJson = await staffRes.json();
+      if (staffJson && staffJson.status === 'success' && Array.isArray(staffJson.data)) {
+        localStorage.setItem(STORAGE_KEYS.STAFF_USERS, JSON.stringify(staffJson.data));
+      }
+
+      // 4. Fetch Real Live AdminUsers Sheet
+      const adminRes = await fetch(`${gasUrl}?action=getAdminUsers`);
+      const adminJson = await adminRes.json();
+      if (adminJson && adminJson.status === 'success' && Array.isArray(adminJson.data)) {
+        localStorage.setItem(STORAGE_KEYS.ADMIN_USERS, JSON.stringify(adminJson.data));
+      }
+
+      // 5. Fetch Real Live Backups Sheet
+      const backupRes = await fetch(`${gasUrl}?action=getBackups`);
+      const backupJson = await backupRes.json();
+      if (backupJson && backupJson.status === 'success' && Array.isArray(backupJson.data)) {
+        localStorage.setItem(STORAGE_KEYS.BACKUPS, JSON.stringify(backupJson.data));
+      }
+
+      return true;
+    } catch (err) {
+      console.warn('Google Sheets live sync error:', err);
+      return false;
     }
   }
 
@@ -263,6 +317,17 @@ class SmoStaffAPI {
     const list = this.getStaffUsers();
     list.unshift(userData);
     localStorage.setItem(STORAGE_KEYS.STAFF_USERS, JSON.stringify(list));
+
+    const gasUrl = this.getGasUrl();
+    if (gasUrl) {
+      fetch(gasUrl, {
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'createStaffUser', data: userData })
+      }).catch(e => console.warn('GAS Save Staff User error:', e));
+    }
+
     return userData;
   }
 
@@ -295,6 +360,17 @@ class SmoStaffAPI {
     const list = this.getAdminUsers();
     list.unshift(adminData);
     localStorage.setItem(STORAGE_KEYS.ADMIN_USERS, JSON.stringify(list));
+
+    const gasUrl = this.getGasUrl();
+    if (gasUrl) {
+      fetch(gasUrl, {
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'createAdminUser', data: adminData })
+      }).catch(e => console.warn('GAS Save Admin User error:', e));
+    }
+
     return adminData;
   }
 
@@ -307,6 +383,17 @@ class SmoStaffAPI {
 
   // --- ACTIVITIES CRUD ---
   async getActivities() {
+    const gasUrl = this.getGasUrl();
+    if (gasUrl) {
+      try {
+        const res = await fetch(`${gasUrl}?action=getActivities`);
+        const json = await res.json();
+        if (json && json.status === 'success' && Array.isArray(json.data)) {
+          localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(json.data));
+          return json.data;
+        }
+      } catch (e) { console.warn('Fetch live activities error:', e); }
+    }
     return JSON.parse(localStorage.getItem(STORAGE_KEYS.ACTIVITIES) || '[]');
   }
 
@@ -321,6 +408,17 @@ class SmoStaffAPI {
     };
     activities.unshift(newAct);
     localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(activities));
+
+    const gasUrl = this.getGasUrl();
+    if (gasUrl) {
+      fetch(gasUrl, {
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'createActivity', data: newAct })
+      }).catch(e => console.warn('GAS Create Activity error:', e));
+    }
+
     return newAct;
   }
 
@@ -345,6 +443,17 @@ class SmoStaffAPI {
 
   // --- REGISTRATIONS CRUD ---
   async getRegistrations() {
+    const gasUrl = this.getGasUrl();
+    if (gasUrl) {
+      try {
+        const res = await fetch(`${gasUrl}?action=getRegistrations`);
+        const json = await res.json();
+        if (json && json.status === 'success' && Array.isArray(json.data)) {
+          localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(json.data));
+          return json.data;
+        }
+      } catch (e) { console.warn('Fetch live registrations error:', e); }
+    }
     return JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS) || '[]');
   }
 
@@ -380,6 +489,16 @@ class SmoStaffAPI {
       localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(activities));
     }
 
+    const gasUrl = this.getGasUrl();
+    if (gasUrl) {
+      fetch(gasUrl, {
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'registerStaff', data: newRecord })
+      }).catch(e => console.warn('GAS Register Staff error:', e));
+    }
+
     return { success: true, record: newRecord };
   }
 
@@ -392,6 +511,17 @@ class SmoStaffAPI {
       rec.earnedHours = rec.baseHours || 3;
       rec.checkInTime = nowStr;
       localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(registrations));
+
+      const gasUrl = this.getGasUrl();
+      if (gasUrl) {
+        fetch(gasUrl, {
+          method: 'POST',
+          mode: 'cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'approveHours', regId: regId, checkInTime: nowStr })
+        }).catch(e => console.warn('GAS Approve Hours error:', e));
+      }
+
       return { success: true, record: rec };
     }
     return { success: false };
@@ -434,7 +564,6 @@ class SmoStaffAPI {
 
     const gasUrl = this.getGasUrl();
 
-    // If Google Apps Script URL is configured, POST directly to GAS to create files in Google Drive!
     if (gasUrl) {
       try {
         const payload = {
@@ -477,7 +606,6 @@ class SmoStaffAPI {
       }
     }
 
-    // Direct Cloud Record
     const backupRecord = {
       backupId,
       timestamp: `${dateStr} ${now.toTimeString().split(' ')[0]}`,

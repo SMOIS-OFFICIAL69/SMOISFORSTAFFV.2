@@ -225,21 +225,48 @@ document.addEventListener('DOMContentLoaded', async () => {
   setInterval(updateClock, 1000);
   updateClock();
 
+  // --- THEME TOGGLE BUTTON (DARK MODE) ---
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', () => {
+      document.body.classList.toggle('dark-theme');
+      const isDark = document.body.classList.contains('dark-theme');
+      themeToggleBtn.innerHTML = isDark ? '<i class="fa-solid fa-sun" style="color:#f59e0b;"></i>' : '<i class="fa-solid fa-moon"></i>';
+      showToast(isDark ? 'สลับเป็นธีมมืด (Dark Mode)' : 'สลับเป็นธีมสว่าง (Light Mode)', 'info');
+    });
+  }
+
+  // --- PASSWORD VISIBILITY TOGGLE EYE BUTTON ---
+  const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+  if (togglePasswordBtn && adminPasswordInput) {
+    togglePasswordBtn.addEventListener('click', () => {
+      const type = adminPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      adminPasswordInput.setAttribute('type', type);
+      togglePasswordBtn.innerHTML = type === 'password' ? '<i class="fa-regular fa-eye"></i>' : '<i class="fa-regular fa-eye-slash"></i>';
+    });
+  }
+
   // Active Role Management
   let currentRole = 'staff';
 
-  roleStaffBtn.addEventListener('click', () => {
-    switchToStaffView();
-  });
+  if (roleStaffBtn) {
+    roleStaffBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      switchToStaffView();
+    });
+  }
 
-  roleAdminBtn.addEventListener('click', () => {
-    const currentAdmin = api.getCurrentAdmin();
-    if (currentAdmin) {
-      switchToAdminView();
-    } else {
-      adminLoginModal.classList.add('active');
-    }
-  });
+  if (roleAdminBtn) {
+    roleAdminBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const currentAdmin = api.getCurrentAdmin();
+      if (currentAdmin) {
+        switchToAdminView();
+      } else {
+        adminLoginModal.classList.add('active');
+      }
+    });
+  }
 
   function switchToStaffView() {
     currentRole = 'staff';
@@ -730,6 +757,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // MODALS CLOSE LISTENERS
+  if (closeStaffLoginModalBtn) closeStaffLoginModalBtn.addEventListener('click', () => staffLoginModal.classList.remove('active'));
+  if (closeAdminLoginModalBtn) closeAdminLoginModalBtn.addEventListener('click', () => adminLoginModal.classList.remove('active'));
   if (closeAddActModalBtn) closeAddActModalBtn.addEventListener('click', () => addActivityModal.classList.remove('active'));
   if (closeEditActModalBtn) closeEditActModalBtn.addEventListener('click', () => editActivityModal.classList.remove('active'));
   if (closeAddStaffModalBtn) closeAddStaffModalBtn.addEventListener('click', () => addStaffModal.classList.remove('active'));
@@ -742,6 +771,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (closeApprovedHoursModalBtn) closeApprovedHoursModalBtn.addEventListener('click', () => approvedHoursModal.classList.remove('active'));
   if (closeGasModalBtn) closeGasModalBtn.addEventListener('click', () => gasSettingsModal.classList.remove('active'));
   if (closeRegModalBtn) closeRegModalBtn.addEventListener('click', () => registrationModal.classList.remove('active'));
+
+  // Close modal when clicking outside on the backdrop background
+  document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) {
+        backdrop.classList.remove('active');
+      }
+    });
+  });
+
+  // Close active modal when pressing Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal-backdrop.active').forEach(m => m.classList.remove('active'));
+    }
+  });
 
   // REGISTRATION SUBMIT WITH AUTO-DRIVE BACKUP TRIGGER
   regForm.addEventListener('submit', async (e) => {
@@ -1135,28 +1180,49 @@ document.addEventListener('DOMContentLoaded', async () => {
     autoDriveBackup('create_activity');
   });
 
-  saveGasUrlBtn.addEventListener('click', () => {
-    api.setGasUrl(gasUrlInput.value.trim());
+  saveGasUrlBtn.addEventListener('click', async () => {
+    const url = gasUrlInput.value.trim();
+    if (!url) {
+      showToast('กรุณาระบุ Web App URL ก่อนบันทึก', 'warning');
+      return;
+    }
+
+    saveGasUrlBtn.disabled = true;
+    saveGasUrlBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังซิงค์ข้อมูลจริงจาก Google Sheets...';
+
+    await api.setGasUrl(url);
+
+    saveGasUrlBtn.disabled = false;
+    saveGasUrlBtn.innerHTML = '<i class="fa-solid fa-link"></i> บันทึกการเชื่อมต่อ Google Drive';
     gasSettingsModal.classList.remove('active');
-    showToast('บันทึกการตั้งค่า Google Apps Script API เรียบร้อยแล้ว', 'success');
-    loadAllData();
+
+    showToast('เชื่อมต่อและดึงข้อมูลจริงจาก Google Sheets เรียบร้อยแล้ว!', 'success');
+    await loadAllData();
   });
 
   // DRIVE BACKUP TRIGGER BUTTON
   if (triggerDriveBackupBtn) {
     triggerDriveBackupBtn.addEventListener('click', async () => {
+      const gasUrl = api.getGasUrl();
+      if (!gasUrl) {
+        gasUrlInput.value = '';
+        gasSettingsModal.classList.add('active');
+        showToast('กรุณาระบุ Google Apps Script Web App URL เพื่ออัปโหลดไฟล์สำรองลงใน Google Drive ของคุณ', 'warning');
+        return;
+      }
+
       triggerDriveBackupBtn.disabled = true;
-      triggerDriveBackupBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate fa-spin"></i> กำลังสำรองข้อมูล...';
+      triggerDriveBackupBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate fa-spin"></i> กำลังอัปโหลดลง Google Drive...';
 
       const res = await api.triggerDriveBackup();
       triggerDriveBackupBtn.disabled = false;
       triggerDriveBackupBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> สำรองข้อมูลเข้า Google Drive';
 
-      if (res.success) {
-        showToast(`สำเร็จ! สำรองข้อมูลไป Google Drive แล้ว (${res.fileName})`, 'success');
+      if (res && res.success) {
+        showToast(`สำเร็จ! สร้างไฟล์สำรองใน Google Drive เรียบร้อย (${res.fileName})`, 'success');
         renderAdminTables();
       } else {
-        showToast('สำรองข้อมูลไม่สำเร็จ', 'error');
+        showToast('เกิดข้อผิดพลาดในการอัปโหลดลง Google Drive', 'error');
       }
     });
   }

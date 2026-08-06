@@ -1008,3 +1008,56 @@ body {
   color: var(--text-dark);
   font-weight: 600;
 }
+
+/* Dark Theme System Overrides */
+body.dark-theme {
+  --bg-main: #0f172a;
+  --bg-card: #1e293b;
+  --bg-hero: #1e1b4b;
+  --text-dark: #f8fafc;
+  --text-gray: #94a3b8;
+  --border-light: #334155;
+  --border-subtle: #1e293b;
+  background-color: #0f172a;
+  color: #f8fafc;
+}
+
+body.dark-theme .app-navbar,
+body.dark-theme .summary-stat-card,
+body.dark-theme .progress-meter-card,
+body.dark-theme .filter-card-bar,
+body.dark-theme .activity-card,
+body.dark-theme .quick-action-card,
+body.dark-theme .modal-content,
+body.dark-theme .data-table,
+body.dark-theme .history-table {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+body.dark-theme .brand-title,
+body.dark-theme .card-title,
+body.dark-theme .meter-header h3,
+body.dark-theme .history-card-header h3 {
+  color: #ffffff;
+}
+
+body.dark-theme .user-profile-pill {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+body.dark-theme .user-name-text {
+  color: #ffffff;
+}
+
+body.dark-theme .form-control, 
+body.dark-theme .form-select,
+body.dark-theme .filter-input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #ffffff;
+}
+
