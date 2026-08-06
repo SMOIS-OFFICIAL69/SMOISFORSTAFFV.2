@@ -60,7 +60,20 @@ function doGet(e) {
   const action = e && e.parameter ? e.parameter.action : 'getActivities';
   let responseData = { status: 'error', message: 'Invalid Action' };
 
-  // Read operations do not require lock
+  // Unified Fast Read Endpoint (Fetches all 5 tables in 1 single network request)
+  if (action === 'getAllData' || !action) {
+    const allData = {
+      activities: getActivitiesData(),
+      registrations: getRegistrationsData(),
+      staffUsers: getStaffUsersData(),
+      adminUsers: getAdminUsersData(),
+      backups: getBackupsData()
+    };
+    return ContentService.createTextOutput(JSON.stringify({ status: 'success', data: allData }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // Individual Read Endpoints
   if (action === 'getActivities') {
     return ContentService.createTextOutput(JSON.stringify({ status: 'success', data: getActivitiesData() }))
       .setMimeType(ContentService.MimeType.JSON);

@@ -202,6 +202,33 @@ class SmoStaffAPI {
     if (!gasUrl) return false;
 
     try {
+      // 1. Ultra-Fast Single Unified Request (Fetches all 5 tables in 1 HTTP payload)
+      const res = await fetch(`${gasUrl}?action=getAllData`);
+      const json = await res.json();
+      if (json && json.status === 'success' && json.data) {
+        if (Array.isArray(json.data.activities)) {
+          localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(json.data.activities));
+        }
+        if (Array.isArray(json.data.registrations)) {
+          localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(json.data.registrations));
+        }
+        if (Array.isArray(json.data.staffUsers)) {
+          localStorage.setItem(STORAGE_KEYS.STAFF_USERS, JSON.stringify(json.data.staffUsers));
+        }
+        if (Array.isArray(json.data.adminUsers)) {
+          localStorage.setItem(STORAGE_KEYS.ADMIN_USERS, JSON.stringify(json.data.adminUsers));
+        }
+        if (Array.isArray(json.data.backups)) {
+          localStorage.setItem(STORAGE_KEYS.BACKUPS, JSON.stringify(json.data.backups));
+        }
+        return true;
+      }
+    } catch (err) {
+      console.warn('Unified fast sync attempt failed, trying fallback:', err);
+    }
+
+    // Fallback: Parallel requests if deployed Code.gs is older version
+    try {
       const [actRes, regRes, staffRes, adminRes, backupRes] = await Promise.all([
         fetch(`${gasUrl}?action=getActivities`),
         fetch(`${gasUrl}?action=getRegistrations`),
