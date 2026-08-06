@@ -1306,23 +1306,45 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (editActivityForm) {
     editActivityForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const id = document.getElementById('editActId').value;
-      const updated = {
-        title: document.getElementById('editActTitle').value.trim(),
-        description: document.getElementById('editActDesc').value.trim(),
-        date: document.getElementById('editActDate').value,
-        time: document.getElementById('editActTime').value.trim(),
-        location: document.getElementById('editActLocation').value.trim(),
-        maxQuota: parseInt(document.getElementById('editActQuota').value, 10),
-        hours: parseInt(document.getElementById('editActHours').value, 10),
-        banner: document.getElementById('editActBanner').value.trim()
-      };
-      api.updateActivity(id, updated);
-      editActivityModal.classList.remove('active');
-      showToast(`แก้ไขข้อมูลกิจกรรม ${id} สำเร็จแล้ว`, 'success');
-      await loadAllData();
-      renderActivitiesListTable();
-      autoDriveBackup('edit_activity');
+      const submitBtn = editActivityForm.querySelector('button[type="submit"]');
+      const originalHtml = submitBtn ? submitBtn.innerHTML : '<i class="fa-solid fa-save"></i> บันทึกการแก้ไข';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึกการแก้ไขลง Google Sheets...';
+      }
+
+      try {
+        const id = document.getElementById('editActId').value;
+        const bannerVal = document.getElementById('editActBanner').value.trim();
+        const updated = {
+          title: document.getElementById('editActTitle').value.trim(),
+          description: document.getElementById('editActDesc').value.trim(),
+          date: document.getElementById('editActDate').value,
+          time: document.getElementById('editActTime').value.trim(),
+          location: document.getElementById('editActLocation').value.trim(),
+          maxQuota: parseInt(document.getElementById('editActQuota').value, 10),
+          hours: parseInt(document.getElementById('editActHours').value, 10)
+        };
+
+        if (bannerVal) {
+          updated.banner = bannerVal;
+        }
+
+        await api.updateActivity(id, updated);
+        document.getElementById('editActivityModal').classList.remove('active');
+        showToast(`✅ บันทึกแก้ไขข้อมูลกิจกรรม "${updated.title}" สำเร็จเรียบร้อยแล้ว!`, 'success');
+        await loadAllData();
+        renderActivitiesListTable();
+        filterAndRenderActivities();
+        autoDriveBackup('edit_activity');
+      } catch (err) {
+        showToast('❌ เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง', 'error');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalHtml;
+        }
+      }
     });
   }
 
@@ -1399,27 +1421,43 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (editStaffForm) {
     editStaffForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const id = document.getElementById('editStaffIdKey').value;
-      const avatarVal = document.getElementById('editStaffAvatar').value.trim();
-
-      const updated = {
-        fullName: document.getElementById('editStaffName').value.trim(),
-        major: document.getElementById('editStaffMajor').value.trim(),
-        year: document.getElementById('editStaffYear').value,
-        department: document.getElementById('editStaffDept').value.trim(),
-        position: document.getElementById('editStaffPos').value.trim()
-      };
-
-      if (avatarVal) {
-        updated.avatar = avatarVal;
+      const submitBtn = editStaffForm.querySelector('button[type="submit"]');
+      const originalHtml = submitBtn ? submitBtn.innerHTML : '<i class="fa-solid fa-save"></i> บันทึกการแก้ไข';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึกการแก้ไขลง Google Sheets...';
       }
 
-      await api.updateStaffUser(id, updated);
-      editStaffModal.classList.remove('active');
-      showToast(`แก้ไขข้อมูลผู้ปฏิบัติงานรหัส ${id} สำเร็จแล้ว`, 'success');
-      await loadAllData();
-      renderStaffListTable();
-      autoDriveBackup('edit_staff');
+      try {
+        const id = document.getElementById('editStaffIdKey').value;
+        const avatarVal = document.getElementById('editStaffAvatar').value.trim();
+
+        const updated = {
+          fullName: document.getElementById('editStaffName').value.trim(),
+          major: document.getElementById('editStaffMajor').value.trim(),
+          year: document.getElementById('editStaffYear').value,
+          department: document.getElementById('editStaffDept').value.trim(),
+          position: document.getElementById('editStaffPos').value.trim()
+        };
+
+        if (avatarVal) {
+          updated.avatar = avatarVal;
+        }
+
+        await api.updateStaffUser(id, updated);
+        editStaffModal.classList.remove('active');
+        showToast(`✅ บันทึกแก้ไขข้อมูลผู้ปฏิบัติงานรหัส ${id} สำเร็จเรียบร้อยแล้ว!`, 'success');
+        await loadAllData();
+        renderStaffListTable();
+        autoDriveBackup('edit_staff');
+      } catch (err) {
+        showToast('❌ เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง', 'error');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalHtml;
+        }
+      }
     });
   }
 
@@ -1580,102 +1618,172 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (editAdminForm) {
     editAdminForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const username = document.getElementById('editAdminUsernameKey').value;
-      const avatarVal = document.getElementById('editAdminAvatar').value.trim();
-
-      const updated = {
-        fullName: document.getElementById('editAdminFullName').value.trim(),
-        position: document.getElementById('editAdminPosition').value.trim()
-      };
-      const pwd = document.getElementById('editAdminPassword').value.trim();
-      if (pwd) updated.password = pwd;
-
-      if (avatarVal) {
-        updated.avatar = avatarVal;
+      const submitBtn = editAdminForm.querySelector('button[type="submit"]');
+      const originalHtml = submitBtn ? submitBtn.innerHTML : '<i class="fa-solid fa-save"></i> บันทึกการแก้ไข';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึกการแก้ไขลง Google Sheets...';
       }
 
-      await api.updateAdminUser(username, updated);
-      document.getElementById('editAdminModal').classList.remove('active');
-      showToast(`แก้ไขข้อมูลแอดมิน ${username} สำเร็จแล้ว`, 'success');
-      await loadAllData();
-      renderAdminListTable();
-      autoDriveBackup('edit_admin');
+      try {
+        const username = document.getElementById('editAdminUsernameKey').value;
+        const avatarVal = document.getElementById('editAdminAvatar').value.trim();
+
+        const updated = {
+          fullName: document.getElementById('editAdminFullName').value.trim(),
+          position: document.getElementById('editAdminPosition').value.trim()
+        };
+        const pwd = document.getElementById('editAdminPassword').value.trim();
+        if (pwd) updated.password = pwd;
+
+        if (avatarVal) {
+          updated.avatar = avatarVal;
+        }
+
+        await api.updateAdminUser(username, updated);
+        document.getElementById('editAdminModal').classList.remove('active');
+        showToast(`✅ บันทึกแก้ไขข้อมูลแอดมิน "${username}" สำเร็จเรียบร้อยแล้ว!`, 'success');
+        await loadAllData();
+        renderAdminListTable();
+        autoDriveBackup('edit_admin');
+      } catch (err) {
+        showToast('❌ เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง', 'error');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalHtml;
+        }
+      }
     });
   }
 
   // ADD STAFF USER SUBMIT
   if (addStaffForm) {
-    addStaffForm.addEventListener('submit', (e) => {
+    addStaffForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const rawAvatar = newStaffAvatar ? newStaffAvatar.value.trim() : '';
-      const newUser = {
-        studentId: document.getElementById('newStaffId').value.trim(),
-        fullName: document.getElementById('newStaffName').value.trim(),
-        major: document.getElementById('newStaffMajor').value.trim(),
-        year: document.getElementById('newStaffYear').value,
-        department: document.getElementById('newStaffDept').value.trim(),
-        position: document.getElementById('newStaffPos').value.trim(),
-        avatar: convertDriveUrlToDirectLink(rawAvatar),
-        targetHours: 200
-      };
-      api.createStaffUser(newUser);
-      addStaffModal.classList.remove('active');
-      addStaffForm.reset();
-      if (staffAvatarPreviewBox) staffAvatarPreviewBox.style.display = 'none';
-      showToast(`เพิ่มผู้ปฏิบัติงานใหม่สำเร็จ (${newUser.fullName})`, 'success');
-      loadAllData();
-      autoDriveBackup('create_staff');
+      const submitBtn = addStaffForm.querySelector('button[type="submit"]');
+      const originalHtml = submitBtn ? submitBtn.innerHTML : '<i class="fa-solid fa-plus"></i> บันทึกเพิ่มผู้ปฏิบัติงาน';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึกข้อมูลลง Google Sheets...';
+      }
+
+      try {
+        const rawAvatar = newStaffAvatar ? newStaffAvatar.value.trim() : '';
+        const newUser = {
+          studentId: document.getElementById('newStaffId').value.trim(),
+          fullName: document.getElementById('newStaffName').value.trim(),
+          major: document.getElementById('newStaffMajor').value.trim(),
+          year: document.getElementById('newStaffYear').value,
+          department: document.getElementById('newStaffDept').value.trim(),
+          position: document.getElementById('newStaffPos').value.trim(),
+          avatar: convertDriveUrlToDirectLink(rawAvatar),
+          targetHours: 200
+        };
+        await api.createStaffUser(newUser);
+        addStaffModal.classList.remove('active');
+        addStaffForm.reset();
+        if (staffAvatarPreviewBox) staffAvatarPreviewBox.style.display = 'none';
+        showToast(`✅ บันทึกเพิ่มผู้ปฏิบัติงานใหม่ "${newUser.fullName}" สำเร็จเรียบร้อยแล้ว!`, 'success');
+        await loadAllData();
+        renderStaffListTable();
+        autoDriveBackup('create_staff');
+      } catch (err) {
+        showToast('❌ เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง', 'error');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalHtml;
+        }
+      }
     });
   }
 
   // ADD ADMIN USER SUBMIT
   if (addAdminForm) {
-    addAdminForm.addEventListener('submit', (e) => {
+    addAdminForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const rawAvatar = newAdminAvatar ? newAdminAvatar.value.trim() : '';
-      const newAdmin = {
-        username: document.getElementById('newAdminUsername').value.trim(),
-        password: document.getElementById('newAdminPassword').value.trim(),
-        fullName: document.getElementById('newAdminFullName').value.trim(),
-        position: document.getElementById('newAdminPosition').value.trim(),
-        avatar: convertDriveUrlToDirectLink(rawAvatar),
-        role: 'Admin'
-      };
-      api.createAdminUser(newAdmin);
-      addAdminModal.classList.remove('active');
-      addAdminForm.reset();
-      if (adminAvatarPreviewBox) adminAvatarPreviewBox.style.display = 'none';
-      showToast(`เพิ่มเจ้าหน้าที่/แอดมินใหม่สำเร็จ (${newAdmin.fullName})`, 'success');
-      loadAllData();
-      autoDriveBackup('create_admin');
+      const submitBtn = addAdminForm.querySelector('button[type="submit"]');
+      const originalHtml = submitBtn ? submitBtn.innerHTML : '<i class="fa-solid fa-plus"></i> บันทึกเพิ่มแอดมิน';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึกข้อมูลลง Google Sheets...';
+      }
+
+      try {
+        const rawAvatar = newAdminAvatar ? newAdminAvatar.value.trim() : '';
+        const newAdmin = {
+          username: document.getElementById('newAdminUsername').value.trim(),
+          password: document.getElementById('newAdminPassword').value.trim(),
+          fullName: document.getElementById('newAdminFullName').value.trim(),
+          position: document.getElementById('newAdminPosition').value.trim(),
+          avatar: convertDriveUrlToDirectLink(rawAvatar),
+          role: 'Admin'
+        };
+        await api.createAdminUser(newAdmin);
+        addAdminModal.classList.remove('active');
+        addAdminForm.reset();
+        if (adminAvatarPreviewBox) adminAvatarPreviewBox.style.display = 'none';
+        showToast(`✅ บันทึกเพิ่มเจ้าหน้าที่/แอดมินใหม่ "${newAdmin.fullName}" สำเร็จเรียบร้อยแล้ว!`, 'success');
+        await loadAllData();
+        renderAdminListTable();
+        autoDriveBackup('create_admin');
+      } catch (err) {
+        showToast('❌ เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง', 'error');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalHtml;
+        }
+      }
     });
   }
 
   // ADD ACTIVITY SUBMIT WITH GOOGLE DRIVE BANNER CONVERSION
-  addActivityForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const rawBanner = newActBanner ? newActBanner.value.trim() : '';
-    const directBanner = convertDriveUrlToDirectLink(rawBanner) || 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=600&q=80';
+  if (addActivityForm) {
+    addActivityForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = addActivityForm.querySelector('button[type="submit"]');
+      const originalHtml = submitBtn ? submitBtn.innerHTML : '<i class="fa-solid fa-plus"></i> บันทึกสร้างกิจกรรม';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึกกิจกรรมใหม่ลง Google Sheets...';
+      }
 
-    const newAct = {
-      title: document.getElementById('newActTitle').value.trim(),
-      description: document.getElementById('newActDesc').value.trim(),
-      date: document.getElementById('newActDate').value,
-      time: document.getElementById('newActTime').value.trim(),
-      location: document.getElementById('newActLocation').value.trim(),
-      maxQuota: parseInt(document.getElementById('newActQuota').value, 10),
-      hours: parseInt(document.getElementById('newActHours').value, 10) || 3,
-      banner: directBanner
-    };
+      try {
+        const rawBanner = newActBanner ? newActBanner.value.trim() : '';
+        const directBanner = convertDriveUrlToDirectLink(rawBanner) || 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=600&q=80';
 
-    await api.createActivity(newAct);
-    addActivityModal.classList.remove('active');
-    addActivityForm.reset();
-    if (actBannerPreviewBox) actBannerPreviewBox.style.display = 'none';
-    showToast('เพิ่มกิจกรรมใหม่เรียบร้อยแล้ว (รองรับลิงก์ Google Drive)', 'success');
-    await loadAllData();
-    autoDriveBackup('create_activity');
-  });
+        const newAct = {
+          title: document.getElementById('newActTitle').value.trim(),
+          description: document.getElementById('newActDesc').value.trim(),
+          date: document.getElementById('newActDate').value,
+          time: document.getElementById('newActTime').value.trim(),
+          location: document.getElementById('newActLocation').value.trim(),
+          maxQuota: parseInt(document.getElementById('newActQuota').value, 10),
+          hours: parseInt(document.getElementById('newActHours').value, 10) || 3,
+          banner: directBanner
+        };
+
+        await api.createActivity(newAct);
+        addActivityModal.classList.remove('active');
+        addActivityForm.reset();
+        if (actBannerPreviewBox) actBannerPreviewBox.style.display = 'none';
+        showToast(`✅ บันทึกสร้างกิจกรรมใหม่ "${newAct.title}" สำเร็จเรียบร้อยแล้ว!`, 'success');
+        await loadAllData();
+        renderActivitiesListTable();
+        filterAndRenderActivities();
+        autoDriveBackup('create_activity');
+      } catch (err) {
+        showToast('❌ เกิดข้อผิดพลาดในการบันทึกกิจกรรม กรุณาลองใหม่อีกครั้ง', 'error');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalHtml;
+        }
+      }
+    });
+  }
 
   // SUBMIT ADMIN ADD STAFF TO ACTIVITY FORM
   const addStaffToActForm = document.getElementById('addStaffToActForm');
@@ -1684,48 +1792,65 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (addStaffToActForm) {
     addStaffToActForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const actId = document.getElementById('adminAddActId').value;
-      const actTitle = document.getElementById('adminAddActTitle').value;
-      const hours = parseInt(document.getElementById('adminAddActHours').value, 10) || 3;
-      const studentId = document.getElementById('selectStaffUserForAct').value;
-      const initialStatus = document.getElementById('adminAddActStatus').value;
-
-      if (!studentId) {
-        showToast('กรุณาเลือกผู้ปฏิบัติงานจากรายการ', 'warning');
-        return;
+      const submitBtn = addStaffToActForm.querySelector('button[type="submit"]');
+      const originalHtml = submitBtn ? submitBtn.innerHTML : '<i class="fa-solid fa-user-plus"></i> ยืนยันเพิ่มคนเข้ากิจกรรม';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึกเพิ่มรายชื่อลง Google Sheets...';
       }
 
-      const staff = api.getStaffUsers().find(s => s.studentId === studentId);
-      if (!staff) {
-        showToast('ไม่พบข้อมูลผู้ปฏิบัติงานรหัสนี้ในระบบ', 'error');
-        return;
-      }
+      try {
+        const actId = document.getElementById('adminAddActId').value;
+        const actTitle = document.getElementById('adminAddActTitle').value;
+        const hours = parseInt(document.getElementById('adminAddActHours').value, 10) || 3;
+        const studentId = document.getElementById('selectStaffUserForAct').value;
+        const initialStatus = document.getElementById('adminAddActStatus').value;
 
-      const payload = {
-        activityId: actId,
-        activityTitle: actTitle,
-        hours: hours,
-        staffId: staff.studentId,
-        staffName: staff.fullName,
-        major: staff.major,
-        department: staff.department,
-        position: staff.position,
-        phone: staff.phone || ''
-      };
-
-      const res = await api.registerStaff(payload);
-      if (addStaffToActModal) addStaffToActModal.classList.remove('active');
-
-      if (res && res.success) {
-        if (initialStatus === 'approved' && res.regId) {
-          await api.approveHours(res.regId);
+        if (!studentId) {
+          showToast('กรุณาเลือกผู้ปฏิบัติงานจากรายการ', 'warning');
+          return;
         }
-        showToast(`เพิ่มคุณ ${staff.fullName} เข้ากิจกรรมเรียบร้อยแล้ว`, 'success');
-        await loadAllData();
-        renderActivitiesListTable();
-        autoDriveBackup('admin_add_staff_to_act');
-      } else {
-        showToast('เกิดข้อผิดพลาด หรือผู้ปฏิบัติงานท่านนี้ถูกเพิ่มลงทะเบียนไว้แล้ว', 'error');
+
+        const staff = api.getStaffUsers().find(s => s.studentId === studentId);
+        if (!staff) {
+          showToast('ไม่พบข้อมูลผู้ปฏิบัติงานรหัสนี้ในระบบ', 'error');
+          return;
+        }
+
+        const payload = {
+          activityId: actId,
+          activityTitle: actTitle,
+          hours: hours,
+          staffId: staff.studentId,
+          staffName: staff.fullName,
+          major: staff.major,
+          department: staff.department,
+          position: staff.position,
+          phone: staff.phone || ''
+        };
+
+        const res = await api.registerStaff(payload);
+        if (addStaffToActModal) addStaffToActModal.classList.remove('active');
+
+        if (res && res.success) {
+          if (initialStatus === 'approved' && res.regId) {
+            await api.approveHours(res.regId);
+          }
+          showToast(`✅ บันทึกเพิ่มคุณ ${staff.fullName} เข้ากิจกรรมสำเร็จเรียบร้อยแล้ว!`, 'success');
+          await loadAllData();
+          renderActivitiesListTable();
+          filterAndRenderActivities();
+          autoDriveBackup('admin_add_staff_to_act');
+        } else {
+          showToast('เกิดข้อผิดพลาด หรือผู้ปฏิบัติงานท่านนี้ถูกเพิ่มลงทะเบียนไว้แล้ว', 'error');
+        }
+      } catch (err) {
+        showToast('❌ เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง', 'error');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalHtml;
+        }
       }
     });
   }
