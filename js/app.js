@@ -1067,15 +1067,51 @@ document.addEventListener('DOMContentLoaded', async () => {
           <td><strong>${realCount}</strong> / ${a.maxQuota} คน</td>
           <td><strong>+${a.hours || 3} ชม.</strong></td>
           <td>
-            <div style="display:flex; align-items:center; gap:0.25rem;">
+            <div style="display:flex; align-items:center; gap:0.25rem; flex-wrap:wrap;">
               <button class="role-pill-btn move-up-act-btn" data-idx="${idx}" ${isFirst ? 'disabled style="opacity:0.35; cursor:not-allowed; background:#94a3b8; color:white; padding:0.25rem 0.5rem; font-size:0.75rem;"' : 'style="background:#0284c7; color:white; padding:0.25rem 0.5rem; font-size:0.75rem; cursor:pointer;"'} title="เลื่อนลำดับขึ้น"><i class="fa-solid fa-arrow-up"></i></button>
               <button class="role-pill-btn move-down-act-btn" data-idx="${idx}" ${isLast ? 'disabled style="opacity:0.35; cursor:not-allowed; background:#94a3b8; color:white; padding:0.25rem 0.5rem; font-size:0.75rem;"' : 'style="background:#0284c7; color:white; padding:0.25rem 0.5rem; font-size:0.75rem; cursor:pointer;"'} title="เลื่อนลำดับลง"><i class="fa-solid fa-arrow-down"></i></button>
-              <button class="role-pill-btn edit-act-btn" data-id="${a.id}" style="background:#2563eb; color:white; padding:0.25rem 0.6rem; font-size:0.75rem;" title="แก้ไขกิจกรรม"><i class="fa-solid fa-pen"></i> แก้ไข</button>
-              <button class="role-pill-btn delete-act-btn" data-id="${a.id}" style="background:#ef4444; color:white; padding:0.25rem 0.5rem; font-size:0.75rem;" title="ลบกิจกรรม"><i class="fa-solid fa-trash"></i> ลบ</button>
+              <button class="role-pill-btn add-staff-to-act-btn" data-id="${a.id}" style="background:#10b981; color:white; padding:0.25rem 0.6rem; font-size:0.75rem; cursor:pointer;" title="เพิ่มผู้ปฏิบัติงานเข้ากิจกรรมนี้"><i class="fa-solid fa-user-plus"></i> เพิ่มคน</button>
+              <button class="role-pill-btn edit-act-btn" data-id="${a.id}" style="background:#2563eb; color:white; padding:0.25rem 0.6rem; font-size:0.75rem; cursor:pointer;" title="แก้ไขกิจกรรม"><i class="fa-solid fa-pen"></i> แก้ไข</button>
+              <button class="role-pill-btn delete-act-btn" data-id="${a.id}" style="background:#ef4444; color:white; padding:0.25rem 0.5rem; font-size:0.75rem; cursor:pointer;" title="ลบกิจกรรม"><i class="fa-solid fa-trash"></i> ลบ</button>
             </div>
           </td>
         </tr>
       `);
+    });
+
+    // Add Staff To Activity Listener
+    const addStaffToActModal = document.getElementById('addStaffToActModal');
+    const selectStaffUserForAct = document.getElementById('selectStaffUserForAct');
+
+    document.querySelectorAll('.add-staff-to-act-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.currentTarget.getAttribute('data-id');
+        const act = currentActivities.find(a => a.id === id);
+        if (act && addStaffToActModal) {
+          document.getElementById('adminAddActId').value = act.id;
+          document.getElementById('adminAddActTitle').value = act.title;
+          document.getElementById('adminAddActHours').value = act.hours || 3;
+          document.getElementById('adminAddActNameLabel').textContent = `${act.title} (${act.id})`;
+
+          // Populate staff members dropdown from database
+          const staffUsers = api.getStaffUsers();
+          selectStaffUserForAct.innerHTML = '<option value="">-- เลือกผู้ปฏิบัติงาน --</option>';
+
+          staffUsers.forEach(s => {
+            const isRegged = currentRegistrations.some(r => r.staffId === s.studentId && r.activityId === act.id);
+            const label = `${s.studentId} - ${s.fullName} (${s.department || s.major}) ${isRegged ? '⚠️ (ลงทะเบียนแล้ว)' : ''}`;
+            const opt = document.createElement('option');
+            opt.value = s.studentId;
+            opt.textContent = label;
+            if (isRegged) {
+              opt.disabled = true;
+            }
+            selectStaffUserForAct.appendChild(opt);
+          });
+
+          addStaffToActModal.classList.add('active');
+        }
+      });
     });
 
     // Move Up Listener
@@ -1508,6 +1544,59 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadAllData();
     autoDriveBackup('create_activity');
   });
+
+  // SUBMIT ADMIN ADD STAFF TO ACTIVITY FORM
+  const addStaffToActForm = document.getElementById('addStaffToActForm');
+  const addStaffToActModal = document.getElementById('addStaffToActModal');
+
+  if (addStaffToActForm) {
+    addStaffToActForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const actId = document.getElementById('adminAddActId').value;
+      const actTitle = document.getElementById('adminAddActTitle').value;
+      const hours = parseInt(document.getElementById('adminAddActHours').value, 10) || 3;
+      const studentId = document.getElementById('selectStaffUserForAct').value;
+      const initialStatus = document.getElementById('adminAddActStatus').value;
+
+      if (!studentId) {
+        showToast('กรุณาเลือกผู้ปฏิบัติงานจากรายการ', 'warning');
+        return;
+      }
+
+      const staff = api.getStaffUsers().find(s => s.studentId === studentId);
+      if (!staff) {
+        showToast('ไม่พบข้อมูลผู้ปฏิบัติงานรหัสนี้ในระบบ', 'error');
+        return;
+      }
+
+      const payload = {
+        activityId: actId,
+        activityTitle: actTitle,
+        hours: hours,
+        staffId: staff.studentId,
+        staffName: staff.fullName,
+        major: staff.major,
+        department: staff.department,
+        position: staff.position,
+        phone: staff.phone || ''
+      };
+
+      const res = await api.registerStaff(payload);
+      if (addStaffToActModal) addStaffToActModal.classList.remove('active');
+
+      if (res && res.success) {
+        if (initialStatus === 'approved' && res.regId) {
+          await api.approveHours(res.regId);
+        }
+        showToast(`เพิ่มคุณ ${staff.fullName} เข้ากิจกรรมเรียบร้อยแล้ว`, 'success');
+        await loadAllData();
+        renderActivitiesListTable();
+        autoDriveBackup('admin_add_staff_to_act');
+      } else {
+        showToast('เกิดข้อผิดพลาด หรือผู้ปฏิบัติงานท่านนี้ถูกเพิ่มลงทะเบียนไว้แล้ว', 'error');
+      }
+    });
+  }
 
   saveGasUrlBtn.addEventListener('click', async () => {
     const url = gasUrlInput.value.trim();
