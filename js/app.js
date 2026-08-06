@@ -322,9 +322,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     logoutBtn.addEventListener('click', (e) => {
       e.preventDefault();
       if (currentRole === 'admin') {
-        api.setCurrentAdmin(null);
-        switchToStaffView();
-        showToast('ออกจากระบบเจ้าหน้าที่เรียบร้อย', 'info');
+        const admin = api.getCurrentAdmin();
+        if (admin) {
+          api.setCurrentAdmin(null);
+          switchToStaffView();
+          showToast('ออกจากระบบเจ้าหน้าที่ (Admin) เรียบร้อยแล้ว', 'info');
+        } else {
+          adminLoginModal.classList.add('active');
+        }
       } else {
         const staff = api.getCurrentStaff();
         if (staff) {
@@ -405,6 +410,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   function renderAdminHeaderInfo() {
     const admin = api.getCurrentAdmin();
     if (!admin) return;
+
+    if (logoutBtn) logoutBtn.textContent = 'ออกจากระบบ';
 
     const directAvatar = convertDriveUrlToDirectLink(admin.avatar);
 
