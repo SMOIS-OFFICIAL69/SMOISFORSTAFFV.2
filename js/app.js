@@ -460,18 +460,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderStaffHeaderInfo();
   await loadAllData();
 
-  const manualSyncBtn = document.getElementById('manualSyncBtn');
-  if (manualSyncBtn) {
-    manualSyncBtn.addEventListener('click', async () => {
-      const icon = document.getElementById('syncSpinIcon');
-      if (icon) icon.classList.add('fa-spin');
-      await loadAllData();
-      showToast('🔄 ดึงและอัปเดตข้อมูลล่าสุดจากฐานระบบเรียบร้อยแล้ว', 'success');
-      setTimeout(() => { if (icon) icon.classList.remove('fa-spin'); }, 800);
-    });
-  }
-
-  // Auto-Sync background timer every 10 seconds for multi-user / multi-device live sync
+  // Silent background auto-sync timer every 10 seconds for multi-user / multi-device live sync
   setInterval(async () => {
     await loadAllData();
   }, 10000);

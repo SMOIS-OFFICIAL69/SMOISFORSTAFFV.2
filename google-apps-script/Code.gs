@@ -11,6 +11,8 @@
  * 1. latest_system_state.json (Overwritten with latest snapshot)
  * 2. backup_state_YYYY-MM-DD_HH-mm-ss.json (Historical timestamped backups)
  * 
+ * Includes Concurrency LockService & Anti-Duplication Protection for Multi-User Access
+ * 
  * Supported Sheets:
  * - Activities
  * - Registrations
@@ -52,24 +54,41 @@ function setupAutomatedDailyDriveBackupTrigger() {
 }
 
 /**
- * --- GET API ENDPOINTS (READS & FALLBACK MUTATIONS) ---
+ * --- GET API ENDPOINTS (READS & FALLBACK MUTATIONS WITH CONCURRENCY LOCK) ---
  */
 function doGet(e) {
   const action = e && e.parameter ? e.parameter.action : 'getActivities';
   let responseData = { status: 'error', message: 'Invalid Action' };
 
+  // Read operations do not require lock
+  if (action === 'getActivities') {
+    return ContentService.createTextOutput(JSON.stringify({ status: 'success', data: getActivitiesData() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } else if (action === 'getRegistrations') {
+    return ContentService.createTextOutput(JSON.stringify({ status: 'success', data: getRegistrationsData() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } else if (action === 'getStaffUsers') {
+    return ContentService.createTextOutput(JSON.stringify({ status: 'success', data: getStaffUsersData() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } else if (action === 'getAdminUsers') {
+    return ContentService.createTextOutput(JSON.stringify({ status: 'success', data: getAdminUsersData() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } else if (action === 'getBackups') {
+    return ContentService.createTextOutput(JSON.stringify({ status: 'success', data: getBackupsData() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // Mutation operations require Concurrency LockService
+  const lock = LockService.getScriptLock();
   try {
-    if (action === 'getActivities') {
-      responseData = { status: 'success', data: getActivitiesData() };
-    } else if (action === 'getRegistrations') {
-      responseData = { status: 'success', data: getRegistrationsData() };
-    } else if (action === 'getStaffUsers') {
-      responseData = { status: 'success', data: getStaffUsersData() };
-    } else if (action === 'getAdminUsers') {
-      responseData = { status: 'success', data: getAdminUsersData() };
-    } else if (action === 'getBackups') {
-      responseData = { status: 'success', data: getBackupsData() };
-    } else if (action === 'approveHours') {
+    lock.waitLock(10000); // Wait up to 10 seconds for other concurrent requests
+  } catch (lockErr) {
+    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: 'ระบบกำลังประมวลผลคำสั่งอื่นอยู่ กรุณาลองใหม่อีกครั้ง' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  try {
+    if (action === 'approveHours') {
       const regId = e.parameter.regId;
       const checkInTime = e.parameter.checkInTime || Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
       const result = approveHoursRecord(regId, checkInTime);
@@ -103,6 +122,8 @@ function doGet(e) {
     }
   } catch (err) {
     responseData = { status: 'error', message: err.toString() };
+  } finally {
+    lock.releaseLock();
   }
 
   return ContentService.createTextOutput(JSON.stringify(responseData))
@@ -110,10 +131,19 @@ function doGet(e) {
 }
 
 /**
- * --- POST API ENDPOINTS (MUTATIONS, APPROVALS & DELETIONS) ---
+ * --- POST API ENDPOINTS (MUTATIONS, APPROVALS & DELETIONS WITH CONCURRENCY LOCK) ---
  */
 function doPost(e) {
   let responseData = { status: 'error', message: 'Invalid Request' };
+
+  // Concurrency Protection via ScriptLock
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000);
+  } catch (lockErr) {
+    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: 'ระบบกำลังประมวลผลคำสั่งอื่นอยู่ กรุณาลองใหม่อีกครั้ง' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 
   try {
     let postData = {};
@@ -180,6 +210,8 @@ function doPost(e) {
     }
   } catch (err) {
     responseData = { status: 'error', message: err.toString() };
+  } finally {
+    lock.releaseLock();
   }
 
   return ContentService.createTextOutput(JSON.stringify(responseData))
@@ -394,10 +426,19 @@ function getBackupsData() {
 }
 
 /**
- * --- DATA SAVE & APPROVAL OPERATIONS ---
+ * --- DATA SAVE & APPROVAL OPERATIONS WITH ANTI-DUPLICATION & CONCURRENCY CHECKS ---
  */
 function saveRegistration(data) {
   const sheet = getOrCreateSheet(CONFIG.SHEET_REGISTRATIONS, ['RegID', 'Timestamp', 'StaffID', 'StaffName', 'Major', 'Department', 'Position', 'ActivityID', 'ActivityTitle', 'BaseHours', 'EarnedHours', 'Status', 'CheckInTime']);
+  const rows = sheet.getDataRange().getValues();
+  
+  // Anti-duplication check: prevent same staff registering same activity twice
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][2]) === String(data.staffId) && String(rows[i][7]) === String(data.activityId)) {
+      return false;
+    }
+  }
+
   sheet.appendRow([data.regId, data.timestamp, data.staffId, data.staffName, data.major, data.department, data.position, data.activityId, data.activityTitle, data.baseHours || 3, 0, 'pending', '']);
   return true;
 }
@@ -433,18 +474,54 @@ function unapproveHoursRecord(regId) {
 
 function saveActivity(data) {
   const sheet = getOrCreateSheet(CONFIG.SHEET_ACTIVITIES, ['ID', 'Title', 'Category', 'Description', 'Date', 'Time', 'Location', 'MaxQuota', 'RegisteredCount', 'Hours', 'Status', 'Banner']);
+  const rows = sheet.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]) === String(data.id)) {
+      sheet.getRange(i + 1, 2).setValue(data.title);
+      sheet.getRange(i + 1, 3).setValue(data.category || 'กิจกรรม');
+      sheet.getRange(i + 1, 4).setValue(data.description);
+      sheet.getRange(i + 1, 5).setValue(data.date);
+      sheet.getRange(i + 1, 6).setValue(data.time);
+      sheet.getRange(i + 1, 7).setValue(data.location);
+      sheet.getRange(i + 1, 8).setValue(data.maxQuota);
+      sheet.getRange(i + 1, 10).setValue(data.hours || 3);
+      if (data.banner) sheet.getRange(i + 1, 12).setValue(data.banner);
+      return true;
+    }
+  }
   sheet.appendRow([data.id, data.title, data.category || 'กิจกรรม', data.description, data.date, data.time, data.location, data.maxQuota, 0, data.hours || 3, 'open', data.banner]);
   return true;
 }
 
 function saveStaffUser(data) {
   const sheet = getOrCreateSheet(CONFIG.SHEET_STAFF, ['StudentID', 'FullName', 'Major', 'Year', 'Department', 'Position', 'TargetHours']);
+  const rows = sheet.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]) === String(data.studentId)) {
+      sheet.getRange(i + 1, 2).setValue(data.fullName);
+      sheet.getRange(i + 1, 3).setValue(data.major);
+      sheet.getRange(i + 1, 4).setValue(data.year);
+      sheet.getRange(i + 1, 5).setValue(data.department);
+      sheet.getRange(i + 1, 6).setValue(data.position);
+      return true;
+    }
+  }
   sheet.appendRow([data.studentId, data.fullName, data.major, data.year, data.department, data.position, data.targetHours || 200]);
   return true;
 }
 
 function saveAdminUser(data) {
   const sheet = getOrCreateSheet(CONFIG.SHEET_ADMIN, ['Username', 'Password', 'FullName', 'Position', 'Role']);
+  const rows = sheet.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]) === String(data.username)) {
+      if (data.password) sheet.getRange(i + 1, 2).setValue(data.password);
+      sheet.getRange(i + 1, 3).setValue(data.fullName);
+      sheet.getRange(i + 1, 4).setValue(data.position);
+      sheet.getRange(i + 1, 5).setValue(data.role || 'Admin');
+      return true;
+    }
+  }
   sheet.appendRow([data.username, data.password, data.fullName, data.position, data.role || 'Admin']);
   return true;
 }
