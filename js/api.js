@@ -1,5 +1,5 @@
 // SYSTEM GLOBAL GOOGLE APPS SCRIPT WEB APP URL (SHARED BY ALL USERS & DEVICES)
-window.DEFAULT_GAS_URL = window.DEFAULT_GAS_URL || '';
+window.DEFAULT_GAS_URL = window.DEFAULT_GAS_URL || 'https://script.google.com/macros/s/AKfycbxGC8t6PkLQ_0esKGW_WhRPH4j7Vzlok1VASafXzxYO0mPEsPF86y66KRmCBfOcehzw/exec';
 
 const STORAGE_KEYS = {
   GAS_URL: 'smo_staff_gas_url',
@@ -725,7 +725,7 @@ class SmoStaffAPI {
     const registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS) || '[]');
     let csv = '\uFEFF';
     csv += 'รหัสลงทะเบียน,รหัสผู้ปฏิบัติงาน,ชื่อ-นามสกุล,สาขาวิชา,สังกัด,กิจกรรม,ชั่วโมงฐาน,ชั่วโมงที่ได้รับ,สถานะ,วันเวลาเช็คอิน\n';
-    
+
     registrations.forEach(r => {
       csv += `"${r.regId}","${r.staffId}","${r.staffName}","${r.major || ''}","${r.department}","${r.activityTitle}",${r.baseHours || 3},${r.earnedHours || 0},"${r.status}","${r.checkInTime || ''}"\n`;
     });

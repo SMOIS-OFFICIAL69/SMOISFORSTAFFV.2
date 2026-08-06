@@ -460,6 +460,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderStaffHeaderInfo();
   await loadAllData();
 
+  if (!api.getGasUrl()) {
+    setTimeout(() => {
+      if (gasSettingsModal) {
+        gasUrlInput.value = '';
+        gasSettingsModal.classList.add('active');
+      }
+      showToast('⚠️ กรุณาเชื่อมต่อ Web App URL จาก Google Apps Script เพื่อดึงข้อมูลจริงจาก Google Sheets', 'warning');
+    }, 600);
+  }
+
   // Silent background auto-sync timer every 10 seconds for multi-user / multi-device live sync
   setInterval(async () => {
     await loadAllData();
