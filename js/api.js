@@ -248,11 +248,21 @@ class SmoStaffAPI {
 
   // --- AUTHENTICATION & USERS ---
   getStaffUsers() {
-    return JSON.parse(localStorage.getItem(STORAGE_KEYS.STAFF_USERS) || '[]');
+    const local = JSON.parse(localStorage.getItem(STORAGE_KEYS.STAFF_USERS) || '[]');
+    if (!local || local.length === 0) {
+      localStorage.setItem(STORAGE_KEYS.STAFF_USERS, JSON.stringify(SEED_STAFF_USERS));
+      return SEED_STAFF_USERS;
+    }
+    return local;
   }
 
   getAdminUsers() {
-    return JSON.parse(localStorage.getItem(STORAGE_KEYS.ADMIN_USERS) || '[]');
+    const local = JSON.parse(localStorage.getItem(STORAGE_KEYS.ADMIN_USERS) || '[]');
+    if (!local || local.length === 0) {
+      localStorage.setItem(STORAGE_KEYS.ADMIN_USERS, JSON.stringify(SEED_ADMIN_USERS));
+      return SEED_ADMIN_USERS;
+    }
+    return local;
   }
 
   getCurrentStaff() {
@@ -374,6 +384,25 @@ class SmoStaffAPI {
     return adminData;
   }
 
+  updateAdminUser(username, updatedData) {
+    const list = this.getAdminUsers();
+    const idx = list.findIndex(a => a.username === username);
+    if (idx !== -1) {
+      if (updatedData.avatar) {
+        updatedData.avatar = convertDriveUrlToDirectLink(updatedData.avatar);
+      }
+      list[idx] = { ...list[idx], ...updatedData };
+      localStorage.setItem(STORAGE_KEYS.ADMIN_USERS, JSON.stringify(list));
+
+      const curr = this.getCurrentAdmin();
+      if (curr && curr.username === username) {
+        this.setCurrentAdmin(list[idx]);
+      }
+      return { success: true, admin: list[idx] };
+    }
+    return { success: false };
+  }
+
   deleteAdminUser(username) {
     let list = this.getAdminUsers();
     list = list.filter(a => a.username !== username);
@@ -388,13 +417,18 @@ class SmoStaffAPI {
       try {
         const res = await fetch(`${gasUrl}?action=getActivities`);
         const json = await res.json();
-        if (json && json.status === 'success' && Array.isArray(json.data)) {
+        if (json && json.status === 'success' && Array.isArray(json.data) && json.data.length > 0) {
           localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(json.data));
           return json.data;
         }
       } catch (e) { console.warn('Fetch live activities error:', e); }
     }
-    return JSON.parse(localStorage.getItem(STORAGE_KEYS.ACTIVITIES) || '[]');
+    const local = JSON.parse(localStorage.getItem(STORAGE_KEYS.ACTIVITIES) || '[]');
+    if (!local || local.length === 0) {
+      localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(SEED_ACTIVITIES));
+      return SEED_ACTIVITIES;
+    }
+    return local;
   }
 
   async createActivity(activityData) {
@@ -448,13 +482,18 @@ class SmoStaffAPI {
       try {
         const res = await fetch(`${gasUrl}?action=getRegistrations`);
         const json = await res.json();
-        if (json && json.status === 'success' && Array.isArray(json.data)) {
+        if (json && json.status === 'success' && Array.isArray(json.data) && json.data.length > 0) {
           localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(json.data));
           return json.data;
         }
       } catch (e) { console.warn('Fetch live registrations error:', e); }
     }
-    return JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS) || '[]');
+    const local = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS) || '[]');
+    if (!local || local.length === 0) {
+      localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(SEED_REGISTRATIONS));
+      return SEED_REGISTRATIONS;
+    }
+    return local;
   }
 
   async registerStaff(registrationData) {

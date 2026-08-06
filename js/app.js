@@ -473,7 +473,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function updateStaffHoursStats() {
     const staff = api.getCurrentStaff();
-    if (!staff) return;
+    if (!staff) {
+      if (myRegCountBadge) myRegCountBadge.textContent = '0';
+      if (accumulatedHours) accumulatedHours.textContent = '0';
+      if (pendingHours) pendingHours.textContent = '0';
+      return;
+    }
 
     const myRegs = currentRegistrations.filter(r => r.staffId === staff.studentId);
     if (myRegCountBadge) myRegCountBadge.textContent = myRegs.length;
@@ -488,11 +493,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         pending += (r.baseHours || 3);
       }
     });
-
-    if (staff.studentId === '673450351-6') {
-      earned += 2;
-      pending += 27;
-    }
 
     if (accumulatedHours) accumulatedHours.textContent = earned;
     if (pendingHours) pendingHours.textContent = pending;
@@ -535,12 +535,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       else if (r.status === 'pending') pending += (r.baseHours || 3);
     });
 
-    if (staff.studentId === '673450351-6') {
-      earned += 2;
-      pending += 27;
-    }
-
-    const regCount = Math.max(myRegs.length, staff.studentId === '673450351-6' ? 6 : myRegs.length);
+    const regCount = myRegs.length;
     const target = staff.targetHours || 200;
     const percent = Math.min(100, Math.round((earned / target) * 100));
     const remaining = Math.max(0, target - earned);
@@ -557,56 +552,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!historyTableBody) return;
     historyTableBody.innerHTML = '';
 
-    const historyItems = [];
-    if (staff.studentId === '673450351-6') {
-      historyItems.push({
-        idx: 1,
-        title: 'One Journey วันเจอนี่',
-        subtitle: 'สโมสรนักศึกษา | REG-1786009414461',
-        dateTime: '13 ส.ค. 2569 16.00 - 21.00 น.',
-        baseHours: '6 ชม.',
-        earnedHours: '0 ชม.',
-        statusText: 'รออนุมัติชั่วโมง',
-        statusClass: 'status-tag-pending'
-      });
-      historyItems.push({
-        idx: 2,
-        title: 'โครงการปฏิบัติธรรมในวันธรรมสวนะ ประจำปี 2569',
-        subtitle: 'ฝ่ายบริการและกิจกรรม | REG-1786001024881',
-        dateTime: '6 ส.ค. 2569 08.30 - 16.30 น.',
-        baseHours: '2 ชม.',
-        earnedHours: '2 ชม.',
-        statusText: 'อนุมัติแล้ว',
-        statusClass: 'status-tag-checked'
-      });
+    if (myRegs.length === 0) {
+      historyTableBody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-gray);">
+            <i class="fa-regular fa-folder-open" style="font-size: 1.8rem; color: #cbd5e1; margin-bottom: 0.5rem; display: block;"></i>
+            ยังไม่มีประวัติการลงทะเบียนกิจกรรม
+          </td>
+        </tr>
+      `;
+      return;
     }
 
     myRegs.forEach((r, idx) => {
       const isApproved = r.status === 'approved';
-      historyItems.unshift({
-        idx: historyItems.length + 1,
-        title: r.activityTitle,
-        subtitle: `${r.department} | ${r.regId}`,
-        dateTime: r.timestamp,
-        baseHours: `${r.baseHours || 3} ชม.`,
-        earnedHours: isApproved ? `${r.earnedHours || r.baseHours || 3} ชม.` : '0 ชม.',
-        statusText: isApproved ? 'อนุมัติแล้ว' : 'รออนุมัติชั่วโมง',
-        statusClass: isApproved ? 'status-tag-checked' : 'status-tag-pending'
-      });
-    });
-
-    historyItems.forEach(item => {
       const tr = `
         <tr>
-          <td><strong>${item.idx}</strong></td>
+          <td><strong>${idx + 1}</strong></td>
           <td>
-            <div style="font-weight:700; color:var(--text-dark);">${item.title}</div>
-            <div style="font-size:0.75rem; color:var(--text-gray); font-family:'Space Grotesk', monospace;">${item.subtitle}</div>
+            <div style="font-weight:700; color:var(--text-dark);">${r.activityTitle}</div>
+            <div style="font-size:0.75rem; color:var(--text-gray); font-family:'Space Grotesk', monospace;">${r.department || 'สโมสรนักศึกษา'} | ${r.regId}</div>
           </td>
-          <td>${item.dateTime}</td>
-          <td>${item.baseHours}</td>
-          <td><strong style="color:${item.earnedHours !== '0 ชม.' ? 'var(--success-green)' : 'var(--text-dark)'}">${item.earnedHours}</strong></td>
-          <td><span class="${item.statusClass}">${item.statusText}</span></td>
+          <td>${r.timestamp}</td>
+          <td>${r.baseHours || 3} ชม.</td>
+          <td><strong style="color:${isApproved ? 'var(--success-green)' : 'var(--text-dark)'}">${isApproved ? (r.earnedHours || r.baseHours || 3) + ' ชม.' : '0 ชม.'}</strong></td>
+          <td><span class="${isApproved ? 'status-tag-checked' : 'status-tag-pending'}">${isApproved ? 'อนุมัติแล้ว' : 'รออนุมัติชั่วโมง'}</span></td>
         </tr>
       `;
       historyTableBody.insertAdjacentHTML('beforeend', tr);
@@ -1075,7 +1045,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // RENDER TABLE: ADMIN USERS LIST (WITH DELETE)
+  // RENDER TABLE: ADMIN USERS LIST (WITH EDIT & DELETE)
   function renderAdminListTable() {
     if (!adminListTableBody) return;
     const admins = api.getAdminUsers();
@@ -1094,12 +1064,31 @@ document.addEventListener('DOMContentLoaded', async () => {
           <td>${a.position}</td>
           <td><span style="background:#e0e7ff; color:#3730a3; padding:0.2rem 0.6rem; border-radius:12px; font-size:0.75rem; font-weight:600;">${a.role || 'Admin'}</span></td>
           <td>
+            <button class="role-pill-btn edit-admin-btn" data-id="${a.username}" style="background:#2563eb; color:white; padding:0.25rem 0.6rem; font-size:0.75rem; margin-right:0.25rem;"><i class="fa-solid fa-user-pen"></i> แก้ไข</button>
             ${a.username !== 'admin' ? `<button class="role-pill-btn delete-admin-btn" data-id="${a.username}" style="background:#ef4444; color:white; padding:0.25rem 0.5rem; font-size:0.75rem;"><i class="fa-solid fa-trash"></i> ลบ</button>` : '<small style="color:var(--text-gray);">แอดมินหลัก</small>'}
           </td>
         </tr>
       `);
     });
 
+    // Attach Edit Admin Event
+    document.querySelectorAll('.edit-admin-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const username = e.currentTarget.getAttribute('data-id');
+        const a = api.getAdminUsers().find(x => x.username === username);
+        if (a) {
+          document.getElementById('editAdminUsernameKey').value = a.username;
+          document.getElementById('editAdminUsername').value = a.username;
+          document.getElementById('editAdminFullName').value = a.fullName;
+          document.getElementById('editAdminPosition').value = a.position;
+          document.getElementById('editAdminPassword').value = '';
+          document.getElementById('editAdminAvatar').value = a.avatar || '';
+          document.getElementById('editAdminModal').classList.add('active');
+        }
+      });
+    });
+
+    // Attach Delete Admin Event
     document.querySelectorAll('.delete-admin-btn').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         const username = e.currentTarget.getAttribute('data-id');
@@ -1111,6 +1100,36 @@ document.addEventListener('DOMContentLoaded', async () => {
           autoDriveBackup('delete_admin');
         }
       });
+    });
+  }
+
+  // SUBMIT EDIT ADMIN FORM
+  const editAdminForm = document.getElementById('editAdminForm');
+  const closeEditAdminModalBtn = document.getElementById('closeEditAdminModalBtn');
+  if (closeEditAdminModalBtn) {
+    closeEditAdminModalBtn.addEventListener('click', () => {
+      document.getElementById('editAdminModal').classList.remove('active');
+    });
+  }
+
+  if (editAdminForm) {
+    editAdminForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('editAdminUsernameKey').value;
+      const updated = {
+        fullName: document.getElementById('editAdminFullName').value.trim(),
+        position: document.getElementById('editAdminPosition').value.trim(),
+        avatar: document.getElementById('editAdminAvatar').value.trim()
+      };
+      const pwd = document.getElementById('editAdminPassword').value.trim();
+      if (pwd) updated.password = pwd;
+
+      api.updateAdminUser(username, updated);
+      document.getElementById('editAdminModal').classList.remove('active');
+      showToast(`แก้ไขข้อมูลแอดมิน ${username} สำเร็จแล้ว`, 'success');
+      await loadAllData();
+      renderAdminListTable();
+      autoDriveBackup('edit_admin');
     });
   }
 
@@ -1241,17 +1260,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     adminTableBody.innerHTML = '';
 
     const staffUsers = api.getStaffUsers();
-    let pendingHrsCount = 27;
-    let approvedHrsCount = 2;
+    let pendingHrsCount = 0;
+    let approvedHrsCount = 0;
 
     currentRegistrations.forEach(r => {
       if (r.status === 'approved') approvedHrsCount += (r.earnedHours || r.baseHours || 3);
       else if (r.status === 'pending') pendingHrsCount += (r.baseHours || 3);
     });
 
-    if (adminTotalActCount) adminTotalActCount.textContent = currentActivities.length;
-    if (adminTotalStaffCount) adminTotalStaffCount.textContent = staffUsers.length;
-    if (adminTotalRegCount) adminTotalRegCount.textContent = currentRegistrations.length + 2;
+    const actCount = currentActivities.length;
+    const staffCount = staffUsers.length;
+    const regCount = currentRegistrations.length;
+
+    if (adminTotalActCount) adminTotalActCount.textContent = actCount;
+    if (adminTotalStaffCount) adminTotalStaffCount.textContent = staffCount;
+    if (adminTotalRegCount) adminTotalRegCount.textContent = regCount;
     if (adminTotalPendingHrs) adminTotalPendingHrs.textContent = pendingHrsCount;
     if (adminTotalApprovedHrs) adminTotalApprovedHrs.textContent = approvedHrsCount;
 
