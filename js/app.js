@@ -856,7 +856,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const staff = api.getCurrentStaff();
 
-    list.forEach(act => {
+    // Group activities: Open vs Closed
+    const openActivities = list.filter(a => a.status !== 'closed');
+    const closedActivities = list.filter(a => a.status === 'closed');
+
+    const renderCardHtml = (act) => {
       const realRegCount = currentRegistrations.filter(r => r.activityId === act.id).length;
       act.registeredCount = realRegCount;
       const isFull = act.registeredCount >= act.maxQuota || act.status === 'full';
@@ -870,8 +874,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const directBannerUrl = convertDriveUrlToDirectLink(act.banner) || 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=600&q=80';
 
-      const cardHtml = `
-        <div class="activity-card">
+      return `
+        <div class="activity-card" style="${isClosed ? 'opacity: 0.88; border: 1px dashed #cbd5e1;' : ''}">
           <div class="card-banner act-click-trigger" data-act-id="${act.id}" style="background-image: url('${directBannerUrl}'); cursor: pointer;" title="คลิกเพื่อดูรายละเอียดและป้ายภาพกิจกรรมแบบเต็ม">
             <div class="card-banner-overlay"></div>
             <div class="card-badge ${badgeClass}">${badgeText}</div>
@@ -907,8 +911,49 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
         </div>
       `;
-      activitiesGrid.insertAdjacentHTML('beforeend', cardHtml);
-    });
+    };
+
+    // 1. Render Open Activities Section
+    if (openActivities.length > 0) {
+      if (closedActivities.length > 0 || !stat) {
+        activitiesGrid.insertAdjacentHTML('beforeend', `
+          <div class="activity-section-header" style="grid-column: 1/-1; margin: 0.25rem 0 0.75rem 0; padding-bottom: 0.6rem; border-bottom: 2px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: #dbeafe; color: #2563eb; font-size: 0.95rem;">
+                <i class="fa-solid fa-folder-open"></i>
+              </span>
+              <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">กิจกรรมที่กำลังเปิดรับสมัคร</h3>
+            </div>
+            <span style="background: #eff6ff; color: #2563eb; font-size: 0.8rem; font-weight: 600; padding: 0.2rem 0.65rem; border-radius: 20px; border: 1px solid #bfdbfe;">
+              ${openActivities.length} รายการ
+            </span>
+          </div>
+        `);
+      }
+      openActivities.forEach(act => {
+        activitiesGrid.insertAdjacentHTML('beforeend', renderCardHtml(act));
+      });
+    }
+
+    // 2. Render Closed Activities Section (At the bottom)
+    if (closedActivities.length > 0) {
+      activitiesGrid.insertAdjacentHTML('beforeend', `
+        <div class="activity-section-header" style="grid-column: 1/-1; margin: 2rem 0 0.75rem 0; padding-top: 1rem; border-top: 2px dashed #cbd5e1; display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: #fee2e2; color: #dc2626; font-size: 0.95rem;">
+              <i class="fa-solid fa-lock"></i>
+            </span>
+            <h3 style="font-size: 1.1rem; font-weight: 700; color: #475569; margin: 0;">กิจกรรมที่ปิดรับสมัครแล้ว</h3>
+          </div>
+          <span style="background: #fef2f2; color: #dc2626; font-size: 0.8rem; font-weight: 600; padding: 0.2rem 0.65rem; border-radius: 20px; border: 1px solid #fecaca;">
+            ${closedActivities.length} รายการ
+          </span>
+        </div>
+      `);
+      closedActivities.forEach(act => {
+        activitiesGrid.insertAdjacentHTML('beforeend', renderCardHtml(act));
+      });
+    }
 
     // Attach Click Event to Card Image Banner & Title for Full Detail Modal
     document.querySelectorAll('.act-click-trigger').forEach(el => {
