@@ -574,6 +574,27 @@ class SmoStaffAPI {
     return { success: true, record: newRecord };
   }
 
+  async sendGasMutation(action, postPayload, queryParamsStr = '') {
+    const gasUrl = this.getGasUrl();
+    if (!gasUrl) return;
+
+    try {
+      await fetch(gasUrl, {
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: action, ...postPayload })
+      });
+    } catch (err) {
+      console.warn(`POST ${action} failed, attempting GET query fallback:`, err);
+      try {
+        await fetch(`${gasUrl}?action=${action}&${queryParamsStr}`, { mode: 'no-cors' });
+      } catch (getErr) {
+        console.warn(`GET ${action} fallback error:`, getErr);
+      }
+    }
+  }
+
   async approveHours(regId) {
     const nowStr = new Date().toLocaleString('sv-SE');
     const registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS) || '[]');
@@ -584,16 +605,7 @@ class SmoStaffAPI {
       rec.checkInTime = nowStr;
       localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(registrations));
 
-      const gasUrl = this.getGasUrl();
-      if (gasUrl) {
-        fetch(gasUrl, {
-          method: 'POST',
-          mode: 'cors',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action: 'approveHours', regId: regId, checkInTime: nowStr })
-        }).catch(e => console.warn('GAS Approve Hours error:', e));
-      }
-
+      this.sendGasMutation('approveHours', { regId: regId, checkInTime: nowStr }, `regId=${encodeURIComponent(regId)}&checkInTime=${encodeURIComponent(nowStr)}`);
       return { success: true, record: rec };
     }
     return { success: false };
@@ -608,16 +620,7 @@ class SmoStaffAPI {
       rec.checkInTime = null;
       localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(registrations));
 
-      const gasUrl = this.getGasUrl();
-      if (gasUrl) {
-        fetch(gasUrl, {
-          method: 'POST',
-          mode: 'cors',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action: 'unapproveHours', regId: regId })
-        }).catch(e => console.warn('GAS Unapprove Hours error:', e));
-      }
-
+      this.sendGasMutation('unapproveHours', { regId: regId }, `regId=${encodeURIComponent(regId)}`);
       return { success: true, record: rec };
     }
     return { success: false };
@@ -640,16 +643,7 @@ class SmoStaffAPI {
     registrations = registrations.filter(r => r.regId !== regId);
     localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(registrations));
 
-    const gasUrl = this.getGasUrl();
-    if (gasUrl) {
-      fetch(gasUrl, {
-        method: 'POST',
-        mode: 'cors',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'deleteRegistration', regId: regId })
-      }).catch(e => console.warn('GAS Delete Registration error:', e));
-    }
-
+    this.sendGasMutation('deleteRegistration', { regId: regId }, `regId=${encodeURIComponent(regId)}`);
     return { success: true };
   }
 

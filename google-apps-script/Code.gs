@@ -52,10 +52,10 @@ function setupAutomatedDailyDriveBackupTrigger() {
 }
 
 /**
- * --- GET API ENDPOINTS ---
+ * --- GET API ENDPOINTS (READS & FALLBACK MUTATIONS) ---
  */
 function doGet(e) {
-  const action = e ? e.parameter.action : 'getActivities';
+  const action = e && e.parameter ? e.parameter.action : 'getActivities';
   let responseData = { status: 'error', message: 'Invalid Action' };
 
   try {
@@ -69,6 +69,37 @@ function doGet(e) {
       responseData = { status: 'success', data: getAdminUsersData() };
     } else if (action === 'getBackups') {
       responseData = { status: 'success', data: getBackupsData() };
+    } else if (action === 'approveHours') {
+      const regId = e.parameter.regId;
+      const checkInTime = e.parameter.checkInTime || Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
+      const result = approveHoursRecord(regId, checkInTime);
+      performGoogleDriveBackup();
+      responseData = { status: 'success', result: result };
+    } else if (action === 'unapproveHours') {
+      const regId = e.parameter.regId;
+      const result = unapproveHoursRecord(regId);
+      performGoogleDriveBackup();
+      responseData = { status: 'success', result: result };
+    } else if (action === 'deleteRegistration') {
+      const regId = e.parameter.regId;
+      const result = deleteRegistrationRecord(regId);
+      performGoogleDriveBackup();
+      responseData = { status: 'success', result: result };
+    } else if (action === 'deleteActivity') {
+      const id = e.parameter.id;
+      const result = deleteActivityRecord(id);
+      performGoogleDriveBackup();
+      responseData = { status: 'success', result: result };
+    } else if (action === 'deleteStaffUser') {
+      const studentId = e.parameter.studentId;
+      const result = deleteStaffUserRecord(studentId);
+      performGoogleDriveBackup();
+      responseData = { status: 'success', result: result };
+    } else if (action === 'deleteAdminUser') {
+      const username = e.parameter.username;
+      const result = deleteAdminUserRecord(username);
+      performGoogleDriveBackup();
+      responseData = { status: 'success', result: result };
     }
   } catch (err) {
     responseData = { status: 'error', message: err.toString() };
@@ -85,7 +116,17 @@ function doPost(e) {
   let responseData = { status: 'error', message: 'Invalid Request' };
 
   try {
-    const postData = JSON.parse(e.postData.contents);
+    let postData = {};
+    if (e && e.postData && e.postData.contents) {
+      try {
+        postData = JSON.parse(e.postData.contents);
+      } catch (jsonErr) {
+        postData = e.parameter || {};
+      }
+    } else if (e && e.parameter) {
+      postData = e.parameter;
+    }
+
     const action = postData.action;
 
     if (action === 'registerStaff') {
@@ -113,19 +154,19 @@ function doPost(e) {
       performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'deleteActivity') {
-      const result = deleteActivityRecord(postData.id);
+      const result = deleteActivityRecord(postData.id || postData.data);
       performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'deleteStaffUser') {
-      const result = deleteStaffUserRecord(postData.studentId);
+      const result = deleteStaffUserRecord(postData.studentId || postData.data);
       performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'deleteAdminUser') {
-      const result = deleteAdminUserRecord(postData.username);
+      const result = deleteAdminUserRecord(postData.username || postData.data);
       performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'deleteRegistration') {
-      const result = deleteRegistrationRecord(postData.regId);
+      const result = deleteRegistrationRecord(postData.regId || postData.data);
       performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'createDriveBackup') {
@@ -354,7 +395,7 @@ function approveHoursRecord(regId, checkInTime) {
       const baseHrs = Number(rows[i][9] || 3);
       sheet.getRange(i + 1, 11).setValue(baseHrs);
       sheet.getRange(i + 1, 12).setValue('approved');
-      sheet.getRange(i + 1, 13).setValue(checkInTime);
+      sheet.getRange(i + 1, 13).setValue(checkInTime || Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss'));
       return true;
     }
   }

@@ -764,6 +764,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         registrationModal.classList.add('active');
       });
     });
+  }
+
   // --- ACTIVITY DETAIL & POSTER IMAGE PREVIEW MODAL ---
   const activityDetailModal = document.getElementById('activityDetailModal');
   const closeDetailActModalBtn = document.getElementById('closeDetailActModalBtn');
