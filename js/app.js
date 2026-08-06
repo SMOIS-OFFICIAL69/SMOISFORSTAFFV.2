@@ -351,10 +351,71 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // RENDER HEADERS & AVATARS
+  function updateStaffActivityMeter() {
+    const staff = api.getCurrentStaff();
+    const targetHoursText = document.getElementById('targetHoursText');
+    const meterSubtitleText = document.getElementById('meterSubtitleText');
+    const meterPercentText = document.getElementById('meterPercentText');
+    const meterFillBar = document.getElementById('meterFillBar');
+    const meterEarnedText = document.getElementById('meterEarnedText');
+    const meterRemainingText = document.getElementById('meterRemainingText');
+    const summaryEarnedHours = document.getElementById('summaryEarnedHours');
+    const summaryPendingHours = document.getElementById('summaryPendingHours');
+    const summaryRegisteredCount = document.getElementById('summaryRegisteredCount');
+
+    if (!staff) {
+      // LOGGED OUT / GUEST STATE: Do NOT display numbers or target hours
+      if (targetHoursText) targetHoursText.textContent = '-';
+      if (meterSubtitleText) meterSubtitleText.textContent = 'เป้าหมายปีงบประมาณ 2026: - ชั่วโมงกิจกรรม';
+      if (meterPercentText) meterPercentText.textContent = '-';
+      if (meterFillBar) meterFillBar.style.width = '0%';
+      if (meterEarnedText) meterEarnedText.textContent = 'สะสมแล้ว - / - ชั่วโมง';
+      if (meterRemainingText) meterRemainingText.textContent = 'กรุณาเข้าสู่ระบบเพื่อดูข้อมูล';
+
+      if (summaryEarnedHours) summaryEarnedHours.textContent = '-';
+      if (summaryPendingHours) summaryPendingHours.textContent = '-';
+      if (summaryRegisteredCount) summaryRegisteredCount.textContent = '-';
+      return;
+    }
+
+    // LOGGED IN STATE: Calculate numbers dynamically for the logged-in staff
+    const staffId = staff.studentId;
+    const target = Number(staff.targetHours) || 200;
+
+    // Filter registrations for logged in staff
+    const userRegs = currentRegistrations.filter(r => String(r.staffId) === String(staffId));
+
+    // Earned (approved) hours
+    const earned = userRegs
+      .filter(r => r.status === 'approved')
+      .reduce((sum, r) => sum + (Number(r.earnedHours || r.hours) || 0), 0);
+
+    // Pending hours
+    const pending = userRegs
+      .filter(r => r.status === 'pending')
+      .reduce((sum, r) => sum + (Number(r.hours) || 0), 0);
+
+    const remaining = Math.max(0, target - earned);
+    const percent = Math.min(100, Math.round((earned / target) * 100));
+
+    if (targetHoursText) targetHoursText.textContent = target;
+    if (meterSubtitleText) meterSubtitleText.textContent = `เป้าหมายปีงบประมาณ 2026: ${target} ชั่วโมงกิจกรรม`;
+    if (meterPercentText) meterPercentText.textContent = `${percent}%`;
+    if (meterFillBar) meterFillBar.style.width = `${percent}%`;
+    if (meterEarnedText) meterEarnedText.textContent = `สะสมแล้ว ${earned} / ${target} ชั่วโมง`;
+    if (meterRemainingText) meterRemainingText.textContent = `ขาดอีก ${remaining} ชั่วโมง`;
+
+    if (summaryEarnedHours) summaryEarnedHours.textContent = earned;
+    if (summaryPendingHours) summaryPendingHours.textContent = pending;
+    if (summaryRegisteredCount) summaryRegisteredCount.textContent = userRegs.length;
+  }
+
   function renderStaffHeaderInfo() {
     const staff = api.getCurrentStaff();
     const staffLoggedOutHero = document.getElementById('staffLoggedOutHero');
     const staffLoggedInHero = document.getElementById('staffLoggedInHero');
+
+    updateStaffActivityMeter();
 
     if (!staff) {
       // LOGGED OUT STATE
@@ -401,7 +462,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (staffYear) staffYear.textContent = staff.year || 'ชั้นปีที่ 3';
     if (staffDept) staffDept.textContent = `สังกัด: ${staff.department || 'สโมสรนักศึกษา'}`;
     if (staffPos) staffPos.textContent = `ตำแหน่ง: ${staff.position || 'ประธานฝ่ายกิจกรรม'}`;
-    if (targetHoursText) targetHoursText.textContent = staff.targetHours || 200;
 
     if (historyUserSubtitle) {
       historyUserSubtitle.textContent = `ผู้ปฏิบัติงาน: ${cleanName} (${staff.studentId}) - ${staff.major}`;
