@@ -344,30 +344,21 @@ class SmoStaffAPI {
     return { success: false, message: 'ชื่อผู้ใช้งานหรือรหัสผ่านแอดมินไม่ถูกต้อง' };
   }
 
-  createStaffUser(userData) {
+  async createStaffUser(userData) {
     userData.avatar = convertDriveUrlToDirectLink(userData.avatar);
     const list = this.getStaffUsers();
     list.unshift(userData);
     localStorage.setItem(STORAGE_KEYS.STAFF_USERS, JSON.stringify(list));
 
-    const gasUrl = this.getGasUrl();
-    if (gasUrl) {
-      fetch(gasUrl, {
-        method: 'POST',
-        mode: 'cors',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'createStaffUser', data: userData })
-      }).catch(e => console.warn('GAS Save Staff User error:', e));
-    }
-
+    await this.sendGasMutation('createStaffUser', { data: userData }, `studentId=${encodeURIComponent(userData.studentId)}&fullName=${encodeURIComponent(userData.fullName)}&major=${encodeURIComponent(userData.major || '')}&year=${encodeURIComponent(userData.year || '')}&department=${encodeURIComponent(userData.department || '')}&position=${encodeURIComponent(userData.position || '')}`);
     return userData;
   }
 
-  updateStaffUser(studentId, updatedData) {
+  async updateStaffUser(studentId, updatedData) {
     const list = this.getStaffUsers();
     const idx = list.findIndex(s => s.studentId === studentId);
     if (idx !== -1) {
-      updatedData.avatar = convertDriveUrlToDirectLink(updatedData.avatar);
+      if (updatedData.avatar) updatedData.avatar = convertDriveUrlToDirectLink(updatedData.avatar);
       list[idx] = { ...list[idx], ...updatedData };
       localStorage.setItem(STORAGE_KEYS.STAFF_USERS, JSON.stringify(list));
 
@@ -375,49 +366,33 @@ class SmoStaffAPI {
       if (curr && curr.studentId === studentId) {
         this.setCurrentStaff(list[idx]);
       }
+
+      await this.sendGasMutation('createStaffUser', { data: list[idx] }, `studentId=${encodeURIComponent(studentId)}&fullName=${encodeURIComponent(list[idx].fullName)}&major=${encodeURIComponent(list[idx].major || '')}&year=${encodeURIComponent(list[idx].year || '')}&department=${encodeURIComponent(list[idx].department || '')}&position=${encodeURIComponent(list[idx].position || '')}`);
       return { success: true, user: list[idx] };
     }
     return { success: false };
   }
 
-  deleteStaffUser(studentId) {
+  async deleteStaffUser(studentId) {
     let list = this.getStaffUsers();
     list = list.filter(s => s.studentId !== studentId);
     localStorage.setItem(STORAGE_KEYS.STAFF_USERS, JSON.stringify(list));
 
-    const gasUrl = this.getGasUrl();
-    if (gasUrl) {
-      fetch(gasUrl, {
-        method: 'POST',
-        mode: 'cors',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'deleteStaffUser', studentId: studentId })
-      }).catch(e => console.warn('GAS Delete Staff User error:', e));
-    }
-
+    await this.sendGasMutation('deleteStaffUser', { studentId: studentId }, `studentId=${encodeURIComponent(studentId)}`);
     return { success: true };
   }
 
-  createAdminUser(adminData) {
+  async createAdminUser(adminData) {
     adminData.avatar = convertDriveUrlToDirectLink(adminData.avatar);
     const list = this.getAdminUsers();
     list.unshift(adminData);
     localStorage.setItem(STORAGE_KEYS.ADMIN_USERS, JSON.stringify(list));
 
-    const gasUrl = this.getGasUrl();
-    if (gasUrl) {
-      fetch(gasUrl, {
-        method: 'POST',
-        mode: 'cors',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'createAdminUser', data: adminData })
-      }).catch(e => console.warn('GAS Save Admin User error:', e));
-    }
-
+    await this.sendGasMutation('createAdminUser', { data: adminData }, `username=${encodeURIComponent(adminData.username)}&fullName=${encodeURIComponent(adminData.fullName)}&position=${encodeURIComponent(adminData.position || '')}&role=${encodeURIComponent(adminData.role || 'Admin')}`);
     return adminData;
   }
 
-  updateAdminUser(username, updatedData) {
+  async updateAdminUser(username, updatedData) {
     const list = this.getAdminUsers();
     const idx = list.findIndex(a => a.username === username);
     if (idx !== -1) {
@@ -431,26 +406,19 @@ class SmoStaffAPI {
       if (curr && curr.username === username) {
         this.setCurrentAdmin(list[idx]);
       }
+
+      await this.sendGasMutation('createAdminUser', { data: list[idx] }, `username=${encodeURIComponent(username)}&fullName=${encodeURIComponent(list[idx].fullName)}&position=${encodeURIComponent(list[idx].position || '')}&role=${encodeURIComponent(list[idx].role || 'Admin')}`);
       return { success: true, admin: list[idx] };
     }
     return { success: false };
   }
 
-  deleteAdminUser(username) {
+  async deleteAdminUser(username) {
     let list = this.getAdminUsers();
     list = list.filter(a => a.username !== username);
     localStorage.setItem(STORAGE_KEYS.ADMIN_USERS, JSON.stringify(list));
 
-    const gasUrl = this.getGasUrl();
-    if (gasUrl) {
-      fetch(gasUrl, {
-        method: 'POST',
-        mode: 'cors',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'deleteAdminUser', username: username })
-      }).catch(e => console.warn('GAS Delete Admin User error:', e));
-    }
-
+    await this.sendGasMutation('deleteAdminUser', { username: username }, `username=${encodeURIComponent(username)}`);
     return { success: true };
   }
 
@@ -472,32 +440,25 @@ class SmoStaffAPI {
     activities.unshift(newAct);
     localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(activities));
 
-    const gasUrl = this.getGasUrl();
-    if (gasUrl) {
-      fetch(gasUrl, {
-        method: 'POST',
-        mode: 'cors',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'createActivity', data: newAct })
-      }).catch(e => console.warn('GAS Create Activity error:', e));
-    }
-
+    await this.sendGasMutation('createActivity', { data: newAct }, `id=${encodeURIComponent(newAct.id)}&title=${encodeURIComponent(newAct.title)}&location=${encodeURIComponent(newAct.location || '')}&date=${encodeURIComponent(newAct.date || '')}&time=${encodeURIComponent(newAct.time || '')}&maxQuota=${newAct.maxQuota}&hours=${newAct.hours}`);
     return newAct;
   }
 
-  updateActivity(id, updatedData) {
+  async updateActivity(id, updatedData) {
     const activities = JSON.parse(localStorage.getItem(STORAGE_KEYS.ACTIVITIES) || '[]');
     const idx = activities.findIndex(a => a.id === id);
     if (idx !== -1) {
-      updatedData.banner = convertDriveUrlToDirectLink(updatedData.banner);
+      if (updatedData.banner) updatedData.banner = convertDriveUrlToDirectLink(updatedData.banner);
       activities[idx] = { ...activities[idx], ...updatedData };
       localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(activities));
+
+      await this.sendGasMutation('createActivity', { data: activities[idx] }, `id=${encodeURIComponent(id)}&title=${encodeURIComponent(activities[idx].title)}&location=${encodeURIComponent(activities[idx].location || '')}&date=${encodeURIComponent(activities[idx].date || '')}&time=${encodeURIComponent(activities[idx].time || '')}&maxQuota=${activities[idx].maxQuota}&hours=${activities[idx].hours}`);
       return { success: true, activity: activities[idx] };
     }
     return { success: false };
   }
 
-  saveActivitiesOrder(activitiesArray) {
+  async saveActivitiesOrder(activitiesArray) {
     if (Array.isArray(activitiesArray)) {
       localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(activitiesArray));
       return { success: true };
@@ -505,21 +466,12 @@ class SmoStaffAPI {
     return { success: false };
   }
 
-  deleteActivity(id) {
+  async deleteActivity(id) {
     let activities = JSON.parse(localStorage.getItem(STORAGE_KEYS.ACTIVITIES) || '[]');
     activities = activities.filter(a => a.id !== id);
     localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(activities));
 
-    const gasUrl = this.getGasUrl();
-    if (gasUrl) {
-      fetch(gasUrl, {
-        method: 'POST',
-        mode: 'cors',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'deleteActivity', id: id })
-      }).catch(e => console.warn('GAS Delete Activity error:', e));
-    }
-
+    await this.sendGasMutation('deleteActivity', { id: id }, `id=${encodeURIComponent(id)}`);
     return { success: true };
   }
 
@@ -565,17 +517,8 @@ class SmoStaffAPI {
       localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(activities));
     }
 
-    const gasUrl = this.getGasUrl();
-    if (gasUrl) {
-      fetch(gasUrl, {
-        method: 'POST',
-        mode: 'cors',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'registerStaff', data: newRecord })
-      }).catch(e => console.warn('GAS Register Staff error:', e));
-    }
-
-    return { success: true, record: newRecord };
+    await this.sendGasMutation('registerStaff', { data: newRecord }, `regId=${encodeURIComponent(regId)}&staffId=${encodeURIComponent(registrationData.staffId)}&staffName=${encodeURIComponent(registrationData.staffName)}&activityId=${encodeURIComponent(registrationData.activityId)}&activityTitle=${encodeURIComponent(registrationData.activityTitle)}&baseHours=${registrationData.hours || 3}`);
+    return { success: true, regId, record: newRecord };
   }
 
   async sendGasMutation(action, postPayload, queryParamsStr = '') {

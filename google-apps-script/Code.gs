@@ -177,15 +177,15 @@ function doPost(e) {
       const result = unapproveHoursRecord(postData.regId);
       performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
-    } else if (action === 'createActivity') {
+    } else if (action === 'createActivity' || action === 'saveActivity' || action === 'updateActivity') {
       const result = saveActivity(postData.data);
       performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
-    } else if (action === 'createStaffUser') {
+    } else if (action === 'createStaffUser' || action === 'updateStaffUser' || action === 'saveStaffUser') {
       const result = saveStaffUser(postData.data);
       performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
-    } else if (action === 'createAdminUser') {
+    } else if (action === 'createAdminUser' || action === 'updateAdminUser' || action === 'saveAdminUser') {
       const result = saveAdminUser(postData.data);
       performGoogleDriveBackup();
       responseData = { status: 'success', result: result };

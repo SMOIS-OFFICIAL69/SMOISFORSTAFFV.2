@@ -456,6 +456,102 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderMySummaryView();
   });
 
+  // MOBILE HAMBURGER MENU (☰) TOGGLE & DRAWER SYNC
+  const mobileMenuToggleBtn = document.getElementById('mobileMenuToggleBtn');
+  const closeMobileDrawerBtn = document.getElementById('closeMobileDrawerBtn');
+  const mobileNavDrawer = document.getElementById('mobileNavDrawer');
+  const mobileNavBackdrop = document.getElementById('mobileNavBackdrop');
+  const drawerRoleStaffBtn = document.getElementById('drawerRoleStaffBtn');
+  const drawerRoleAdminBtn = document.getElementById('drawerRoleAdminBtn');
+  const drawerUserName = document.getElementById('drawerUserName');
+  const drawerUserSub = document.getElementById('drawerUserSub');
+  const drawerLogoutBtn = document.getElementById('drawerLogoutBtn');
+  const drawerGasBtn = document.getElementById('drawerGasBtn');
+
+  function openMobileDrawer() {
+    if (mobileNavDrawer && mobileNavBackdrop) {
+      // Sync user profile status into drawer
+      const staff = api.getCurrentStaff();
+      const admin = api.getCurrentAdmin();
+      if (currentRole === 'staff' && staff) {
+        if (drawerUserName) drawerUserName.textContent = staff.fullName;
+        if (drawerUserSub) drawerUserSub.textContent = `รหัส: ${staff.studentId}`;
+        if (drawerLogoutBtn) {
+          drawerLogoutBtn.textContent = 'ออกจากระบบ';
+          drawerLogoutBtn.style.background = '#ef4444';
+        }
+      } else if (currentRole === 'admin' && admin) {
+        if (drawerUserName) drawerUserName.textContent = admin.fullName;
+        if (drawerUserSub) drawerUserSub.textContent = `ตำแหน่ง: ${admin.position || 'แอดมิน'}`;
+        if (drawerLogoutBtn) {
+          drawerLogoutBtn.textContent = 'ออกจากระบบ';
+          drawerLogoutBtn.style.background = '#ef4444';
+        }
+      } else {
+        if (drawerUserName) drawerUserName.textContent = 'กรุณาเข้าสู่ระบบ';
+        if (drawerUserSub) drawerUserSub.textContent = 'สำหรับผู้ปฏิบัติงาน/แอดมิน';
+        if (drawerLogoutBtn) {
+          drawerLogoutBtn.textContent = 'เข้าสู่ระบบ';
+          drawerLogoutBtn.style.background = '#2563eb';
+        }
+      }
+
+      // Sync role switcher buttons active state
+      if (drawerRoleStaffBtn && drawerRoleAdminBtn) {
+        if (currentRole === 'staff') {
+          drawerRoleStaffBtn.classList.add('active');
+          drawerRoleAdminBtn.classList.remove('active');
+        } else {
+          drawerRoleAdminBtn.classList.add('active');
+          drawerRoleStaffBtn.classList.remove('active');
+        }
+      }
+
+      mobileNavDrawer.classList.add('active');
+      mobileNavBackdrop.classList.add('active');
+    }
+  }
+
+  function closeMobileDrawer() {
+    if (mobileNavDrawer && mobileNavBackdrop) {
+      mobileNavDrawer.classList.remove('active');
+      mobileNavBackdrop.classList.remove('active');
+    }
+  }
+
+  if (mobileMenuToggleBtn) mobileMenuToggleBtn.addEventListener('click', openMobileDrawer);
+  if (closeMobileDrawerBtn) closeMobileDrawerBtn.addEventListener('click', closeMobileDrawer);
+  if (mobileNavBackdrop) mobileNavBackdrop.addEventListener('click', closeMobileDrawer);
+
+  if (drawerRoleStaffBtn) {
+    drawerRoleStaffBtn.addEventListener('click', () => {
+      if (roleStaffBtn) roleStaffBtn.click();
+      closeMobileDrawer();
+    });
+  }
+
+  if (drawerRoleAdminBtn) {
+    drawerRoleAdminBtn.addEventListener('click', () => {
+      if (roleAdminBtn) roleAdminBtn.click();
+      closeMobileDrawer();
+    });
+  }
+
+  if (drawerLogoutBtn) {
+    drawerLogoutBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      closeMobileDrawer();
+      if (logoutBtn) logoutBtn.click();
+    });
+  }
+
+  if (drawerGasBtn) {
+    drawerGasBtn.addEventListener('click', () => {
+      closeMobileDrawer();
+      if (gasSettingsModal) gasSettingsModal.classList.add('active');
+    });
+  }
+
   // DATA INITIALIZATION & MULTI-USER LIVE AUTO-SYNC (EVERY 10 SECONDS)
   renderStaffHeaderInfo();
   await loadAllData(true);

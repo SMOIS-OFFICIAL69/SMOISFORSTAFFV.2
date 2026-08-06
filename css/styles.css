@@ -1152,17 +1152,77 @@ html, body {
   }
 }
 
+/* Hamburger Menu & Mobile Navigation Drawer */
+.mobile-menu-toggle-btn {
+  display: none;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: var(--text-dark);
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mobile-nav-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(2px);
+  z-index: 9998;
+}
+
+.mobile-nav-backdrop.active {
+  display: block;
+}
+
+.mobile-nav-drawer {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 85%;
+  max-width: 320px;
+  height: 100vh;
+  background: #ffffff;
+  z-index: 9999;
+  box-shadow: -5px 0 25px rgba(0,0,0,0.15);
+  transition: right 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 1.25rem 1rem;
+  box-sizing: border-box;
+}
+
+.mobile-nav-drawer.active {
+  right: 0;
+}
+
 @media (max-width: 768px) {
+  .mobile-menu-toggle-btn {
+    display: flex !important;
+  }
+
+  .app-navbar .role-switcher-container {
+    display: none !important; /* Move role switcher into mobile drawer for ultra-clean header */
+  }
+
+  .app-navbar .user-profile-pill {
+    display: none !important; /* Move user profile into mobile drawer */
+  }
+
   /* Prevent iOS/Android input auto-zoom shift */
   input, select, textarea, .form-control, .form-select, .filter-input {
     font-size: 16px !important;
     max-width: 100% !important;
   }
 
-  /* Navbar Mobile Clean 2-Row Layout */
+  /* Navbar Mobile Clean Single-Row Layout */
   .app-navbar {
     padding: 0.5rem 0.75rem;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     justify-content: space-between;
     align-items: center;
     gap: 0.4rem;
