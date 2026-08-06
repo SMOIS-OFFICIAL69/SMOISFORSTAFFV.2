@@ -452,7 +452,7 @@ class SmoStaffAPI {
       activities[idx] = { ...activities[idx], ...updatedData };
       localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(activities));
 
-      await this.sendGasMutation('createActivity', { data: activities[idx] }, `id=${encodeURIComponent(id)}&title=${encodeURIComponent(activities[idx].title)}&location=${encodeURIComponent(activities[idx].location || '')}&date=${encodeURIComponent(activities[idx].date || '')}&time=${encodeURIComponent(activities[idx].time || '')}&maxQuota=${activities[idx].maxQuota}&hours=${activities[idx].hours}`);
+      await this.sendGasMutation('createActivity', { data: activities[idx] }, `id=${encodeURIComponent(id)}&title=${encodeURIComponent(activities[idx].title)}&location=${encodeURIComponent(activities[idx].location || '')}&date=${encodeURIComponent(activities[idx].date || '')}&time=${encodeURIComponent(activities[idx].time || '')}&maxQuota=${activities[idx].maxQuota}&hours=${activities[idx].hours}&status=${encodeURIComponent(activities[idx].status || 'open')}`);
       return { success: true, activity: activities[idx] };
     }
     return { success: false };

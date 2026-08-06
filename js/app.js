@@ -1248,6 +1248,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div style="display:flex; align-items:center; gap:0.25rem; flex-wrap:wrap;">
               <button class="role-pill-btn move-up-act-btn" data-idx="${idx}" ${isFirst ? 'disabled style="opacity:0.35; cursor:not-allowed; background:#94a3b8; color:white; padding:0.25rem 0.5rem; font-size:0.75rem;"' : 'style="background:#0284c7; color:white; padding:0.25rem 0.5rem; font-size:0.75rem; cursor:pointer;"'} title="เลื่อนลำดับขึ้น"><i class="fa-solid fa-arrow-up"></i></button>
               <button class="role-pill-btn move-down-act-btn" data-idx="${idx}" ${isLast ? 'disabled style="opacity:0.35; cursor:not-allowed; background:#94a3b8; color:white; padding:0.25rem 0.5rem; font-size:0.75rem;"' : 'style="background:#0284c7; color:white; padding:0.25rem 0.5rem; font-size:0.75rem; cursor:pointer;"'} title="เลื่อนลำดับลง"><i class="fa-solid fa-arrow-down"></i></button>
+              ${a.status === 'open' 
+                ? `<button class="role-pill-btn toggle-act-status-btn" data-id="${a.id}" data-target-status="closed" style="background:#dc2626; color:white; padding:0.25rem 0.55rem; font-size:0.75rem; cursor:pointer;" title="คลิกเพื่อปิดรับสมัคร"><i class="fa-solid fa-lock"></i> ปิดรับสมัคร</button>` 
+                : `<button class="role-pill-btn toggle-act-status-btn" data-id="${a.id}" data-target-status="open" style="background:#16a34a; color:white; padding:0.25rem 0.55rem; font-size:0.75rem; cursor:pointer;" title="คลิกเพื่อเปิดรับสมัคร"><i class="fa-solid fa-lock-open"></i> เปิดรับสมัคร</button>`}
               <button class="role-pill-btn add-staff-to-act-btn" data-id="${a.id}" style="background:#10b981; color:white; padding:0.25rem 0.6rem; font-size:0.75rem; cursor:pointer;" title="เพิ่มผู้ปฏิบัติงานเข้ากิจกรรมนี้"><i class="fa-solid fa-user-plus"></i> เพิ่มคน</button>
               <button class="role-pill-btn edit-act-btn" data-id="${a.id}" style="background:#2563eb; color:white; padding:0.25rem 0.6rem; font-size:0.75rem; cursor:pointer;" title="แก้ไขกิจกรรม"><i class="fa-solid fa-pen"></i> แก้ไข</button>
               <button class="role-pill-btn delete-act-btn" data-id="${a.id}" style="background:#ef4444; color:white; padding:0.25rem 0.5rem; font-size:0.75rem; cursor:pointer;" title="ลบกิจกรรม"><i class="fa-solid fa-trash"></i> ลบ</button>
@@ -1255,6 +1258,24 @@ document.addEventListener('DOMContentLoaded', async () => {
           </td>
         </tr>
       `);
+    });
+
+    // 1-Click Quick Toggle Activity Status Listener
+    document.querySelectorAll('.toggle-act-status-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = e.currentTarget.getAttribute('data-id');
+        const newStatus = e.currentTarget.getAttribute('data-target-status');
+        const act = currentActivities.find(a => a.id === id);
+        if (act) {
+          act.status = newStatus;
+          await api.updateActivity(id, { status: newStatus });
+          const label = newStatus === 'open' ? 'เปิดรับสมัคร' : 'ปิดรับสมัคร';
+          showToast(`สลับสถานะกิจกรรม "${act.title}" เป็น "${label}" เรียบร้อยแล้ว`, 'success');
+          renderActivitiesListTable();
+          filterAndRenderActivities();
+          autoDriveBackup('toggle_activity_status');
+        }
+      });
     });
 
     // Add Staff To Activity Listener
@@ -1339,6 +1360,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           document.getElementById('editActLocation').value = act.location;
           document.getElementById('editActQuota').value = act.maxQuota;
           document.getElementById('editActHours').value = act.hours || 3;
+          const statusInput = document.getElementById('editActStatus');
+          if (statusInput) statusInput.value = act.status || 'open';
           document.getElementById('editActBanner').value = act.banner || '';
           editActivityModal.classList.add('active');
         }
@@ -1380,7 +1403,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           time: document.getElementById('editActTime').value.trim(),
           location: document.getElementById('editActLocation').value.trim(),
           maxQuota: parseInt(document.getElementById('editActQuota').value, 10),
-          hours: parseInt(document.getElementById('editActHours').value, 10)
+          hours: parseInt(document.getElementById('editActHours').value, 10),
+          status: document.getElementById('editActStatus').value
         };
 
         if (bannerVal) {

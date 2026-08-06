@@ -908,9 +908,19 @@
             <input type="number" class="form-control" id="editActQuota" min="1" required>
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">จำนวนชั่วโมงสะสม (ชม.)</label>
-          <input type="number" class="form-control" id="editActHours" min="1" required>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">จำนวนชั่วโมงสะสม (ชม.)</label>
+            <input type="number" class="form-control" id="editActHours" min="1" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">สถานะการรับสมัคร <span style="color:red">*</span></label>
+            <select class="form-select" id="editActStatus" required style="font-weight:600;">
+              <option value="open">🟢 เปิดรับสมัคร (Open)</option>
+              <option value="closed">🔴 ปิดรับสมัคร (Closed)</option>
+              <option value="full">🟠 โควตาเต็ม (Full)</option>
+            </select>
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">URL ลิงก์รูปป้ายกิจกรรม (รองรับ Google Drive)</label>
