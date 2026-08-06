@@ -1854,30 +1854,31 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (addStaffToActForm) {
     addStaffToActForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+
+      const studentId = document.getElementById('selectStaffUserForAct').value;
+      if (!studentId) {
+        showToast('กรุณาเลือกผู้ปฏิบัติงานจากรายการ', 'warning');
+        return;
+      }
+
+      const staff = api.getStaffUsers().find(s => s.studentId === studentId);
+      if (!staff) {
+        showToast('ไม่พบข้อมูลผู้ปฏิบัติงานรหัสนี้ในระบบ', 'error');
+        return;
+      }
+
       const submitBtn = addStaffToActForm.querySelector('button[type="submit"]');
       const originalHtml = submitBtn ? submitBtn.innerHTML : '<i class="fa-solid fa-user-plus"></i> ยืนยันเพิ่มคนเข้ากิจกรรม';
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึกเพิ่มรายชื่อลง Google Sheets...';
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึกเพิ่มรายชื่อ...';
       }
 
       try {
         const actId = document.getElementById('adminAddActId').value;
         const actTitle = document.getElementById('adminAddActTitle').value;
         const hours = parseInt(document.getElementById('adminAddActHours').value, 10) || 3;
-        const studentId = document.getElementById('selectStaffUserForAct').value;
         const initialStatus = document.getElementById('adminAddActStatus').value;
-
-        if (!studentId) {
-          showToast('กรุณาเลือกผู้ปฏิบัติงานจากรายการ', 'warning');
-          return;
-        }
-
-        const staff = api.getStaffUsers().find(s => s.studentId === studentId);
-        if (!staff) {
-          showToast('ไม่พบข้อมูลผู้ปฏิบัติงานรหัสนี้ในระบบ', 'error');
-          return;
-        }
 
         const payload = {
           activityId: actId,
@@ -1899,7 +1900,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             await api.approveHours(res.regId);
           }
           showToast(`✅ บันทึกเพิ่มคุณ ${staff.fullName} เข้ากิจกรรมสำเร็จเรียบร้อยแล้ว!`, 'success');
-          await loadAllData();
+          loadAllData();
           renderActivitiesListTable();
           filterAndRenderActivities();
           autoDriveBackup('admin_add_staff_to_act');
@@ -1988,10 +1989,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (adminTotalPendingHrs) adminTotalPendingHrs.textContent = pendingHrsCount;
     if (adminTotalApprovedHrs) adminTotalApprovedHrs.textContent = approvedHrsCount;
 
-    if (currentRegistrations.length === 0) {
-      adminTableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-gray);">ไม่พบรายการผู้ลงทะเบียนรออนุมัติ</td></tr>`;
+    const pendingList = currentRegistrations.filter(r => r.status === 'pending');
+
+    if (pendingList.length === 0) {
+      adminTableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-gray); padding: 2rem;">🎉 ไม่พบรายการผู้ลงทะเบียนรออนุมัติ (อนุมัติหรือดำเนินการเรียบร้อยแล้วทุกรายการ)</td></tr>`;
     } else {
-      currentRegistrations.forEach(r => {
+      pendingList.forEach(r => {
         const isApproved = r.status === 'approved';
         const isRejected = r.status === 'rejected';
 
@@ -2013,7 +2016,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ${isApproved 
                   ? `<button class="role-pill-btn unapprove-hrs-btn" data-id="${r.regId}" style="background:#f59e0b; color:white; padding:0.25rem 0.55rem; font-size:0.75rem;" title="ยกเลิกการอนุมัติ ย้อนกลับเป็นรออนุมัติ"><i class="fa-solid fa-rotate-left"></i> ยกเลิกการอนุมัติ</button>` 
                   : `<button class="role-pill-btn approve-hrs-btn" data-id="${r.regId}" style="background:#16a34a; color:white; padding:0.25rem 0.65rem; font-size:0.75rem;"><i class="fa-solid fa-check"></i> อนุมัติชั่วโมง</button>
-                     <button class="role-pill-btn reject-hrs-btn" data-id="${r.regId}" style="background:#64748b; color:white; padding:0.25rem 0.55rem; font-size:0.75rem;"><i class="fa-solid fa-xmark"></i></button>`}
+                     <button class="role-pill-btn reject-hrs-btn" data-id="${r.regId}" style="background:#64748b; color:white; padding:0.25rem 0.55rem; font-size:0.75rem;" title="ปฏิเสธรายการ"><i class="fa-solid fa-xmark"></i></button>`}
                 <button class="role-pill-btn delete-reg-admin-btn" data-id="${r.regId}" data-act-id="${r.activityId}" style="background:#ef4444; color:white; padding:0.25rem 0.55rem; font-size:0.75rem;" title="ลบรายการลงทะเบียนนี้"><i class="fa-solid fa-trash"></i> ลบ</button>
               </div>
             </td>

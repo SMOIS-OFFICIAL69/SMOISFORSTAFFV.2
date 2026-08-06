@@ -521,21 +521,30 @@ class SmoStaffAPI {
     return { success: true, regId, record: newRecord };
   }
 
-  async sendGasMutation(action, postPayload, queryParamsStr = '') {
+  async sendGasMutation(action, postPayload, queryParamsStr) {
     const gasUrl = this.getGasUrl();
     if (!gasUrl) return;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2500);
 
     try {
       await fetch(gasUrl, {
         method: 'POST',
         mode: 'cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: action, ...postPayload })
+        body: JSON.stringify({ action: action, ...postPayload }),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
     } catch (err) {
-      console.warn(`POST ${action} failed, attempting GET query fallback:`, err);
+      clearTimeout(timeoutId);
+      console.warn(`POST ${action} timed out or failed, attempting fast GET query fallback:`, err);
       try {
-        await fetch(`${gasUrl}?action=${action}&${queryParamsStr}`, { mode: 'no-cors' });
+        const getController = new AbortController();
+        const getTimeoutId = setTimeout(() => getController.abort(), 2500);
+        await fetch(`${gasUrl}?action=${action}&${queryParamsStr}`, { mode: 'no-cors', signal: getController.signal });
+        clearTimeout(getTimeoutId);
       } catch (getErr) {
         console.warn(`GET ${action} fallback error:`, getErr);
       }
