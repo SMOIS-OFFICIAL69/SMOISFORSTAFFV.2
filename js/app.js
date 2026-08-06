@@ -613,10 +613,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // DATA INITIALIZATION & MULTI-USER HIGH-PERFORMANCE CACHE-FIRST SYNC
+  // DATA INITIALIZATION & LIVE DATA SYNC
   renderStaffHeaderInfo();
-  const hasLocalCachedData = api.getActivities().length > 0;
-  await loadAllData(!hasLocalCachedData);
+  await loadAllData(true);
 
   if (!api.getGasUrl()) {
     setTimeout(() => {
