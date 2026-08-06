@@ -458,7 +458,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // DATA INITIALIZATION & MULTI-USER LIVE AUTO-SYNC (EVERY 10 SECONDS)
   renderStaffHeaderInfo();
-  await loadAllData();
+  await loadAllData(true);
 
   if (!api.getGasUrl()) {
     setTimeout(() => {
@@ -472,14 +472,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Silent background auto-sync timer every 10 seconds for multi-user / multi-device live sync
   setInterval(async () => {
-    await loadAllData();
+    await loadAllData(false);
   }, 10000);
 
-  async function loadAllData() {
+  async function loadAllData(showLoadingModal = false) {
+    const dataLoadingModal = document.getElementById('dataLoadingModal');
+    if (showLoadingModal && dataLoadingModal) {
+      dataLoadingModal.classList.add('active');
+    }
+
     try {
       // 1. Instant 0ms UI Render using local cached data
-      currentActivities = await api.getActivities();
-      currentRegistrations = await api.getRegistrations();
+      currentActivities = api.getActivities();
+      currentRegistrations = api.getRegistrations();
       
       renderStaffHeaderInfo();
       updateStaffHoursStats();
@@ -490,15 +495,27 @@ document.addEventListener('DOMContentLoaded', async () => {
       // 2. Fast Non-Blocking Parallel Background Live Refresh
       const synced = await api.syncDataFromGoogleSheets();
       if (synced) {
-        currentActivities = await api.getActivities();
-        currentRegistrations = await api.getRegistrations();
+        currentActivities = api.getActivities();
+        currentRegistrations = api.getRegistrations();
         renderStaffHeaderInfo();
         updateStaffHoursStats();
         filterAndRenderActivities();
         renderMySummaryView();
         if (currentRole === 'admin') renderAdminTables();
+
+        if (showLoadingModal) {
+          showToast('⚡ โหลดและอัปเดตข้อมูลสดจากระบบเรียบร้อยแล้ว', 'success');
+        }
       }
-    } catch (e) { console.error('Load error:', e); }
+    } catch (e) {
+      console.error('Load error:', e);
+    } finally {
+      if (dataLoadingModal) {
+        setTimeout(() => {
+          dataLoadingModal.classList.remove('active');
+        }, 300);
+      }
+    }
   }
 
   function updateStaffHoursStats() {
