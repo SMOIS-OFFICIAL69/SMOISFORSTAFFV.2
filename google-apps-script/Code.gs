@@ -60,16 +60,9 @@ function doGet(e) {
   const action = e && e.parameter ? e.parameter.action : 'getActivities';
   let responseData = { status: 'error', message: 'Invalid Action' };
 
-  // Unified Fast Read Endpoint (Fetches all 5 tables in 1 single network request)
+  // Unified Ultra-Fast Read Endpoint (Batch processes all 5 tables in 1 memory pass)
   if (action === 'getAllData' || !action) {
-    const allData = {
-      activities: getActivitiesData(),
-      registrations: getRegistrationsData(),
-      staffUsers: getStaffUsersData(),
-      adminUsers: getAdminUsersData(),
-      backups: getBackupsData()
-    };
-    return ContentService.createTextOutput(JSON.stringify({ status: 'success', data: allData }))
+    return ContentService.createTextOutput(JSON.stringify({ status: 'success', data: getAllDataFast() }))
       .setMimeType(ContentService.MimeType.JSON);
   }
 
@@ -335,6 +328,123 @@ function getTargetDriveFolder() {
 /**
  * --- DATA READ OPERATIONS ---
  */
+function getAllDataFast() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  
+  const actSheet = ss.getSheetByName(CONFIG.SHEET_ACTIVITIES) || getOrCreateSheet(CONFIG.SHEET_ACTIVITIES, ['ID', 'Title', 'Category', 'Description', 'Date', 'Time', 'Location', 'MaxQuota', 'RegisteredCount', 'Hours', 'Status', 'Banner']);
+  const regSheet = ss.getSheetByName(CONFIG.SHEET_REGISTRATIONS) || getOrCreateSheet(CONFIG.SHEET_REGISTRATIONS, ['RegID', 'Timestamp', 'StaffID', 'StaffName', 'Major', 'Department', 'Position', 'ActivityID', 'ActivityTitle', 'BaseHours', 'EarnedHours', 'Status', 'CheckInTime']);
+  const staffSheet = ss.getSheetByName(CONFIG.SHEET_STAFF) || getOrCreateSheet(CONFIG.SHEET_STAFF, ['StudentID', 'FullName', 'Major', 'Year', 'Department', 'Position', 'TargetHours']);
+  const adminSheet = ss.getSheetByName(CONFIG.SHEET_ADMIN) || getOrCreateSheet(CONFIG.SHEET_ADMIN, ['Username', 'Password', 'FullName', 'Position', 'Role']);
+  const backupSheet = ss.getSheetByName(CONFIG.SHEET_BACKUPS) || getOrCreateSheet(CONFIG.SHEET_BACKUPS, ['BackupID', 'Timestamp', 'FileName', 'FileUrl', 'RecordCount', 'Status']);
+
+  const actRows = actSheet ? actSheet.getDataRange().getValues() : [];
+  const regRows = regSheet ? regSheet.getDataRange().getValues() : [];
+  const staffRows = staffSheet ? staffSheet.getDataRange().getValues() : [];
+  const adminRows = adminSheet ? adminSheet.getDataRange().getValues() : [];
+  const backupRows = backupSheet ? backupSheet.getDataRange().getValues() : [];
+
+  const tz = Session.getScriptTimeZone();
+
+  // 1. Process Registrations & count map
+  const countMap = {};
+  const registrations = [];
+  if (regRows.length > 1) {
+    for (let r = 1; r < regRows.length; r++) {
+      const row = regRows[r];
+      const actId = String(row[7]);
+      countMap[actId] = (countMap[actId] || 0) + 1;
+      registrations.push({
+        regId: String(row[0]),
+        timestamp: row[1] instanceof Date ? Utilities.formatDate(row[1], tz, 'yyyy-MM-dd HH:mm:ss') : String(row[1]),
+        staffId: String(row[2]),
+        staffName: String(row[3]),
+        major: String(row[4]),
+        department: String(row[5]),
+        position: String(row[6]),
+        activityId: String(row[7]),
+        activityTitle: String(row[8]),
+        baseHours: Number(row[9] || 3),
+        earnedHours: Number(row[10] || 0),
+        status: String(row[11]),
+        checkInTime: row[12] ? (row[12] instanceof Date ? Utilities.formatDate(row[12], tz, 'yyyy-MM-dd HH:mm:ss') : String(row[12])) : null
+      });
+    }
+  }
+
+  // 2. Process Activities
+  const activities = [];
+  if (actRows.length > 1) {
+    for (let i = 1; i < actRows.length; i++) {
+      const row = actRows[i];
+      const actId = String(row[0]);
+      activities.push({
+        id: actId,
+        title: String(row[1]),
+        category: String(row[2]),
+        description: String(row[3]),
+        date: row[4] instanceof Date ? Utilities.formatDate(row[4], tz, 'yyyy-MM-dd') : String(row[4]),
+        time: String(row[5]),
+        location: String(row[6]),
+        maxQuota: Number(row[7]),
+        registeredCount: countMap[actId] !== undefined ? countMap[actId] : Number(row[8] || 0),
+        hours: Number(row[9] || 3),
+        status: String(row[10]),
+        banner: String(row[11])
+      });
+    }
+  }
+
+  // 3. Process Staff Users
+  const staffUsers = [];
+  if (staffRows.length > 1) {
+    for (let i = 1; i < staffRows.length; i++) {
+      const row = staffRows[i];
+      staffUsers.push({
+        studentId: String(row[0]),
+        fullName: String(row[1]),
+        major: String(row[2]),
+        year: String(row[3]),
+        department: String(row[4]),
+        position: String(row[5]),
+        targetHours: Number(row[6] || 200)
+      });
+    }
+  }
+
+  // 4. Process Admin Users
+  const adminUsers = [];
+  if (adminRows.length > 1) {
+    for (let i = 1; i < adminRows.length; i++) {
+      const row = adminRows[i];
+      adminUsers.push({
+        username: String(row[0]),
+        password: String(row[1]),
+        fullName: String(row[2]),
+        position: String(row[3]),
+        role: String(row[4] || 'Admin')
+      });
+    }
+  }
+
+  // 5. Process Backups
+  const backups = [];
+  if (backupRows.length > 1) {
+    for (let i = 1; i < backupRows.length; i++) {
+      const row = backupRows[i];
+      backups.push({
+        backupId: String(row[0]),
+        timestamp: row[1] instanceof Date ? Utilities.formatDate(row[1], tz, 'yyyy-MM-dd HH:mm:ss') : String(row[1]),
+        fileName: String(row[2]),
+        fileUrl: String(row[3]),
+        recordCount: Number(row[4]),
+        status: String(row[5])
+      });
+    }
+  }
+
+  return { activities, registrations, staffUsers, adminUsers, backups };
+}
+
 function getActivitiesData() {
   const sheet = getOrCreateSheet(CONFIG.SHEET_ACTIVITIES, ['ID', 'Title', 'Category', 'Description', 'Date', 'Time', 'Location', 'MaxQuota', 'RegisteredCount', 'Hours', 'Status', 'Banner']);
   const rows = sheet.getDataRange().getValues();

@@ -665,7 +665,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (list.length === 0) {
-      activitiesGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-gray); padding: 3rem; background: #fff; border-radius: 12px; border: 1px solid var(--border-light);"><i class="fa-solid fa-folder-open" style="font-size: 2.5rem; margin-bottom: 0.75rem; color: #cbd5e1;"></i><p>ไม่พบรายการกิจกรรมตามเงื่อนไขที่ค้นหา</p></div>`;
+      if (currentActivities.length === 0) {
+        activitiesGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-gray); padding: 3.5rem 1rem; background: #fff; border-radius: 12px; border: 1px solid var(--border-light);"><i class="fa-solid fa-arrows-rotate fa-spin" style="font-size: 2.2rem; margin-bottom: 0.85rem; color: #2563eb;"></i><p style="font-size: 1rem; font-weight: 600; color: var(--text-dark); margin-bottom: 0.35rem;">กำลังเชื่อมต่อและดึงข้อมูลสดจากระบบ...</p><small style="color: var(--text-gray);">กรุณารอสักครู่ ระบบกำลังโหลดรายการกิจกรรมและข้อมูลล่าสุดจาก Google Sheets</small></div>`;
+      } else {
+        activitiesGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-gray); padding: 3rem; background: #fff; border-radius: 12px; border: 1px solid var(--border-light);"><i class="fa-solid fa-folder-open" style="font-size: 2.5rem; margin-bottom: 0.75rem; color: #cbd5e1;"></i><p>ไม่พบรายการกิจกรรมตามเงื่อนไขที่ค้นหา</p></div>`;
+      }
       return;
     }
 

@@ -457,10 +457,6 @@ class SmoStaffAPI {
   // --- ACTIVITIES CRUD ---
   getActivities() {
     const local = JSON.parse(localStorage.getItem(STORAGE_KEYS.ACTIVITIES) || '[]');
-    if (!local || local.length === 0) {
-      localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(SEED_ACTIVITIES));
-      return SEED_ACTIVITIES;
-    }
     return local;
   }
 
