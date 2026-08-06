@@ -330,12 +330,17 @@ function getTargetDriveFolder() {
  */
 function getAllDataFast() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheets = ss.getSheets();
+  const map = {};
+  for (let i = 0; i < sheets.length; i++) {
+    map[sheets[i].getName()] = sheets[i];
+  }
   
-  const actSheet = ss.getSheetByName(CONFIG.SHEET_ACTIVITIES) || getOrCreateSheet(CONFIG.SHEET_ACTIVITIES, ['ID', 'Title', 'Category', 'Description', 'Date', 'Time', 'Location', 'MaxQuota', 'RegisteredCount', 'Hours', 'Status', 'Banner']);
-  const regSheet = ss.getSheetByName(CONFIG.SHEET_REGISTRATIONS) || getOrCreateSheet(CONFIG.SHEET_REGISTRATIONS, ['RegID', 'Timestamp', 'StaffID', 'StaffName', 'Major', 'Department', 'Position', 'ActivityID', 'ActivityTitle', 'BaseHours', 'EarnedHours', 'Status', 'CheckInTime']);
-  const staffSheet = ss.getSheetByName(CONFIG.SHEET_STAFF) || getOrCreateSheet(CONFIG.SHEET_STAFF, ['StudentID', 'FullName', 'Major', 'Year', 'Department', 'Position', 'TargetHours']);
-  const adminSheet = ss.getSheetByName(CONFIG.SHEET_ADMIN) || getOrCreateSheet(CONFIG.SHEET_ADMIN, ['Username', 'Password', 'FullName', 'Position', 'Role']);
-  const backupSheet = ss.getSheetByName(CONFIG.SHEET_BACKUPS) || getOrCreateSheet(CONFIG.SHEET_BACKUPS, ['BackupID', 'Timestamp', 'FileName', 'FileUrl', 'RecordCount', 'Status']);
+  const actSheet = map[CONFIG.SHEET_ACTIVITIES] || getOrCreateSheet(CONFIG.SHEET_ACTIVITIES, ['ID', 'Title', 'Category', 'Description', 'Date', 'Time', 'Location', 'MaxQuota', 'RegisteredCount', 'Hours', 'Status', 'Banner']);
+  const regSheet = map[CONFIG.SHEET_REGISTRATIONS] || getOrCreateSheet(CONFIG.SHEET_REGISTRATIONS, ['RegID', 'Timestamp', 'StaffID', 'StaffName', 'Major', 'Department', 'Position', 'ActivityID', 'ActivityTitle', 'BaseHours', 'EarnedHours', 'Status', 'CheckInTime']);
+  const staffSheet = map[CONFIG.SHEET_STAFF] || getOrCreateSheet(CONFIG.SHEET_STAFF, ['StudentID', 'FullName', 'Major', 'Year', 'Department', 'Position', 'TargetHours', 'Avatar']);
+  const adminSheet = map[CONFIG.SHEET_ADMIN] || getOrCreateSheet(CONFIG.SHEET_ADMIN, ['Username', 'Password', 'FullName', 'Position', 'Role', 'Avatar']);
+  const backupSheet = map[CONFIG.SHEET_BACKUPS] || getOrCreateSheet(CONFIG.SHEET_BACKUPS, ['BackupID', 'Timestamp', 'FileName', 'FileUrl', 'RecordCount', 'Status']);
 
   const actRows = actSheet ? actSheet.getDataRange().getValues() : [];
   const regRows = regSheet ? regSheet.getDataRange().getValues() : [];
