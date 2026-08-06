@@ -957,9 +957,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     showToast('ส่งออกรายงาน CSV สำเร็จเรียบร้อย', 'success');
   });
 
+  // UNIVERSAL DELEGATE CLOSE LISTENER FOR ALL MODAL CLOSE BUTTONS (.close-btn)
+  document.addEventListener('click', (e) => {
+    const closeBtn = e.target.closest('.close-btn');
+    if (closeBtn) {
+      e.preventDefault();
+      const backdrop = closeBtn.closest('.modal-backdrop');
+      if (backdrop) {
+        backdrop.classList.remove('active');
+      }
+    }
+  });
+
   // MODALS CLOSE LISTENERS
-  if (closeStaffLoginModalBtn) closeStaffLoginModalBtn.addEventListener('click', () => staffLoginModal.classList.remove('active'));
-  if (closeAdminLoginModalBtn) closeAdminLoginModalBtn.addEventListener('click', () => adminLoginModal.classList.remove('active'));
+  if (typeof closeStaffLoginModalBtn !== 'undefined' && closeStaffLoginModalBtn) closeStaffLoginModalBtn.addEventListener('click', () => staffLoginModal.classList.remove('active'));
+  if (typeof closeAdminLoginModalBtn !== 'undefined' && closeAdminLoginModalBtn) closeAdminLoginModalBtn.addEventListener('click', () => adminLoginModal.classList.remove('active'));
   if (closeAddActModalBtn) closeAddActModalBtn.addEventListener('click', () => addActivityModal.classList.remove('active'));
   if (closeEditActModalBtn) closeEditActModalBtn.addEventListener('click', () => editActivityModal.classList.remove('active'));
   if (closeAddStaffModalBtn) closeAddStaffModalBtn.addEventListener('click', () => addStaffModal.classList.remove('active'));
