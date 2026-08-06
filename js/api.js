@@ -599,6 +599,30 @@ class SmoStaffAPI {
     return { success: false };
   }
 
+  async unapproveHours(regId) {
+    const registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS) || '[]');
+    const rec = registrations.find(r => r.regId === regId);
+    if (rec) {
+      rec.status = 'pending';
+      rec.earnedHours = 0;
+      rec.checkInTime = null;
+      localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(registrations));
+
+      const gasUrl = this.getGasUrl();
+      if (gasUrl) {
+        fetch(gasUrl, {
+          method: 'POST',
+          mode: 'cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'unapproveHours', regId: regId })
+        }).catch(e => console.warn('GAS Unapprove Hours error:', e));
+      }
+
+      return { success: true, record: rec };
+    }
+    return { success: false };
+  }
+
   async rejectHours(regId) {
     const registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS) || '[]');
     const rec = registrations.find(r => r.regId === regId);

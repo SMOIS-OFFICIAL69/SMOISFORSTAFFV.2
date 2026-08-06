@@ -664,13 +664,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const cardHtml = `
         <div class="activity-card">
-          <div class="card-banner" style="background-image: url('${directBannerUrl}')">
+          <div class="card-banner act-click-trigger" data-act-id="${act.id}" style="background-image: url('${directBannerUrl}'); cursor: pointer;" title="คลิกเพื่อดูรายละเอียดและป้ายภาพกิจกรรมแบบเต็ม">
             <div class="card-banner-overlay"></div>
             <div class="card-badge ${badgeClass}">${badgeText}</div>
             <div class="hours-credit-badge"><i class="fa-solid fa-clock"></i> +${act.hours || 3} ชม.สะสม</div>
           </div>
           <div class="card-body">
-            <h3 class="card-title">${act.title}</h3>
+            <h3 class="card-title act-click-trigger" data-act-id="${act.id}" style="cursor: pointer;" title="คลิกเพื่อดูรายละเอียดและรูปภาพแบบเต็ม">${act.title}</h3>
             <p style="font-size: 0.85rem; color: var(--text-gray); line-height: 1.4;">${act.description}</p>
             <div class="card-info">
               <div class="info-item"><i class="fa-regular fa-calendar-check"></i> วันที่: ${act.date}</div>
@@ -700,6 +700,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
       `;
       activitiesGrid.insertAdjacentHTML('beforeend', cardHtml);
+    });
+
+    // Attach Click Event to Card Image Banner & Title for Full Detail Modal
+    document.querySelectorAll('.act-click-trigger').forEach(el => {
+      el.addEventListener('click', (e) => {
+        const actId = e.currentTarget.getAttribute('data-act-id');
+        openActivityDetailModal(actId);
+      });
     });
 
     // Attach Cancel Registration Event on Card
@@ -756,9 +764,115 @@ document.addEventListener('DOMContentLoaded', async () => {
         registrationModal.classList.add('active');
       });
     });
+  // --- ACTIVITY DETAIL & POSTER IMAGE PREVIEW MODAL ---
+  const activityDetailModal = document.getElementById('activityDetailModal');
+  const closeDetailActModalBtn = document.getElementById('closeDetailActModalBtn');
+  if (closeDetailActModalBtn && activityDetailModal) {
+    closeDetailActModalBtn.addEventListener('click', () => {
+      activityDetailModal.classList.remove('active');
+    });
   }
 
-  // --- ALL 5 OVERVIEW CARDS CLICK LISTENERS ---
+  function openActivityDetailModal(actId) {
+    const act = currentActivities.find(a => a.id === actId);
+    if (!act || !activityDetailModal) return;
+
+    const directBannerUrl = convertDriveUrlToDirectLink(act.banner) || 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=600&q=80';
+    const isFull = act.registeredCount >= act.maxQuota || act.status === 'full';
+    const isClosed = act.status === 'closed';
+    const staff = api.getCurrentStaff();
+    const isRegistered = staff ? currentRegistrations.some(r => r.staffId === staff.studentId && r.activityId === act.id) : false;
+
+    const bannerEl = document.getElementById('detailActBanner');
+    if (bannerEl) bannerEl.src = directBannerUrl;
+    
+    const titleEl = document.getElementById('detailActTitle');
+    if (titleEl) titleEl.textContent = act.title;
+
+    const descEl = document.getElementById('detailActDesc');
+    if (descEl) descEl.textContent = act.description || 'ไม่มีรายละเอียดเพิ่มเติม';
+
+    const dateEl = document.getElementById('detailActDate');
+    if (dateEl) dateEl.textContent = act.date;
+
+    const timeEl = document.getElementById('detailActTime');
+    if (timeEl) timeEl.textContent = act.time;
+
+    const locEl = document.getElementById('detailActLocation');
+    if (locEl) locEl.textContent = act.location;
+
+    const quotaEl = document.getElementById('detailActQuotaText');
+    if (quotaEl) quotaEl.textContent = `${act.registeredCount} / ${act.maxQuota} คน`;
+
+    const hoursBadge = document.getElementById('detailActHoursBadge');
+    if (hoursBadge) hoursBadge.innerHTML = `<i class="fa-solid fa-clock"></i> +${act.hours || 3} ชม.สะสม`;
+
+    const statusBadge = document.getElementById('detailActStatusBadge');
+    if (statusBadge) {
+      if (isClosed) { statusBadge.className = 'card-badge badge-closed'; statusBadge.textContent = 'ปิดรับแล้ว'; }
+      else if (isFull) { statusBadge.className = 'card-badge badge-full'; statusBadge.textContent = 'เต็มจำนวน'; }
+      else { statusBadge.className = 'card-badge badge-open'; statusBadge.textContent = 'เปิดรับลงทะเบียน'; }
+    }
+
+    const footerBox = document.getElementById('detailActFooterBox');
+    if (footerBox) {
+      if (isRegistered) {
+        footerBox.innerHTML = `
+          <button class="btn-register cancel-reg-btn-modal" data-act-id="${act.id}" style="background: #ef4444; color: white; padding: 0.6rem 1.5rem; width: auto; display: inline-flex;">
+            <i class="fa-solid fa-user-xmark"></i> ยกเลิกการลงทะเบียน
+          </button>
+        `;
+      } else {
+        footerBox.innerHTML = `
+          <button class="btn-register open-reg-from-detail-btn" data-id="${act.id}" data-title="${act.title}" data-hours="${act.hours || 3}" ${isFull || isClosed ? 'disabled' : ''} style="padding: 0.6rem 1.5rem; width: auto; display: inline-flex;">
+            ${isClosed ? 'ปิดรับลงทะเบียน' : isFull ? 'โควตาเต็มแล้ว' : '<i class="fa-solid fa-pen-to-square"></i> ลงทะเบียนเข้าร่วมกิจกรรมนี้'}
+          </button>
+        `;
+      }
+
+      // Wire Modal Footer Registration Trigger
+      const openRegBtn = footerBox.querySelector('.open-reg-from-detail-btn');
+      if (openRegBtn) {
+        openRegBtn.addEventListener('click', () => {
+          activityDetailModal.classList.remove('active');
+          if (!staff) {
+            staffLoginModal.classList.add('active');
+            return;
+          }
+          modalActId.value = act.id;
+          modalActTitle.value = act.title;
+          modalActTitle.setAttribute('data-hours', act.hours || 3);
+          staffIdInput.value = staff.studentId;
+          staffNameInput.value = staff.fullName;
+          deptInput.value = `${staff.major} (${staff.department})`;
+          const phoneInputEl = document.getElementById('phoneInput');
+          if (phoneInputEl) phoneInputEl.value = staff.phone || '';
+          registrationModal.classList.add('active');
+        });
+      }
+
+      // Wire Modal Footer Cancellation Trigger
+      const cancelRegBtnModal = footerBox.querySelector('.cancel-reg-btn-modal');
+      if (cancelRegBtnModal) {
+        cancelRegBtnModal.addEventListener('click', async () => {
+          const reg = currentRegistrations.find(r => r.staffId === staff.studentId && r.activityId === act.id);
+          if (!reg) return;
+          if (confirm(`คุณต้องการยกเลิกการลงทะเบียนกิจกรรม "${act.title}" ใช่หรือไม่?`)) {
+            activityDetailModal.classList.remove('active');
+            api.deleteRegistration(reg.regId);
+            act.registeredCount = Math.max(0, (act.registeredCount || 1) - 1);
+            if (act.status === 'full' && act.registeredCount < act.maxQuota) act.status = 'open';
+            api.updateActivity(act.id, act);
+            showToast('ยกเลิกการลงทะเบียนเรียบร้อยแล้ว', 'success');
+            await loadAllData();
+            autoDriveBackup('cancel_registration');
+          }
+        });
+      }
+    }
+
+    activityDetailModal.classList.add('active');
+  }
   if (clickActivitiesCard) {
     clickActivitiesCard.addEventListener('click', () => {
       renderActivitiesListTable();
@@ -1108,7 +1222,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const approvedList = currentRegistrations.filter(r => r.status === 'approved');
 
     if (approvedList.length === 0) {
-      approvedHoursTableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-gray);">ไม่พบประวัติชั่วโมงที่ได้รับการอนุมัติ</td></tr>`;
+      approvedHoursTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-gray);">ไม่พบประวัติชั่วโมงที่ได้รับการอนุมัติ</td></tr>`;
       return;
     }
 
@@ -1123,8 +1237,25 @@ document.addEventListener('DOMContentLoaded', async () => {
           <td>${r.activityTitle}</td>
           <td><strong style="color:var(--success-green);">+${r.earnedHours || r.baseHours || 3} ชม.</strong></td>
           <td><small style="color:var(--text-gray);"><i class="fa-solid fa-clock-check"></i> ${r.checkInTime || r.timestamp}</small></td>
+          <td>
+            <button class="role-pill-btn unapprove-modal-btn" data-id="${r.regId}" style="background:#f59e0b; color:white; padding:0.25rem 0.6rem; font-size:0.75rem;"><i class="fa-solid fa-rotate-left"></i> ยกเลิกการอนุมัติ</button>
+          </td>
         </tr>
       `);
+    });
+
+    document.querySelectorAll('.unapprove-modal-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = e.currentTarget.getAttribute('data-id');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+        await api.unapproveHours(id);
+        showToast(`ยกเลิกการอนุมัติสำหรับรหัส ${id} เรียบร้อยแล้ว (ย้อนกลับเป็นรออนุมัติ)`, 'info');
+        await loadAllData();
+        renderApprovedHoursTable();
+        renderAdminTables();
+        autoDriveBackup('unapprove_hours');
+      });
     });
   }
 
@@ -1382,10 +1513,13 @@ document.addEventListener('DOMContentLoaded', async () => {
               ${isApproved ? '<span class="status-tag-checked"><i class="fa-solid fa-circle-check"></i> อนุมัติชั่วโมงแล้ว</span>' : isRejected ? '<span style="background:#fee2e2; color:#991b1b; padding:0.2rem 0.6rem; border-radius:4px; font-size:0.75rem; font-weight:600;">ปฏิเสธ</span>' : '<span class="status-tag-pending"><i class="fa-solid fa-clock"></i> รอเจ้าหน้าที่อนุมัติ</span>'}
             </td>
             <td>
-              ${isApproved 
-                ? `<small style="color:var(--text-gray);"><i class="fa-solid fa-check"></i> เรียบร้อย (${r.checkInTime || ''})</small>` 
-                : `<button class="role-pill-btn approve-hrs-btn" data-id="${r.regId}" style="background:#16a34a; color:white; padding:0.3rem 0.85rem; font-size:0.75rem; margin-right:0.3rem;"><i class="fa-solid fa-check"></i> อนุมัติชั่วโมง</button>
-                   <button class="role-pill-btn reject-hrs-btn" data-id="${r.regId}" style="background:#ef4444; color:white; padding:0.3rem 0.6rem; font-size:0.75rem;"><i class="fa-solid fa-xmark"></i></button>`}
+              <div style="display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap;">
+                ${isApproved 
+                  ? `<button class="role-pill-btn unapprove-hrs-btn" data-id="${r.regId}" style="background:#f59e0b; color:white; padding:0.25rem 0.55rem; font-size:0.75rem;" title="ยกเลิกการอนุมัติ ย้อนกลับเป็นรออนุมัติ"><i class="fa-solid fa-rotate-left"></i> ยกเลิกการอนุมัติ</button>` 
+                  : `<button class="role-pill-btn approve-hrs-btn" data-id="${r.regId}" style="background:#16a34a; color:white; padding:0.25rem 0.65rem; font-size:0.75rem;"><i class="fa-solid fa-check"></i> อนุมัติชั่วโมง</button>
+                     <button class="role-pill-btn reject-hrs-btn" data-id="${r.regId}" style="background:#64748b; color:white; padding:0.25rem 0.55rem; font-size:0.75rem;"><i class="fa-solid fa-xmark"></i></button>`}
+                <button class="role-pill-btn delete-reg-admin-btn" data-id="${r.regId}" data-act-id="${r.activityId}" style="background:#ef4444; color:white; padding:0.25rem 0.55rem; font-size:0.75rem;" title="ลบรายการลงทะเบียนนี้"><i class="fa-solid fa-trash"></i> ลบ</button>
+              </div>
             </td>
           </tr>
         `;
@@ -1402,6 +1536,41 @@ document.addEventListener('DOMContentLoaded', async () => {
           await loadAllData();
           renderAdminTables();
           autoDriveBackup('hours_approval');
+        });
+      });
+
+      document.querySelectorAll('.unapprove-hrs-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const id = e.currentTarget.getAttribute('data-id');
+          btn.disabled = true;
+          btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+          await api.unapproveHours(id);
+          showToast(`ยกเลิกการอนุมัติสำหรับรหัส ${id} เรียบร้อยแล้ว (ย้อนกลับเป็นรออนุมัติ)`, 'info');
+          await loadAllData();
+          renderAdminTables();
+          autoDriveBackup('unapprove_hours');
+        });
+      });
+
+      document.querySelectorAll('.delete-reg-admin-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const id = e.currentTarget.getAttribute('data-id');
+          const actId = e.currentTarget.getAttribute('data-act-id');
+          if (confirm(`คุณต้องการลบรายการลงทะเบียนรหัส ${id} ใช่หรือไม่?\n(ข้อมูลจะถูกลบออกจากตาราง Google Sheets อัตโนมัติ)`)) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            api.deleteRegistration(id);
+            const act = currentActivities.find(a => a.id === actId);
+            if (act) {
+              act.registeredCount = Math.max(0, (act.registeredCount || 1) - 1);
+              if (act.status === 'full' && act.registeredCount < act.maxQuota) act.status = 'open';
+              api.updateActivity(act.id, act);
+            }
+            showToast(`ลบรายการลงทะเบียน ${id} สำเร็จแล้ว`, 'success');
+            await loadAllData();
+            renderAdminTables();
+            autoDriveBackup('delete_registration');
+          }
         });
       });
 

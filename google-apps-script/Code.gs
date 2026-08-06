@@ -79,7 +79,7 @@ function doGet(e) {
 }
 
 /**
- * --- POST API ENDPOINTS (MUTATIONS & DELETIONS) ---
+ * --- POST API ENDPOINTS (MUTATIONS, APPROVALS & DELETIONS) ---
  */
 function doPost(e) {
   let responseData = { status: 'error', message: 'Invalid Request' };
@@ -94,6 +94,10 @@ function doPost(e) {
       responseData = { status: 'success', result: result };
     } else if (action === 'approveHours') {
       const result = approveHoursRecord(postData.regId, postData.checkInTime);
+      performGoogleDriveBackup();
+      responseData = { status: 'success', result: result };
+    } else if (action === 'unapproveHours') {
+      const result = unapproveHoursRecord(postData.regId);
       performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'createActivity') {
@@ -334,7 +338,7 @@ function getBackupsData() {
 }
 
 /**
- * --- DATA SAVE OPERATIONS ---
+ * --- DATA SAVE & APPROVAL OPERATIONS ---
  */
 function saveRegistration(data) {
   const sheet = getOrCreateSheet(CONFIG.SHEET_REGISTRATIONS, ['RegID', 'Timestamp', 'StaffID', 'StaffName', 'Major', 'Department', 'Position', 'ActivityID', 'ActivityTitle', 'BaseHours', 'EarnedHours', 'Status', 'CheckInTime']);
@@ -351,6 +355,20 @@ function approveHoursRecord(regId, checkInTime) {
       sheet.getRange(i + 1, 11).setValue(baseHrs);
       sheet.getRange(i + 1, 12).setValue('approved');
       sheet.getRange(i + 1, 13).setValue(checkInTime);
+      return true;
+    }
+  }
+  return false;
+}
+
+function unapproveHoursRecord(regId) {
+  const sheet = getOrCreateSheet(CONFIG.SHEET_REGISTRATIONS, ['RegID', 'Timestamp', 'StaffID', 'StaffName', 'Major', 'Department', 'Position', 'ActivityID', 'ActivityTitle', 'BaseHours', 'EarnedHours', 'Status', 'CheckInTime']);
+  const rows = sheet.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]) === String(regId)) {
+      sheet.getRange(i + 1, 11).setValue(0);          // EarnedHours = 0
+      sheet.getRange(i + 1, 12).setValue('pending');  // Status = pending
+      sheet.getRange(i + 1, 13).setValue('');         // CheckInTime = empty
       return true;
     }
   }
