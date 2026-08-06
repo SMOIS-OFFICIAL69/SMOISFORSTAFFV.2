@@ -485,6 +485,14 @@ class SmoStaffAPI {
     return { success: false };
   }
 
+  saveActivitiesOrder(activitiesArray) {
+    if (Array.isArray(activitiesArray)) {
+      localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(activitiesArray));
+      return { success: true };
+    }
+    return { success: false };
+  }
+
   deleteActivity(id) {
     let activities = JSON.parse(localStorage.getItem(STORAGE_KEYS.ACTIVITIES) || '[]');
     activities = activities.filter(a => a.id !== id);

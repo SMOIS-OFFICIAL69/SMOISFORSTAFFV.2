@@ -1043,14 +1043,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // RENDER TABLE: ACTIVITIES LIST (WITH EDIT & DELETE)
+  // RENDER TABLE: ACTIVITIES LIST (WITH REORDER, EDIT & DELETE)
   function renderActivitiesListTable() {
     if (!activitiesListTableBody) return;
     activitiesListTableBody.innerHTML = '';
 
-    currentActivities.forEach(a => {
+    currentActivities.forEach((a, idx) => {
       const realCount = currentRegistrations.filter(r => r.activityId === a.id).length;
       a.registeredCount = realCount;
+
+      const isFirst = idx === 0;
+      const isLast = idx === currentActivities.length - 1;
+
       activitiesListTableBody.insertAdjacentHTML('beforeend', `
         <tr>
           <td><strong style="font-family:'Space Grotesk', monospace;">${a.id}</strong></td>
@@ -1063,11 +1067,49 @@ document.addEventListener('DOMContentLoaded', async () => {
           <td><strong>${realCount}</strong> / ${a.maxQuota} คน</td>
           <td><strong>+${a.hours || 3} ชม.</strong></td>
           <td>
-            <button class="role-pill-btn edit-act-btn" data-id="${a.id}" style="background:#2563eb; color:white; padding:0.25rem 0.6rem; font-size:0.75rem; margin-right:0.25rem;"><i class="fa-solid fa-pen"></i> แก้ไข</button>
-            <button class="role-pill-btn delete-act-btn" data-id="${a.id}" style="background:#ef4444; color:white; padding:0.25rem 0.5rem; font-size:0.75rem;"><i class="fa-solid fa-trash"></i> ลบ</button>
+            <div style="display:flex; align-items:center; gap:0.25rem;">
+              <button class="role-pill-btn move-up-act-btn" data-idx="${idx}" ${isFirst ? 'disabled style="opacity:0.35; cursor:not-allowed; background:#94a3b8; color:white; padding:0.25rem 0.5rem; font-size:0.75rem;"' : 'style="background:#0284c7; color:white; padding:0.25rem 0.5rem; font-size:0.75rem; cursor:pointer;"'} title="เลื่อนลำดับขึ้น"><i class="fa-solid fa-arrow-up"></i></button>
+              <button class="role-pill-btn move-down-act-btn" data-idx="${idx}" ${isLast ? 'disabled style="opacity:0.35; cursor:not-allowed; background:#94a3b8; color:white; padding:0.25rem 0.5rem; font-size:0.75rem;"' : 'style="background:#0284c7; color:white; padding:0.25rem 0.5rem; font-size:0.75rem; cursor:pointer;"'} title="เลื่อนลำดับลง"><i class="fa-solid fa-arrow-down"></i></button>
+              <button class="role-pill-btn edit-act-btn" data-id="${a.id}" style="background:#2563eb; color:white; padding:0.25rem 0.6rem; font-size:0.75rem;" title="แก้ไขกิจกรรม"><i class="fa-solid fa-pen"></i> แก้ไข</button>
+              <button class="role-pill-btn delete-act-btn" data-id="${a.id}" style="background:#ef4444; color:white; padding:0.25rem 0.5rem; font-size:0.75rem;" title="ลบกิจกรรม"><i class="fa-solid fa-trash"></i> ลบ</button>
+            </div>
           </td>
         </tr>
       `);
+    });
+
+    // Move Up Listener
+    document.querySelectorAll('.move-up-act-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const idx = parseInt(e.currentTarget.getAttribute('data-idx'), 10);
+        if (idx > 0) {
+          const temp = currentActivities[idx];
+          currentActivities[idx] = currentActivities[idx - 1];
+          currentActivities[idx - 1] = temp;
+
+          api.saveActivitiesOrder(currentActivities);
+          renderActivitiesListTable();
+          filterAndRenderActivities();
+          showToast('ปรับเลื่อนลำดับกิจกรรมขึ้นเรียบร้อยแล้ว', 'success');
+        }
+      });
+    });
+
+    // Move Down Listener
+    document.querySelectorAll('.move-down-act-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const idx = parseInt(e.currentTarget.getAttribute('data-idx'), 10);
+        if (idx < currentActivities.length - 1) {
+          const temp = currentActivities[idx];
+          currentActivities[idx] = currentActivities[idx + 1];
+          currentActivities[idx + 1] = temp;
+
+          api.saveActivitiesOrder(currentActivities);
+          renderActivitiesListTable();
+          filterAndRenderActivities();
+          showToast('ปรับเลื่อนลำดับกิจกรรมลงเรียบร้อยแล้ว', 'success');
+        }
+      });
     });
 
     document.querySelectorAll('.edit-act-btn').forEach(btn => {
