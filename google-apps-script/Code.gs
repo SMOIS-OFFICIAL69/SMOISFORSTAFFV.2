@@ -637,11 +637,12 @@ function saveActivity(data) {
       sheet.getRange(i + 1, 7).setValue(data.location);
       sheet.getRange(i + 1, 8).setValue(data.maxQuota);
       sheet.getRange(i + 1, 10).setValue(data.hours || 3);
+      if (data.status) sheet.getRange(i + 1, 11).setValue(data.status);
       if (data.banner) sheet.getRange(i + 1, 12).setValue(data.banner);
       return true;
     }
   }
-  sheet.appendRow([data.id, data.title, data.category || 'กิจกรรม', data.description, data.date, data.time, data.location, data.maxQuota, 0, data.hours || 3, 'open', data.banner]);
+  sheet.appendRow([data.id, data.title, data.category || 'กิจกรรม', data.description, data.date, data.time, data.location, data.maxQuota, 0, data.hours || 3, data.status || 'open', data.banner]);
   return true;
 }
 

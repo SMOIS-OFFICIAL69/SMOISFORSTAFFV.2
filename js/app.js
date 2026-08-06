@@ -865,7 +865,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       let badgeClass = 'badge-open';
       let badgeText = 'เปิดรับลงทะเบียน';
-      if (isClosed) { badgeClass = 'badge-closed'; badgeText = 'ปิดรับแล้ว'; }
+      if (isClosed) { badgeClass = 'badge-closed'; badgeText = '🔴 ปิดรับสมัครแล้ว'; }
       else if (isFull) { badgeClass = 'badge-full'; badgeText = 'เต็มจำนวน'; }
 
       const directBannerUrl = convertDriveUrlToDirectLink(act.banner) || 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=600&q=80';
@@ -900,8 +900,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 data-id="${act.id}" 
                 data-title="${act.title}"
                 data-hours="${act.hours || 3}"
-                ${isFull || isClosed ? 'disabled' : ''}>
-                ${isClosed ? 'ปิดรับลงทะเบียน' : isFull ? 'โควตาเต็มแล้ว' : '<i class="fa-solid fa-pen-to-square"></i> ลงทะเบียนเข้าร่วม'}
+                ${isFull || isClosed ? 'disabled style="background: #64748b; cursor: not-allowed; opacity: 0.8;"' : ''}>
+                ${isClosed ? '<i class="fa-solid fa-lock"></i> ปิดรับสมัครแล้ว' : isFull ? 'โควตาเต็มแล้ว' : '<i class="fa-solid fa-pen-to-square"></i> ลงทะเบียนเข้าร่วม'}
               </button>
             `}
           </div>
@@ -1019,7 +1019,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const statusBadge = document.getElementById('detailActStatusBadge');
     if (statusBadge) {
-      if (isClosed) { statusBadge.className = 'card-badge badge-closed'; statusBadge.textContent = 'ปิดรับแล้ว'; }
+      if (isClosed) { statusBadge.className = 'card-badge badge-closed'; statusBadge.textContent = '🔴 ปิดรับสมัครแล้ว'; }
       else if (isFull) { statusBadge.className = 'card-badge badge-full'; statusBadge.textContent = 'เต็มจำนวน'; }
       else { statusBadge.className = 'card-badge badge-open'; statusBadge.textContent = 'เปิดรับลงทะเบียน'; }
     }
@@ -1034,8 +1034,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
       } else {
         footerBox.innerHTML = `
-          <button class="btn-register open-reg-from-detail-btn" data-id="${act.id}" data-title="${act.title}" data-hours="${act.hours || 3}" ${isFull || isClosed ? 'disabled' : ''} style="padding: 0.6rem 1.5rem; width: auto; display: inline-flex;">
-            ${isClosed ? 'ปิดรับลงทะเบียน' : isFull ? 'โควตาเต็มแล้ว' : '<i class="fa-solid fa-pen-to-square"></i> ลงทะเบียนเข้าร่วมกิจกรรมนี้'}
+          <button class="btn-register open-reg-from-detail-btn" data-id="${act.id}" data-title="${act.title}" data-hours="${act.hours || 3}" ${isFull || isClosed ? 'disabled style="background: #64748b; cursor: not-allowed; opacity: 0.8;"' : ''} style="padding: 0.6rem 1.5rem; width: auto; display: inline-flex;">
+            ${isClosed ? '<i class="fa-solid fa-lock"></i> ปิดรับสมัครแล้ว' : isFull ? 'โควตาเต็มแล้ว' : '<i class="fa-solid fa-pen-to-square"></i> ลงทะเบียนเข้าร่วมกิจกรรมนี้'}
           </button>
         `;
       }
