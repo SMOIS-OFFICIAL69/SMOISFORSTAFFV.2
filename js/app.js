@@ -456,9 +456,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderMySummaryView();
   });
 
-  // DATA INITIALIZATION
+  // DATA INITIALIZATION & MULTI-USER LIVE AUTO-SYNC (EVERY 10 SECONDS)
   renderStaffHeaderInfo();
   await loadAllData();
+
+  const manualSyncBtn = document.getElementById('manualSyncBtn');
+  if (manualSyncBtn) {
+    manualSyncBtn.addEventListener('click', async () => {
+      const icon = document.getElementById('syncSpinIcon');
+      if (icon) icon.classList.add('fa-spin');
+      await loadAllData();
+      showToast('🔄 ดึงและอัปเดตข้อมูลล่าสุดจากฐานระบบเรียบร้อยแล้ว', 'success');
+      setTimeout(() => { if (icon) icon.classList.remove('fa-spin'); }, 800);
+    });
+  }
+
+  // Auto-Sync background timer every 10 seconds for multi-user / multi-device live sync
+  setInterval(async () => {
+    await loadAllData();
+  }, 10000);
 
   async function loadAllData() {
     try {
@@ -651,6 +667,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const staff = api.getCurrentStaff();
 
     list.forEach(act => {
+      const realRegCount = currentRegistrations.filter(r => r.activityId === act.id).length;
+      act.registeredCount = realRegCount;
       const isFull = act.registeredCount >= act.maxQuota || act.status === 'full';
       const isClosed = act.status === 'closed';
       const isRegistered = staff ? currentRegistrations.some(r => r.staffId === staff.studentId && r.activityId === act.id) : false;
@@ -1007,6 +1025,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     activitiesListTableBody.innerHTML = '';
 
     currentActivities.forEach(a => {
+      const realCount = currentRegistrations.filter(r => r.activityId === a.id).length;
+      a.registeredCount = realCount;
       activitiesListTableBody.insertAdjacentHTML('beforeend', `
         <tr>
           <td><strong style="font-family:'Space Grotesk', monospace;">${a.id}</strong></td>
@@ -1016,7 +1036,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           </td>
           <td>${a.date} <small style="color:var(--text-gray);">(${a.time})</small></td>
           <td>${a.location}</td>
-          <td>${a.registeredCount} / ${a.maxQuota} คน</td>
+          <td><strong>${realCount}</strong> / ${a.maxQuota} คน</td>
           <td><strong>+${a.hours || 3} ชม.</strong></td>
           <td>
             <button class="role-pill-btn edit-act-btn" data-id="${a.id}" style="background:#2563eb; color:white; padding:0.25rem 0.6rem; font-size:0.75rem; margin-right:0.25rem;"><i class="fa-solid fa-pen"></i> แก้ไข</button>

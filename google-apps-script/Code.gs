@@ -295,20 +295,35 @@ function getActivitiesData() {
   const rows = sheet.getDataRange().getValues();
   if (rows.length <= 1) return [];
 
-  return rows.slice(1).map(row => ({
-    id: String(row[0]),
-    title: String(row[1]),
-    category: String(row[2]),
-    description: String(row[3]),
-    date: row[4] instanceof Date ? Utilities.formatDate(row[4], Session.getScriptTimeZone(), 'yyyy-MM-dd') : String(row[4]),
-    time: String(row[5]),
-    location: String(row[6]),
-    maxQuota: Number(row[7]),
-    registeredCount: Number(row[8]),
-    hours: Number(row[9] || 3),
-    status: String(row[10]),
-    banner: String(row[11])
-  }));
+  // Calculate live registration counts from Registrations sheet
+  const regSheet = getOrCreateSheet(CONFIG.SHEET_REGISTRATIONS, ['RegID', 'Timestamp', 'StaffID', 'StaffName', 'Major', 'Department', 'Position', 'ActivityID', 'ActivityTitle', 'BaseHours', 'EarnedHours', 'Status', 'CheckInTime']);
+  const regRows = regSheet.getDataRange().getValues();
+  const countMap = {};
+  if (regRows.length > 1) {
+    for (let r = 1; r < regRows.length; r++) {
+      const actId = String(regRows[r][7]);
+      countMap[actId] = (countMap[actId] || 0) + 1;
+    }
+  }
+
+  return rows.slice(1).map(row => {
+    const actId = String(row[0]);
+    const liveCount = countMap[actId] !== undefined ? countMap[actId] : Number(row[8] || 0);
+    return {
+      id: actId,
+      title: String(row[1]),
+      category: String(row[2]),
+      description: String(row[3]),
+      date: row[4] instanceof Date ? Utilities.formatDate(row[4], Session.getScriptTimeZone(), 'yyyy-MM-dd') : String(row[4]),
+      time: String(row[5]),
+      location: String(row[6]),
+      maxQuota: Number(row[7]),
+      registeredCount: liveCount,
+      hours: Number(row[9] || 3),
+      status: String(row[10]),
+      banner: String(row[11])
+    };
+  });
 }
 
 function getRegistrationsData() {
