@@ -467,6 +467,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function loadAllData() {
     try {
+      await api.syncDataFromGoogleSheets();
       currentActivities = await api.getActivities();
       currentRegistrations = await api.getRegistrations();
       

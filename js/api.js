@@ -1,7 +1,5 @@
-/**
- * API Bridge for Smo-Staff Activity Registration App
- * Supports 100% Real-time Live Google Sheets Synchronization & Direct Google Drive Backups
- */
+// SYSTEM GLOBAL GOOGLE APPS SCRIPT WEB APP URL (SHARED BY ALL USERS & DEVICES)
+window.DEFAULT_GAS_URL = window.DEFAULT_GAS_URL || '';
 
 const STORAGE_KEYS = {
   GAS_URL: 'smo_staff_gas_url',
@@ -167,7 +165,7 @@ class SmoStaffAPI {
   }
 
   getGasUrl() {
-    return localStorage.getItem(STORAGE_KEYS.GAS_URL) || '';
+    return localStorage.getItem(STORAGE_KEYS.GAS_URL) || window.DEFAULT_GAS_URL || '';
   }
 
   async setGasUrl(url) {
