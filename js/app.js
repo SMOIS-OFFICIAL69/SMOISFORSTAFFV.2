@@ -645,12 +645,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderMySummaryView();
     if (currentRole === 'admin') renderAdminTables();
 
-    // Keep loading modal active while fetching live data
+    // Fast 300ms max modal dismiss so user is never blocked or delayed
     if (showLoadingModal && dataLoadingModal) {
       dataLoadingModal.classList.add('active');
+      setTimeout(() => {
+        dataLoadingModal.classList.remove('active');
+      }, 300);
     }
 
-    // 2. Fast Parallel Background Live Refresh
+    // 2. Fast Non-Blocking Parallel Background Live Refresh
     try {
       const synced = await api.syncDataFromGoogleSheets();
       if (synced) {
@@ -669,7 +672,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (e) {
       console.error('Load error:', e);
     } finally {
-      if (showLoadingModal && dataLoadingModal) {
+      if (dataLoadingModal) {
         dataLoadingModal.classList.remove('active');
       }
     }
