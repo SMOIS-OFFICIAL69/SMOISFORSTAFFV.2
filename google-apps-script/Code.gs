@@ -2,16 +2,16 @@
  * ==============================================================================
  * SMO-STAFF ACTIVITY REGISTRATION & GOOGLE DRIVE BACKUP BACKEND (Code.gs)
  * ==============================================================================
- * Google Apps Script for Google Sheets Database & Automated Drive Backup Service
+ * Google Apps Script Backend for Google Sheets Database & Drive Auto-Backup Service
  * 
- * Auto-creates dedicated organized folder path in Drive:
+ * Auto-creates dedicated organized folder path in Google Drive:
  * Google Drive > SMOIS-WEB > KKU_FIS_StudentUnion_Backup
  * 
  * Generates exact files as required:
  * 1. latest_system_state.json (Overwritten with latest snapshot)
  * 2. backup_state_YYYY-MM-DD_HH-mm-ss.json (Historical timestamped backups)
  * 
- * Sheets Supported:
+ * Supported Sheets:
  * - Activities
  * - Registrations
  * - StaffUsers
@@ -20,9 +20,9 @@
  */
 
 const CONFIG = {
-  PARENT_FOLDER_NAME: 'SMOIS-WEB', // โฟลเดอร์หลัก
-  SUB_FOLDER_NAME: 'KKU_FIS_StudentUnion_Backup', // โฟลเดอร์ย่อยสำหรับเก็บไฟล์สำรองข้อมูล
-  DRIVE_FOLDER_ID: '', // หากมี Folder ID เฉพาะ สามารถระบุตรงนี้ได้
+  PARENT_FOLDER_NAME: 'SMOIS-WEB',                     // โฟลเดอร์หลักใน Google Drive
+  SUB_FOLDER_NAME: 'KKU_FIS_StudentUnion_Backup',     // โฟลเดอร์ย่อยสำหรับเก็บไฟล์สำรองข้อมูล
+  DRIVE_FOLDER_ID: '',                                 // ปล่อยว่างไว้เพื่อให้ระบบสร้างโฟลเดอร์ให้อัตโนมัติ
   SHEET_ACTIVITIES: 'Activities',
   SHEET_REGISTRATIONS: 'Registrations',
   SHEET_STAFF: 'StaffUsers',
@@ -51,6 +51,9 @@ function setupAutomatedDailyDriveBackupTrigger() {
   Logger.log('ตั้งค่าสำรองข้อมูลอัตโนมัติเข้า Google Drive สำเร็จแล้ว (รันทุกวัน เวลา 01:00 น.)');
 }
 
+/**
+ * --- GET API ENDPOINTS ---
+ */
 function doGet(e) {
   const action = e ? e.parameter.action : 'getActivities';
   let responseData = { status: 'error', message: 'Invalid Action' };
@@ -75,6 +78,9 @@ function doGet(e) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+/**
+ * --- POST API ENDPOINTS (MUTATIONS & DELETIONS) ---
+ */
 function doPost(e) {
   let responseData = { status: 'error', message: 'Invalid Request' };
 
@@ -237,7 +243,7 @@ function getTargetDriveFolder() {
 }
 
 /**
- * --- DATA GETTERS & HELPERS ---
+ * --- DATA READ OPERATIONS ---
  */
 function getActivitiesData() {
   const sheet = getOrCreateSheet(CONFIG.SHEET_ACTIVITIES, ['ID', 'Title', 'Category', 'Description', 'Date', 'Time', 'Location', 'MaxQuota', 'RegisteredCount', 'Hours', 'Status', 'Banner']);
@@ -327,7 +333,9 @@ function getBackupsData() {
   }));
 }
 
-// --- SAVE OPERATIONS ---
+/**
+ * --- DATA SAVE OPERATIONS ---
+ */
 function saveRegistration(data) {
   const sheet = getOrCreateSheet(CONFIG.SHEET_REGISTRATIONS, ['RegID', 'Timestamp', 'StaffID', 'StaffName', 'Major', 'Department', 'Position', 'ActivityID', 'ActivityTitle', 'BaseHours', 'EarnedHours', 'Status', 'CheckInTime']);
   sheet.appendRow([data.regId, data.timestamp, data.staffId, data.staffName, data.major, data.department, data.position, data.activityId, data.activityTitle, data.baseHours || 3, 0, 'pending', '']);
@@ -367,7 +375,9 @@ function saveAdminUser(data) {
   return true;
 }
 
-// --- AUTOMATED DELETE OPERATIONS FROM GOOGLE SHEETS DATABASE ---
+/**
+ * --- DATA AUTOMATED DELETE OPERATIONS FROM GOOGLE SHEETS ---
+ */
 function deleteActivityRecord(id) {
   const sheet = getOrCreateSheet(CONFIG.SHEET_ACTIVITIES, ['ID', 'Title', 'Category', 'Description', 'Date', 'Time', 'Location', 'MaxQuota', 'RegisteredCount', 'Hours', 'Status', 'Banner']);
   const rows = sheet.getDataRange().getValues();
@@ -416,6 +426,9 @@ function deleteRegistrationRecord(regId) {
   return false;
 }
 
+/**
+ * --- HELPER: GET OR CREATE SHEET WITH STYLED HEADERS ---
+ */
 function getOrCreateSheet(sheetName, headers) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = ss.getSheetByName(sheetName);

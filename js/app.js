@@ -557,7 +557,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (myRegs.length === 0) {
       historyTableBody.innerHTML = `
         <tr>
-          <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-gray);">
+          <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-gray);">
             <i class="fa-regular fa-folder-open" style="font-size: 1.8rem; color: #cbd5e1; margin-bottom: 0.5rem; display: block;"></i>
             ยังไม่มีประวัติการลงทะเบียนกิจกรรม
           </td>
@@ -579,9 +579,40 @@ document.addEventListener('DOMContentLoaded', async () => {
           <td>${r.baseHours || 3} ชม.</td>
           <td><strong style="color:${isApproved ? 'var(--success-green)' : 'var(--text-dark)'}">${isApproved ? (r.earnedHours || r.baseHours || 3) + ' ชม.' : '0 ชม.'}</strong></td>
           <td><span class="${isApproved ? 'status-tag-checked' : 'status-tag-pending'}">${isApproved ? 'อนุมัติแล้ว' : 'รออนุมัติชั่วโมง'}</span></td>
+          <td>
+            <button class="role-pill-btn cancel-hist-reg-btn" data-reg-id="${r.regId}" data-act-id="${r.activityId}" style="background:#ef4444; color:white; padding:0.25rem 0.6rem; font-size:0.75rem;"><i class="fa-solid fa-user-xmark"></i> ยกเลิก</button>
+          </td>
         </tr>
       `;
       historyTableBody.insertAdjacentHTML('beforeend', tr);
+    });
+
+    // Attach History Table Cancel Registration Listener
+    document.querySelectorAll('.cancel-hist-reg-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const regId = e.currentTarget.getAttribute('data-reg-id');
+        const actId = e.currentTarget.getAttribute('data-act-id');
+        const act = currentActivities.find(a => a.id === actId);
+
+        if (confirm(`คุณต้องการยกเลิกการลงทะเบียนกิจกรรมนี้ใช่หรือไม่?\n(รายชื่อและข้อมูลจะถูกลบออกจากฐานข้อมูล Google Sheets อัตโนมัติ)`)) {
+          btn.disabled = true;
+          btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังยกเลิก...';
+
+          api.deleteRegistration(regId);
+
+          if (act) {
+            act.registeredCount = Math.max(0, (act.registeredCount || 1) - 1);
+            if (act.status === 'full' && act.registeredCount < act.maxQuota) {
+              act.status = 'open';
+            }
+            api.updateActivity(act.id, act);
+          }
+
+          showToast('ยกเลิกการลงทะเบียนเรียบร้อยแล้ว รายชื่อถูกลบออกจากฐานข้อมูลแล้ว', 'success');
+          await loadAllData();
+          autoDriveBackup('cancel_registration');
+        }
+      });
     });
   }
 
@@ -652,17 +683,55 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
           </div>
           <div class="card-footer">
-            <button class="btn-register open-reg-modal-btn" 
-              data-id="${act.id}" 
-              data-title="${act.title}"
-              data-hours="${act.hours || 3}"
-              ${isFull || isClosed || isRegistered ? 'disabled' : ''}>
-              ${isRegistered ? '<i class="fa-solid fa-check-double"></i> ลงทะเบียนแล้ว' : isClosed ? 'ปิดรับลงทะเบียน' : isFull ? 'โควตาเต็มแล้ว' : '<i class="fa-solid fa-pen-to-square"></i> ลงทะเบียนเข้าร่วม'}
-            </button>
+            ${isRegistered ? `
+              <button class="btn-register cancel-reg-btn" data-act-id="${act.id}" style="background: #ef4444; color: white;">
+                <i class="fa-solid fa-user-xmark"></i> ยกเลิกการลงทะเบียน
+              </button>
+            ` : `
+              <button class="btn-register open-reg-modal-btn" 
+                data-id="${act.id}" 
+                data-title="${act.title}"
+                data-hours="${act.hours || 3}"
+                ${isFull || isClosed ? 'disabled' : ''}>
+                ${isClosed ? 'ปิดรับลงทะเบียน' : isFull ? 'โควตาเต็มแล้ว' : '<i class="fa-solid fa-pen-to-square"></i> ลงทะเบียนเข้าร่วม'}
+              </button>
+            `}
           </div>
         </div>
       `;
       activitiesGrid.insertAdjacentHTML('beforeend', cardHtml);
+    });
+
+    // Attach Cancel Registration Event on Card
+    document.querySelectorAll('.cancel-reg-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const staff = api.getCurrentStaff();
+        if (!staff) return;
+        const actId = e.currentTarget.getAttribute('data-act-id');
+        const act = currentActivities.find(a => a.id === actId);
+        const reg = currentRegistrations.find(r => r.staffId === staff.studentId && r.activityId === actId);
+
+        if (!reg) return;
+
+        if (confirm(`คุณต้องการยกเลิกการลงทะเบียนกิจกรรม "${act ? act.title : ''}" ใช่หรือไม่?\n(รายชื่อและข้อมูลจะถูกลบออกจากฐานข้อมูล Google Sheets อัตโนมัติ)`)) {
+          btn.disabled = true;
+          btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังยกเลิก...';
+
+          api.deleteRegistration(reg.regId);
+
+          if (act) {
+            act.registeredCount = Math.max(0, (act.registeredCount || 1) - 1);
+            if (act.status === 'full' && act.registeredCount < act.maxQuota) {
+              act.status = 'open';
+            }
+            api.updateActivity(act.id, act);
+          }
+
+          showToast('ยกเลิกการลงทะเบียนกิจกรรมสำเร็จแล้ว รายชื่อถูกลบออกจากฐานข้อมูลเรียบร้อย', 'success');
+          await loadAllData();
+          autoDriveBackup('cancel_registration');
+        }
+      });
     });
 
     document.querySelectorAll('.open-reg-modal-btn').forEach(btn => {
