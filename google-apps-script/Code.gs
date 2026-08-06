@@ -217,6 +217,7 @@ function doPost(e) {
   } catch (err) {
     responseData = { status: 'error', message: err.toString() };
   } finally {
+    clearDataCache();
     lock.releaseLock();
   }
 
@@ -328,7 +329,21 @@ function getTargetDriveFolder() {
 /**
  * --- DATA READ OPERATIONS ---
  */
+function clearDataCache() {
+  try {
+    CacheService.getScriptCache().remove('ALL_DATA_FAST');
+  } catch (e) {}
+}
+
 function getAllDataFast() {
+  const cache = CacheService.getScriptCache();
+  const cachedData = cache.get('ALL_DATA_FAST');
+  if (cachedData) {
+    try {
+      return JSON.parse(cachedData);
+    } catch (e) {}
+  }
+
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheets = ss.getSheets();
   const map = {};
@@ -449,7 +464,12 @@ function getAllDataFast() {
     }
   }
 
-  return { activities, registrations, staffUsers, adminUsers, backups };
+  const result = { activities, registrations, staffUsers, adminUsers, backups };
+  try {
+    cache.put('ALL_DATA_FAST', JSON.stringify(result), 30);
+  } catch (e) {}
+
+  return result;
 }
 
 function getActivitiesData() {

@@ -613,9 +613,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // DATA INITIALIZATION & MULTI-USER LIVE AUTO-SYNC (EVERY 10 SECONDS)
+  // DATA INITIALIZATION & MULTI-USER HIGH-PERFORMANCE CACHE-FIRST SYNC
   renderStaffHeaderInfo();
-  await loadAllData(true);
+  const hasLocalCachedData = api.getActivities().length > 0;
+  await loadAllData(!hasLocalCachedData);
 
   if (!api.getGasUrl()) {
     setTimeout(() => {
@@ -627,10 +628,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, 600);
   }
 
-  // Silent background auto-sync timer every 10 seconds for multi-user / multi-device live sync
+  // Silent background auto-sync timer every 30 seconds for multi-user / multi-device live sync
   setInterval(async () => {
     await loadAllData(false);
-  }, 10000);
+  }, 30000);
 
   async function loadAllData(showLoadingModal = false) {
     const dataLoadingModal = document.getElementById('dataLoadingModal');
