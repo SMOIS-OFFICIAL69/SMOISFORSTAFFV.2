@@ -621,7 +621,7 @@ function saveActivity(data) {
 }
 
 function saveStaffUser(data) {
-  const sheet = getOrCreateSheet(CONFIG.SHEET_STAFF, ['StudentID', 'FullName', 'Major', 'Year', 'Department', 'Position', 'TargetHours']);
+  const sheet = getOrCreateSheet(CONFIG.SHEET_STAFF, ['StudentID', 'FullName', 'Major', 'Year', 'Department', 'Position', 'TargetHours', 'Avatar']);
   const rows = sheet.getDataRange().getValues();
   for (let i = 1; i < rows.length; i++) {
     if (String(rows[i][0]) === String(data.studentId)) {
@@ -630,15 +630,18 @@ function saveStaffUser(data) {
       sheet.getRange(i + 1, 4).setValue(data.year);
       sheet.getRange(i + 1, 5).setValue(data.department);
       sheet.getRange(i + 1, 6).setValue(data.position);
+      if (data.avatar !== undefined && data.avatar !== null && data.avatar !== '') {
+        sheet.getRange(i + 1, 8).setValue(data.avatar);
+      }
       return true;
     }
   }
-  sheet.appendRow([data.studentId, data.fullName, data.major, data.year, data.department, data.position, data.targetHours || 200]);
+  sheet.appendRow([data.studentId, data.fullName, data.major, data.year, data.department, data.position, data.targetHours || 200, data.avatar || '']);
   return true;
 }
 
 function saveAdminUser(data) {
-  const sheet = getOrCreateSheet(CONFIG.SHEET_ADMIN, ['Username', 'Password', 'FullName', 'Position', 'Role']);
+  const sheet = getOrCreateSheet(CONFIG.SHEET_ADMIN, ['Username', 'Password', 'FullName', 'Position', 'Role', 'Avatar']);
   const rows = sheet.getDataRange().getValues();
   for (let i = 1; i < rows.length; i++) {
     if (String(rows[i][0]) === String(data.username)) {
@@ -646,10 +649,13 @@ function saveAdminUser(data) {
       sheet.getRange(i + 1, 3).setValue(data.fullName);
       sheet.getRange(i + 1, 4).setValue(data.position);
       sheet.getRange(i + 1, 5).setValue(data.role || 'Admin');
+      if (data.avatar !== undefined && data.avatar !== null && data.avatar !== '') {
+        sheet.getRange(i + 1, 6).setValue(data.avatar);
+      }
       return true;
     }
   }
-  sheet.appendRow([data.username, data.password, data.fullName, data.position, data.role || 'Admin']);
+  sheet.appendRow([data.username, data.password, data.fullName, data.position, data.role || 'Admin', data.avatar || '']);
   return true;
 }
 

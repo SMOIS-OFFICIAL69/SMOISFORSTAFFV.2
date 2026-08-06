@@ -890,6 +890,7 @@ body {
 }
 
 /* Modals */
+/* Base Modal Backdrop Z-Index */
 .modal-backdrop {
   position: fixed;
   top: 0;
@@ -901,11 +902,37 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
+  z-index: 9990;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.25s ease;
   padding: 1rem;
+}
+
+/* List Table Overview Modals (Level 1) */
+#staffListModal,
+#activitiesListModal,
+#adminListModal,
+#registrationsListModal,
+#approvedHoursModal {
+  z-index: 9995 !important;
+}
+
+/* Action, Edit, Add & Form Modals (Level 2 - Always Pop Up IN FRONT on top of list modals!) */
+#editStaffModal,
+#editActivityModal,
+#editAdminModal,
+#addStaffToActModal,
+#addStaffModal,
+#addAdminModal,
+#addActivityModal,
+#registrationModal,
+#activityDetailModal,
+#staffLoginModal,
+#adminLoginModal,
+#gasSettingsModal,
+#dataLoadingModal {
+  z-index: 10010 !important;
 }
 
 .modal-backdrop.active {
@@ -1484,20 +1511,36 @@ html, body {
     overflow-x: hidden !important;
   }
 
-  /* Center Login Modals in Middle of Mobile Screen */
+  /* Center Login, Edit & Form Modals in Middle of Mobile Screen */
+  #editStaffModal,
+  #editActivityModal,
+  #editAdminModal,
+  #addStaffToActModal,
+  #addStaffModal,
+  #addAdminModal,
+  #addActivityModal,
+  #registrationModal,
   #staffLoginModal,
   #adminLoginModal {
     align-items: center !important;
     justify-content: center !important;
-    padding: 1rem !important;
+    padding: 0.85rem !important;
   }
 
+  #editStaffModal .modal-content,
+  #editActivityModal .modal-content,
+  #editAdminModal .modal-content,
+  #addStaffToActModal .modal-content,
+  #addStaffModal .modal-content,
+  #addAdminModal .modal-content,
+  #addActivityModal .modal-content,
+  #registrationModal .modal-content,
   #staffLoginModal .modal-content,
   #adminLoginModal .modal-content {
     margin: auto !important;
     border-radius: 16px !important;
-    max-width: 92% !important;
-    width: 380px !important;
+    max-width: 94% !important;
+    width: 480px !important;
     transform: translateY(0) !important;
     animation: zoomInMobile 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
   }
