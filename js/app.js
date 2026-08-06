@@ -2112,17 +2112,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!backupTableBody) return;
     const backups = api.getBackups();
     backupTableBody.innerHTML = '';
-    backups.forEach(b => {
-      backupTableBody.insertAdjacentHTML('beforeend', `
-        <tr>
-          <td><strong style="font-family:'Space Grotesk', monospace;">${b.backupId}</strong></td>
-          <td>${b.timestamp}</td>
-          <td>${b.fileName}</td>
-          <td>${b.recordCount} รายการ</td>
-          <td><span style="color:#10b981; font-weight:600;"><i class="fa-solid fa-cloud"></i> จัดเก็บสำเร็จ</span></td>
-        </tr>
-      `);
-    });
+
+    const recentBackups = backups.slice(0, 5);
+    if (recentBackups.length === 0) {
+      backupTableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-gray); padding: 1.5rem;">ยังไม่มีประวัติการสำรองข้อมูล</td></tr>`;
+    } else {
+      recentBackups.forEach(b => {
+        backupTableBody.insertAdjacentHTML('beforeend', `
+          <tr>
+            <td><strong style="font-family:'Space Grotesk', monospace;">${b.backupId}</strong></td>
+            <td>${b.timestamp}</td>
+            <td>${b.fileName}</td>
+            <td>${b.recordCount} รายการ</td>
+            <td><span style="color:#10b981; font-weight:600;"><i class="fa-solid fa-cloud"></i> จัดเก็บสำเร็จ</span></td>
+          </tr>
+        `);
+      });
+    }
   }
 
   // Toast Notifications
