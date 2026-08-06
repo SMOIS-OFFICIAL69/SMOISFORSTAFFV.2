@@ -406,7 +406,8 @@ function getAllDataFast() {
         year: String(row[3]),
         department: String(row[4]),
         position: String(row[5]),
-        targetHours: Number(row[6] || 200)
+        targetHours: Number(row[6] || 200),
+        avatar: String(row[7] || '')
       });
     }
   }
@@ -421,7 +422,8 @@ function getAllDataFast() {
         password: String(row[1]),
         fullName: String(row[2]),
         position: String(row[3]),
-        role: String(row[4] || 'Admin')
+        role: String(row[4] || 'Admin'),
+        avatar: String(row[5] || '')
       });
     }
   }
@@ -504,7 +506,7 @@ function getRegistrationsData() {
 }
 
 function getStaffUsersData() {
-  const sheet = getOrCreateSheet(CONFIG.SHEET_STAFF, ['StudentID', 'FullName', 'Major', 'Year', 'Department', 'Position', 'TargetHours']);
+  const sheet = getOrCreateSheet(CONFIG.SHEET_STAFF, ['StudentID', 'FullName', 'Major', 'Year', 'Department', 'Position', 'TargetHours', 'Avatar']);
   const rows = sheet.getDataRange().getValues();
   if (rows.length <= 1) return [];
 
@@ -515,12 +517,13 @@ function getStaffUsersData() {
     year: String(row[3]),
     department: String(row[4]),
     position: String(row[5]),
-    targetHours: Number(row[6] || 200)
+    targetHours: Number(row[6] || 200),
+    avatar: String(row[7] || '')
   }));
 }
 
 function getAdminUsersData() {
-  const sheet = getOrCreateSheet(CONFIG.SHEET_ADMIN, ['Username', 'Password', 'FullName', 'Position', 'Role']);
+  const sheet = getOrCreateSheet(CONFIG.SHEET_ADMIN, ['Username', 'Password', 'FullName', 'Position', 'Role', 'Avatar']);
   const rows = sheet.getDataRange().getValues();
   if (rows.length <= 1) return [];
 
@@ -529,7 +532,8 @@ function getAdminUsersData() {
     password: String(row[1]),
     fullName: String(row[2]),
     position: String(row[3]),
-    role: String(row[4] || 'Admin')
+    role: String(row[4] || 'Admin'),
+    avatar: String(row[5] || '')
   }));
 }
 

@@ -1,26 +1,31 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SMO-STAFF Official | ระบบลงทะเบียนและสะสมชั่วโมงกิจกรรมผู้ปฏิบัติงาน</title>
-  
+
   <!-- Google Fonts & Font Awesome Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
+
   <!-- CSS Stylesheet -->
   <link rel="stylesheet" href="css/styles.css">
 </head>
+
 <body>
 
   <!-- TOP APP NAVBAR -->
   <header class="app-navbar">
     <div class="nav-left">
       <a href="#" class="brand-wrapper">
-        <img src="https://lh3.googleusercontent.com/d/1pB-8Qn75ZVnzhJhllPLbc0hI8k0jVJ-9" alt="SMO-STAFF Logo" class="brand-emblem">
+        <img src="https://lh3.googleusercontent.com/d/1pB-8Qn75ZVnzhJhllPLbc0hI8k0jVJ-9" alt="SMO-STAFF Logo"
+          class="brand-emblem">
         <span class="brand-title">SMO-STAFF Official</span>
       </a>
 
@@ -35,7 +40,8 @@
       <!-- Role Switcher Toggle Pill -->
       <div class="role-switcher-container">
         <button class="role-pill-btn active" id="roleStaffBtn">ผู้ปฏิบัติงาน</button>
-        <button class="role-pill-btn" id="roleAdminBtn"><i class="fa-solid fa-lock" style="font-size: 0.75rem;"></i> เจ้าหน้าที่ (Admin)</button>
+        <button class="role-pill-btn" id="roleAdminBtn"><i class="fa-solid fa-lock" style="font-size: 0.75rem;"></i>
+          เจ้าหน้าที่ (Admin)</button>
       </div>
 
       <!-- User Profile Pill -->
@@ -65,33 +71,46 @@
   <!-- MOBILE NAVIGATION DRAWER (HAMBURGER MENU) -->
   <div class="mobile-nav-backdrop" id="mobileNavBackdrop"></div>
   <div class="mobile-nav-drawer" id="mobileNavDrawer">
-    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.85rem; border-bottom: 1px solid #e2e8f0; margin-bottom: 1rem;">
-      <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-dark); margin: 0;"><i class="fa-solid fa-bars" style="color: var(--primary-blue);"></i> เมนูระบบ</h3>
+    <div
+      style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.85rem; border-bottom: 1px solid #e2e8f0; margin-bottom: 1rem;">
+      <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-dark); margin: 0;"><i class="fa-solid fa-bars"
+          style="color: var(--primary-blue);"></i> เมนูระบบ</h3>
       <button class="close-btn" id="closeMobileDrawerBtn" style="font-size: 1.5rem; color: #64748b;">&times;</button>
     </div>
 
     <div style="display: flex; flex-direction: column; gap: 1rem;">
       <div>
-        <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-gray); text-transform: uppercase; margin-bottom: 0.4rem; display: block;">เลือกบทบาทเข้าใช้งาน</label>
-        <div class="role-switcher-container" style="width: 100%; display: flex; background: #f1f5f9; padding: 4px; border-radius: 8px; gap: 4px;">
-          <button class="role-pill-btn active" id="drawerRoleStaffBtn" style="flex: 1; padding: 0.45rem; font-size: 0.82rem; border-radius: 6px;">ผู้ปฏิบัติงาน</button>
-          <button class="role-pill-btn" id="drawerRoleAdminBtn" style="flex: 1; padding: 0.45rem; font-size: 0.82rem; border-radius: 6px;"><i class="fa-solid fa-lock" style="font-size: 0.75rem;"></i> แอดมิน</button>
+        <label
+          style="font-size: 0.78rem; font-weight: 700; color: var(--text-gray); text-transform: uppercase; margin-bottom: 0.4rem; display: block;">เลือกบทบาทเข้าใช้งาน</label>
+        <div class="role-switcher-container"
+          style="width: 100%; display: flex; background: #f1f5f9; padding: 4px; border-radius: 8px; gap: 4px;">
+          <button class="role-pill-btn active" id="drawerRoleStaffBtn"
+            style="flex: 1; padding: 0.45rem; font-size: 0.82rem; border-radius: 6px;">ผู้ปฏิบัติงาน</button>
+          <button class="role-pill-btn" id="drawerRoleAdminBtn"
+            style="flex: 1; padding: 0.45rem; font-size: 0.82rem; border-radius: 6px;"><i class="fa-solid fa-lock"
+              style="font-size: 0.75rem;"></i> แอดมิน</button>
         </div>
       </div>
 
       <div>
-        <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-gray); text-transform: uppercase; margin-bottom: 0.4rem; display: block;">สถานะผู้ใช้งาน</label>
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 0.85rem; display: flex; align-items: center; justify-content: space-between;">
+        <label
+          style="font-size: 0.78rem; font-weight: 700; color: var(--text-gray); text-transform: uppercase; margin-bottom: 0.4rem; display: block;">สถานะผู้ใช้งาน</label>
+        <div
+          style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 0.85rem; display: flex; align-items: center; justify-content: space-between;">
           <div style="overflow: hidden;">
-            <span id="drawerUserName" style="font-weight: 700; font-size: 0.88rem; color: var(--text-dark); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">กรุณาเข้าสู่ระบบ</span>
-            <small id="drawerUserSub" style="color: var(--text-gray); font-size: 0.75rem;">สำหรับผู้ปฏิบัติงาน/แอดมิน</small>
+            <span id="drawerUserName"
+              style="font-weight: 700; font-size: 0.88rem; color: var(--text-dark); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">กรุณาเข้าสู่ระบบ</span>
+            <small id="drawerUserSub"
+              style="color: var(--text-gray); font-size: 0.75rem;">สำหรับผู้ปฏิบัติงาน/แอดมิน</small>
           </div>
-          <a href="#" class="btn-logout" id="drawerLogoutBtn" style="padding: 0.35rem 0.85rem; font-size: 0.78rem; border-radius: 6px; white-space: nowrap;">เข้าสู่ระบบ</a>
+          <a href="#" class="btn-logout" id="drawerLogoutBtn"
+            style="padding: 0.35rem 0.85rem; font-size: 0.78rem; border-radius: 6px; white-space: nowrap;">เข้าสู่ระบบ</a>
         </div>
       </div>
 
       <div style="border-top: 1px solid #e2e8f0; padding-top: 1rem; margin-top: 0.5rem;">
-        <button id="drawerGasBtn" style="width: 100%; text-align: left; padding: 0.65rem 0.85rem; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+        <button id="drawerGasBtn"
+          style="width: 100%; text-align: left; padding: 0.65rem 0.85rem; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
           <i class="fa-brands fa-google-drive" style="color: #0f9d58;"></i> เชื่อมต่อ Google Drive
         </button>
       </div>
@@ -100,25 +119,32 @@
 
   <!-- MAIN PAGE CONTENT -->
   <main class="main-content-container">
-    
+
     <!-- =================================================================== -->
     <!-- TAB 1: ผู้ปฏิบัติงาน (STAFF PORTAL SECTION) -->
     <!-- =================================================================== -->
     <section id="staffViewSection">
-      
+
       <!-- Guest Banner (Shown when not logged in) -->
-      <div class="user-hero-card" id="staffLoggedOutHero" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #ffffff; border: 1px solid #334155; display: flex; flex-direction: column; gap: 0.85rem;">
-        <div class="user-hero-left" style="display: flex; flex-direction: row; align-items: center; gap: 0.75rem; width: 100%; min-width: 0;">
-          <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 1.35rem; color: #60a5fa; flex-shrink: 0;">
+      <div class="user-hero-card" id="staffLoggedOutHero"
+        style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #ffffff; border: 1px solid #334155; display: flex; flex-direction: column; gap: 0.85rem;">
+        <div class="user-hero-left"
+          style="display: flex; flex-direction: row; align-items: center; gap: 0.75rem; width: 100%; min-width: 0;">
+          <div
+            style="width: 48px; height: 48px; border-radius: 12px; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 1.35rem; color: #60a5fa; flex-shrink: 0;">
             <i class="fa-solid fa-user-lock"></i>
           </div>
           <div style="flex: 1 1 auto; min-width: 0;">
-            <h2 style="font-size: 1.1rem; font-weight: 700; color: #ffffff; margin-bottom: 0.25rem; line-height: 1.35;">กรุณาเข้าสู่ระบบผู้ปฏิบัติงาน</h2>
-            <p style="font-size: 0.82rem; color: #94a3b8; line-height: 1.4; margin: 0;">เข้าสู่ระบบด้วยรหัสนักศึกษาเพื่อดูข้อมูลส่วนบุคคล, เป้าหมายชั่วโมงกิจกรรม และประวัติสะสมชั่วโมงรายบุคคล</p>
+            <h2 style="font-size: 1.1rem; font-weight: 700; color: #ffffff; margin-bottom: 0.25rem; line-height: 1.35;">
+              กรุณาเข้าสู่ระบบผู้ปฏิบัติงาน</h2>
+            <p style="font-size: 0.82rem; color: #94a3b8; line-height: 1.4; margin: 0;">
+              เข้าสู่ระบบด้วยรหัสนักศึกษาเพื่อดูข้อมูลส่วนบุคคล, เป้าหมายชั่วโมงกิจกรรม และประวัติสะสมชั่วโมงรายบุคคล
+            </p>
           </div>
         </div>
         <div style="width: 100%;">
-          <button class="btn-register" id="openStaffLoginHeroBtn" style="background: #2563eb; width: 100%; min-height: 44px; padding: 0.6rem 1rem; border-radius: 8px; font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+          <button class="btn-register" id="openStaffLoginHeroBtn"
+            style="background: #2563eb; width: 100%; min-height: 44px; padding: 0.6rem 1rem; border-radius: 8px; font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
             <i class="fa-solid fa-right-to-bracket"></i> เข้าสู่ระบบด้วยรหัสนักศึกษา
           </button>
         </div>
@@ -132,15 +158,17 @@
           </div>
           <div class="hero-user-details">
             <h2>
-              <span id="staffFullName">นายอภินันท์ คำดี</span> 
+              <span id="staffFullName">นายอภินันท์ คำดี</span>
               <span class="hero-code-tag" id="staffCodeTag">673450351-6</span>
             </h2>
             <div class="hero-user-subtitle">
-              สาขาวิชา: <strong id="staffMajor">ภาษาอังกฤษเพื่อการสื่อสารธุรกิจ</strong> • ชั้นปี: <strong id="staffYear">ชั้นปีที่ 3</strong>
+              สาขาวิชา: <strong id="staffMajor">ภาษาอังกฤษเพื่อการสื่อสารธุรกิจ</strong> • ชั้นปี: <strong
+                id="staffYear">ชั้นปีที่ 3</strong>
             </div>
             <div class="hero-user-tags">
               <span class="user-tag-pill" id="staffDept">สังกัด: สโมสรนักศึกษา</span>
-              <span class="user-tag-pill" id="staffPos" style="background:#e0e7ff; color:#3730a3;">ตำแหน่ง: ประธานฝ่ายกิจกรรม</span>
+              <span class="user-tag-pill" id="staffPos" style="background:#e0e7ff; color:#3730a3;">ตำแหน่ง:
+                ประธานฝ่ายกิจกรรม</span>
             </div>
           </div>
         </div>
@@ -179,7 +207,8 @@
         <!-- SEARCH & FILTER BAR CARD -->
         <div class="filter-card-bar">
           <div class="filter-inputs-group">
-            <input type="text" id="searchInput" class="filter-input filter-search-input" placeholder="ค้นหากิจกรรม, สถานที่, รหัส...">
+            <input type="text" id="searchInput" class="filter-input filter-search-input"
+              placeholder="ค้นหากิจกรรม, สถานที่, รหัส...">
 
             <select id="statusFilter" class="filter-input filter-select">
               <option value="">สถานะทั้งหมด</option>
@@ -198,7 +227,7 @@
 
       <!-- SUBVIEW 2: สรุปชั่วโมงกิจกรรมของฉัน (MY HOURS SUMMARY) -->
       <div id="subviewMySummary" style="display: none;">
-        
+
         <!-- 4 TOP SUMMARY STATS CARDS -->
         <div class="summary-stats-grid">
           <div class="summary-stat-card">
@@ -249,7 +278,8 @@
         <div class="history-card-header">
           <div>
             <h3>ประวัติการลงทะเบียนกิจกรรมและสะสมชั่วโมงรายบุคคล</h3>
-            <p id="historyUserSubtitle">ผู้ปฏิบัติงาน: นายอภินันท์ คำดี (673450351-6) - ภาษาอังกฤษเพื่อการสื่อสารธุรกิจ</p>
+            <p id="historyUserSubtitle">ผู้ปฏิบัติงาน: นายอภินันท์ คำดี (673450351-6) - ภาษาอังกฤษเพื่อการสื่อสารธุรกิจ
+            </p>
           </div>
           <div>
             <button class="btn-export-pdf" onclick="window.print()">
@@ -283,7 +313,7 @@
     <!-- TAB 2: เจ้าหน้าที่ (ADMIN PORTAL SECTION) -->
     <!-- =================================================================== -->
     <section id="adminViewSection" style="display: none;">
-      
+
       <!-- ส่วนที่ 1: ข้อมูลแอดมิน (ADMIN HERO INFO CARD) -->
       <div class="user-hero-card" style="background: #eef2ff; border-color: #c7d2fe;">
         <div class="user-hero-left">
@@ -292,7 +322,7 @@
           </div>
           <div class="hero-user-details">
             <h2>
-              <span id="adminFullName">เจ้าหน้าที่แอดมิน</span> 
+              <span id="adminFullName">เจ้าหน้าที่แอดมิน</span>
               <span class="hero-code-tag" id="adminRoleBadge" style="background: #312e81; color: white;">Admin</span>
             </h2>
             <div class="hero-user-subtitle">
@@ -304,96 +334,120 @@
 
       <!-- ส่วนที่ 2: สถิติภาพรวมแอดมิน (OVERVIEW STATS DASHBOARD - ALL 5 CARDS ARE CLICKABLE) -->
       <div class="summary-stats-grid" style="grid-template-columns: repeat(5, 1fr); margin-bottom: 1.75rem;">
-        
+
         <!-- CARD 1: กิจกรรมทั้งหมด (CLICKABLE) -->
-        <div class="summary-stat-card summary-stat-card-clickable" id="clickActivitiesCard" title="คลิกเพื่อจัดการและดูรายการกิจกรรมทั้งหมด">
+        <div class="summary-stat-card summary-stat-card-clickable" id="clickActivitiesCard"
+          title="คลิกเพื่อจัดการและดูรายการกิจกรรมทั้งหมด">
           <div class="summary-stat-title" style="display: flex; justify-content: space-between; align-items: center;">
             <span>กิจกรรมทั้งหมด</span>
             <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.75rem; color: #1e3a8a;"></i>
           </div>
-          <div class="summary-stat-val val-navy"><span id="adminTotalActCount">3</span> <span class="unit">รายการ</span></div>
-          <small style="font-size: 0.7rem; color: #1e3a8a; font-weight: 600; display: block; margin-top: 0.2rem;">🔍 คลิกแก้ไข/ลบกิจกรรม</small>
+          <div class="summary-stat-val val-navy"><span id="adminTotalActCount">3</span> <span class="unit">รายการ</span>
+          </div>
+          <small style="font-size: 0.7rem; color: #1e3a8a; font-weight: 600; display: block; margin-top: 0.2rem;">🔍
+            คลิกแก้ไข/ลบกิจกรรม</small>
         </div>
 
         <!-- CARD 2: ผู้ปฏิบัติงานในระบบ (CLICKABLE) -->
-        <div class="summary-stat-card summary-stat-card-clickable" id="clickStaffListCard" title="คลิกเพื่อดูและจัดการรายชื่อผู้ปฏิบัติงานทั้งหมด">
+        <div class="summary-stat-card summary-stat-card-clickable" id="clickStaffListCard"
+          title="คลิกเพื่อดูและจัดการรายชื่อผู้ปฏิบัติงานทั้งหมด">
           <div class="summary-stat-title" style="display: flex; justify-content: space-between; align-items: center;">
             <span>ผู้ปฏิบัติงานในระบบ</span>
             <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.75rem; color: #7c3aed;"></i>
           </div>
-          <div class="summary-stat-val val-purple"><span id="adminTotalStaffCount">2</span> <span class="unit">คน</span></div>
-          <small style="font-size: 0.7rem; color: #7c3aed; font-weight: 600; display: block; margin-top: 0.2rem;">🔍 คลิกแก้ไข/ลบผู้ปฏิบัติงาน</small>
+          <div class="summary-stat-val val-purple"><span id="adminTotalStaffCount">2</span> <span class="unit">คน</span>
+          </div>
+          <small style="font-size: 0.7rem; color: #7c3aed; font-weight: 600; display: block; margin-top: 0.2rem;">🔍
+            คลิกแก้ไข/ลบผู้ปฏิบัติงาน</small>
         </div>
 
         <!-- CARD 3: ยอดการลงทะเบียน (CLICKABLE) -->
-        <div class="summary-stat-card summary-stat-card-clickable" id="clickRegistrationsCard" title="คลิกเพื่อดูและจัดการยอดการลงทะเบียนทั้งหมด">
+        <div class="summary-stat-card summary-stat-card-clickable" id="clickRegistrationsCard"
+          title="คลิกเพื่อดูและจัดการยอดการลงทะเบียนทั้งหมด">
           <div class="summary-stat-title" style="display: flex; justify-content: space-between; align-items: center;">
             <span>ยอดการลงทะเบียน</span>
             <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.75rem; color: #2563eb;"></i>
           </div>
-          <div class="summary-stat-val val-blue" style="color:#2563eb;"><span id="adminTotalRegCount">2</span> <span class="unit">รายการ</span></div>
-          <small style="font-size: 0.7rem; color: #2563eb; font-weight: 600; display: block; margin-top: 0.2rem;">🔍 คลิกดู/ลบการลงทะเบียน</small>
+          <div class="summary-stat-val val-blue" style="color:#2563eb;"><span id="adminTotalRegCount">2</span> <span
+              class="unit">รายการ</span></div>
+          <small style="font-size: 0.7rem; color: #2563eb; font-weight: 600; display: block; margin-top: 0.2rem;">🔍
+            คลิกดู/ลบการลงทะเบียน</small>
         </div>
 
         <!-- CARD 4: ชั่วโมงที่รออนุมัติ (CLICKABLE) -->
-        <div class="summary-stat-card summary-stat-card-clickable" id="clickPendingHoursCard" title="คลิกเพื่อไปยังตารางอนุมัติชั่วโมง">
+        <div class="summary-stat-card summary-stat-card-clickable" id="clickPendingHoursCard"
+          title="คลิกเพื่อไปยังตารางอนุมัติชั่วโมง">
           <div class="summary-stat-title" style="display: flex; justify-content: space-between; align-items: center;">
             <span>ชั่วโมงที่รออนุมัติ</span>
             <i class="fa-solid fa-clock" style="font-size: 0.75rem; color: #f59e0b;"></i>
           </div>
-          <div class="summary-stat-val val-orange"><span id="adminTotalPendingHrs">27</span> <span class="unit">ชม.</span></div>
-          <small style="font-size: 0.7rem; color: #f59e0b; font-weight: 600; display: block; margin-top: 0.2rem;">⚡ คลิกอนุมัติชั่วโมงสด</small>
+          <div class="summary-stat-val val-orange"><span id="adminTotalPendingHrs">27</span> <span
+              class="unit">ชม.</span></div>
+          <small style="font-size: 0.7rem; color: #f59e0b; font-weight: 600; display: block; margin-top: 0.2rem;">⚡
+            คลิกอนุมัติชั่วโมงสด</small>
         </div>
 
         <!-- CARD 5: ชั่วโมงที่อนุมัติแล้ว (CLICKABLE) -->
-        <div class="summary-stat-card summary-stat-card-clickable" id="clickApprovedHoursCard" title="คลิกเพื่อดูประวัติการอนุมัติชั่วโมงทั้งหมด">
+        <div class="summary-stat-card summary-stat-card-clickable" id="clickApprovedHoursCard"
+          title="คลิกเพื่อดูประวัติการอนุมัติชั่วโมงทั้งหมด">
           <div class="summary-stat-title" style="display: flex; justify-content: space-between; align-items: center;">
             <span>ชั่วโมงที่อนุมัติแล้ว</span>
             <i class="fa-solid fa-circle-check" style="font-size: 0.75rem; color: #10b981;"></i>
           </div>
-          <div class="summary-stat-val val-green"><span id="adminTotalApprovedHrs">2</span> <span class="unit">ชม.</span></div>
-          <small style="font-size: 0.7rem; color: #10b981; font-weight: 600; display: block; margin-top: 0.2rem;">🔍 คลิกดูประวัติอนุมัติ</small>
+          <div class="summary-stat-val val-green"><span id="adminTotalApprovedHrs">2</span> <span
+              class="unit">ชม.</span></div>
+          <small style="font-size: 0.7rem; color: #10b981; font-weight: 600; display: block; margin-top: 0.2rem;">🔍
+            คลิกดูประวัติอนุมัติ</small>
         </div>
 
       </div>
 
       <!-- ส่วนที่ 3: เมนูดำเนินการด่วนสำหรับเจ้าหน้าที่ (QUICK ADMIN ACTIONS) -->
       <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.85rem; color: var(--primary-navy);">
-        <i class="fa-solid fa-bolt" style="color: var(--warning-orange);"></i> เมนูดำเนินการด่วนสำหรับเจ้าหน้าที่ (Quick Admin Actions)
+        <i class="fa-solid fa-bolt" style="color: var(--warning-orange);"></i> เมนูดำเนินการด่วนสำหรับเจ้าหน้าที่ (Quick
+        Admin Actions)
       </h3>
       <div class="quick-actions-grid">
         <div class="quick-action-card" id="quickAddActBtn">
-          <div class="quick-action-icon" style="background: #eff6ff; color: #2563eb;"><i class="fa-solid fa-plus-circle"></i></div>
+          <div class="quick-action-icon" style="background: #eff6ff; color: #2563eb;"><i
+              class="fa-solid fa-plus-circle"></i></div>
           <div class="quick-action-title">เพิ่มกิจกรรมใหม่</div>
         </div>
         <div class="quick-action-card" id="quickAddStaffBtn">
-          <div class="quick-action-icon" style="background: #f0fdf4; color: #16a34a;"><i class="fa-solid fa-user-plus"></i></div>
+          <div class="quick-action-icon" style="background: #f0fdf4; color: #16a34a;"><i
+              class="fa-solid fa-user-plus"></i></div>
           <div class="quick-action-title">เพิ่มผู้ปฏิบัติงานใหม่</div>
         </div>
         <div class="quick-action-card" id="quickAddAdminBtn">
-          <div class="quick-action-icon" style="background: #f5f3ff; color: #7c3aed;"><i class="fa-solid fa-user-shield"></i></div>
+          <div class="quick-action-icon" style="background: #f5f3ff; color: #7c3aed;"><i
+              class="fa-solid fa-user-shield"></i></div>
           <div class="quick-action-title">เพิ่มแอดมินใหม่</div>
         </div>
         <div class="quick-action-card" id="quickListAdminBtn">
-          <div class="quick-action-icon" style="background: #fff7ed; color: #ea580c;"><i class="fa-solid fa-address-book"></i></div>
+          <div class="quick-action-icon" style="background: #fff7ed; color: #ea580c;"><i
+              class="fa-solid fa-address-book"></i></div>
           <div class="quick-action-title">รายชื่อแอดมินทั้งหมด</div>
         </div>
         <div class="quick-action-card" id="quickConnectGasBtn">
-          <div class="quick-action-icon" style="background: #ecfeff; color: #0891b2;"><i class="fa-solid fa-link"></i></div>
+          <div class="quick-action-icon" style="background: #ecfeff; color: #0891b2;"><i class="fa-solid fa-link"></i>
+          </div>
           <div class="quick-action-title">เชื่อมต่อ Google Sheets</div>
         </div>
         <div class="quick-action-card" id="quickExportCsvBtn">
-          <div class="quick-action-icon" style="background: #fdf2f8; color: #db2777;"><i class="fa-solid fa-file-csv"></i></div>
+          <div class="quick-action-icon" style="background: #fdf2f8; color: #db2777;"><i
+              class="fa-solid fa-file-csv"></i></div>
           <div class="quick-action-title">ส่งออกรายงาน CSV</div>
         </div>
       </div>
 
       <!-- ส่วนที่ 4: แดชบอร์ดเจ้าหน้าที่จัดการกิจกรรม รายชื่อ & อนุมัติชั่วโมง -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;" id="adminApprovalSection">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;"
+        id="adminApprovalSection">
         <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--primary-navy);">
           <i class="fa-solid fa-user-check"></i> แดชบอร์ดเจ้าหน้าที่จัดการกิจกรรม รายชื่อ & อนุมัติชั่วโมง
         </h3>
-        <button class="btn-register" id="triggerDriveBackupBtn" style="background: #10b981; width: auto; padding: 0.45rem 1rem;">
+        <button class="btn-register" id="triggerDriveBackupBtn"
+          style="background: #10b981; width: auto; padding: 0.45rem 1rem;">
           <i class="fa-solid fa-cloud-arrow-up"></i> สำรองข้อมูลเข้า Google Drive
         </button>
       </div>
@@ -419,7 +473,8 @@
       </div>
 
       <!-- BACKUP HISTORY TABLE -->
-      <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.75rem;"><i class="fa-solid fa-history"></i> ประวัติการสำรองข้อมูล (Google Drive Backup Logs)</h3>
+      <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.75rem;"><i class="fa-solid fa-history"></i>
+        ประวัติการสำรองข้อมูล (Google Drive Backup Logs)</h3>
       <div class="table-responsive">
         <table class="data-table">
           <thead>
@@ -454,9 +509,11 @@
       </div>
       <form id="staffLoginForm">
         <div class="form-group">
-          <label class="form-label" for="loginStudentId">รหัสนักศึกษา / รหัสผู้ปฏิบัติงาน <span style="color:red">*</span></label>
+          <label class="form-label" for="loginStudentId">รหัสนักศึกษา / รหัสผู้ปฏิบัติงาน <span
+              style="color:red">*</span></label>
           <input type="text" class="form-control" id="loginStudentId" placeholder="ตัวอย่าง: 673450351-6" required>
-          <small style="color: var(--text-gray); margin-top: 0.35rem; display: block;">กรอกรหัสนักศึกษาเพื่อดึงข้อมูลและชั่วโมงสะสม</small>
+          <small
+            style="color: var(--text-gray); margin-top: 0.35rem; display: block;">กรอกรหัสนักศึกษาเพื่อดึงข้อมูลและชั่วโมงสะสม</small>
         </div>
         <div style="margin-top: 1.25rem;">
           <button type="submit" class="btn-register">
@@ -472,11 +529,13 @@
     <div class="modal-content" style="max-width: 440px;">
       <div class="modal-header">
         <div style="display: flex; align-items: center; gap: 0.75rem;">
-          <div style="width: 40px; height: 40px; border-radius: 10px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+          <div
+            style="width: 40px; height: 40px; border-radius: 10px; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
             <i class="fa-solid fa-user-shield"></i>
           </div>
           <div>
-            <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-dark);">เข้าสู่ระบบเจ้าหน้าที่ (Admin)</h3>
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-dark);">เข้าสู่ระบบเจ้าหน้าที่ (Admin)
+            </h3>
             <p style="font-size: 0.8rem; color: var(--text-gray);">ระบุยูสเซอร์เนมและรหัสผ่านเจ้าหน้าที่</p>
           </div>
         </div>
@@ -485,19 +544,23 @@
 
       <form id="adminLoginForm" style="margin-top: 1rem;">
         <div class="form-group">
-          <label class="form-label" for="adminUsernameInput">ชื่อผู้ใช้งาน (Username) <span style="color:red">*</span></label>
+          <label class="form-label" for="adminUsernameInput">ชื่อผู้ใช้งาน (Username) <span
+              style="color:red">*</span></label>
           <input type="text" class="form-control" id="adminUsernameInput" placeholder="admin" required value="admin">
         </div>
         <div class="form-group">
-          <label class="form-label" for="adminPasswordInput">รหัสผ่าน (Password) <span style="color:red">*</span></label>
+          <label class="form-label" for="adminPasswordInput">รหัสผ่าน (Password) <span
+              style="color:red">*</span></label>
           <div style="position: relative;">
-            <input type="password" class="form-control" id="adminPasswordInput" placeholder="admin123" required value="admin123" style="padding-right: 2.5rem;">
-            <button type="button" id="togglePasswordBtn" style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-gray); cursor: pointer;">
+            <input type="password" class="form-control" id="adminPasswordInput" placeholder="admin123" required
+              value="admin123" style="padding-right: 2.5rem;">
+            <button type="button" id="togglePasswordBtn"
+              style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-gray); cursor: pointer;">
               <i class="fa-regular fa-eye"></i>
             </button>
           </div>
         </div>
-        
+
         <div style="margin-top: 1.25rem;">
           <button type="submit" class="btn-register" style="background: #1e293b; width: 100%;">
             <i class="fa-solid fa-right-to-bracket"></i> เข้าสู่ระบบเจ้าหน้าที่
@@ -526,7 +589,8 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">สาขาวิชา <span style="color:red">*</span></label>
-            <input type="text" class="form-control" id="newStaffMajor" placeholder="ภาษาอังกฤษเพื่อการสื่อสารธุรกิจ" required>
+            <input type="text" class="form-control" id="newStaffMajor" placeholder="ภาษาอังกฤษเพื่อการสื่อสารธุรกิจ"
+              required>
           </div>
           <div class="form-group">
             <label class="form-label">ชั้นปี <span style="color:red">*</span></label>
@@ -550,13 +614,16 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label"><i class="fa-brands fa-google-drive" style="color:#0f9d58;"></i> URL ลิงก์รูปโปรไฟล์ผู้ปฏิบัติงาน (รองรับ Google Drive)</label>
-          <input type="url" class="form-control" id="newStaffAvatar" placeholder="https://drive.google.com/file/d/... หรือ URL รูปภาพทั่วไป">
+          <label class="form-label"><i class="fa-brands fa-google-drive" style="color:#0f9d58;"></i> URL
+            ลิงก์รูปโปรไฟล์ผู้ปฏิบัติงาน (รองรับ Google Drive)</label>
+          <input type="url" class="form-control" id="newStaffAvatar"
+            placeholder="https://drive.google.com/file/d/... หรือ URL รูปภาพทั่วไป">
           <small style="color: var(--text-gray); margin-top: 0.35rem; display: block;">
             💡 สามารถวางลิงก์แชร์จาก Google Drive ได้โดยตรง ระบบจะแปลงเป็นลิงก์แสดงรูปโปรไฟล์ให้อัตโนมัติ
           </small>
           <div id="staffAvatarPreviewBox" style="display: none; margin-top: 0.5rem; text-align: center;">
-            <img id="staffAvatarImgPreview" src="" alt="Avatar Preview" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid #16a34a;">
+            <img id="staffAvatarImgPreview" src="" alt="Avatar Preview"
+              style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid #16a34a;">
           </div>
         </div>
 
@@ -635,7 +702,8 @@
         <input type="hidden" id="editAdminUsernameKey">
         <div class="form-group">
           <label class="form-label">ชื่อผู้ใช้งาน (Username)</label>
-          <input type="text" class="form-control" id="editAdminUsername" readonly style="background:#f1f5f9; font-weight:600;">
+          <input type="text" class="form-control" id="editAdminUsername" readonly
+            style="background:#f1f5f9; font-weight:600;">
         </div>
         <div class="form-group">
           <label class="form-label">ชื่อ - นามสกุล <span style="color:red">*</span></label>
@@ -647,11 +715,14 @@
         </div>
         <div class="form-group">
           <label class="form-label">รหัสผ่านใหม่ (Password)</label>
-          <input type="password" class="form-control" id="editAdminPassword" placeholder="เว้นว่างไว้หากไม่ต้องการเปลี่ยนรหัสผ่าน">
+          <input type="password" class="form-control" id="editAdminPassword"
+            placeholder="เว้นว่างไว้หากไม่ต้องการเปลี่ยนรหัสผ่าน">
         </div>
         <div class="form-group">
-          <label class="form-label"><i class="fa-brands fa-google-drive" style="color:#0f9d58;"></i> URL ลิงก์รูปโปรไฟล์ (รองรับ Google Drive)</label>
-          <input type="url" class="form-control" id="editAdminAvatar" placeholder="https://drive.google.com/file/d/... หรือ URL รูปภาพทั่วไป">
+          <label class="form-label"><i class="fa-brands fa-google-drive" style="color:#0f9d58;"></i> URL ลิงก์รูปโปรไฟล์
+            (รองรับ Google Drive)</label>
+          <input type="url" class="form-control" id="editAdminAvatar"
+            placeholder="https://drive.google.com/file/d/... หรือ URL รูปภาพทั่วไป">
         </div>
         <div style="margin-top: 1.25rem;">
           <button type="submit" class="btn-register" style="background: #7c3aed;">
@@ -682,17 +753,21 @@
         </div>
         <div class="form-group">
           <label class="form-label">ตำแหน่ง <span style="color:red">*</span></label>
-          <input type="text" class="form-control" id="newAdminPosition" placeholder="เจ้าหน้าที่บริหารงานทั่วไป" required>
+          <input type="text" class="form-control" id="newAdminPosition" placeholder="เจ้าหน้าที่บริหารงานทั่วไป"
+            required>
         </div>
 
         <div class="form-group">
-          <label class="form-label"><i class="fa-brands fa-google-drive" style="color:#0f9d58;"></i> URL ลิงก์รูปโปรไฟล์แอดมิน/เจ้าหน้าที่ (รองรับ Google Drive)</label>
-          <input type="url" class="form-control" id="newAdminAvatar" placeholder="https://drive.google.com/file/d/... หรือ URL รูปภาพทั่วไป">
+          <label class="form-label"><i class="fa-brands fa-google-drive" style="color:#0f9d58;"></i> URL
+            ลิงก์รูปโปรไฟล์แอดมิน/เจ้าหน้าที่ (รองรับ Google Drive)</label>
+          <input type="url" class="form-control" id="newAdminAvatar"
+            placeholder="https://drive.google.com/file/d/... หรือ URL รูปภาพทั่วไป">
           <small style="color: var(--text-gray); margin-top: 0.35rem; display: block;">
             💡 สามารถวางลิงก์แชร์จาก Google Drive ได้โดยตรง ระบบจะแปลงเป็นลิงก์แสดงรูปโปรไฟล์ให้อัตโนมัติ
           </small>
           <div id="adminAvatarPreviewBox" style="display: none; margin-top: 0.5rem; text-align: center;">
-            <img id="adminAvatarImgPreview" src="" alt="Admin Avatar Preview" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid #7c3aed;">
+            <img id="adminAvatarImgPreview" src="" alt="Admin Avatar Preview"
+              style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid #7c3aed;">
           </div>
         </div>
 
@@ -873,7 +948,8 @@
   <div class="modal-backdrop" id="approvedHoursModal">
     <div class="modal-content" style="max-width: 880px;">
       <div class="modal-header">
-        <h3><i class="fa-solid fa-circle-check" style="color: #10b981;"></i> ประวัติชั่วโมงกิจกรรมที่ได้รับการอนุมัติแล้ว</h3>
+        <h3><i class="fa-solid fa-circle-check" style="color: #10b981;"></i>
+          ประวัติชั่วโมงกิจกรรมที่ได้รับการอนุมัติแล้ว</h3>
         <button class="close-btn" id="closeApprovedHoursModalBtn">&times;</button>
       </div>
       <div class="table-responsive">
@@ -906,7 +982,8 @@
       <form id="regForm">
         <div class="form-group">
           <label class="form-label">กิจกรรมที่เลือก</label>
-          <input type="text" class="form-control" id="modalActTitle" readonly style="background: #f1f5f9; font-weight: 600;">
+          <input type="text" class="form-control" id="modalActTitle" readonly
+            style="background: #f1f5f9; font-weight: 600;">
           <input type="hidden" id="modalActId">
         </div>
         <div class="form-row">
@@ -946,28 +1023,46 @@
     <div class="modal-content" style="max-width: 640px; padding: 0; overflow: hidden;">
       <div style="position: relative; width: 100%; height: 260px; background: #0f172a; overflow: hidden;">
         <img id="detailActBanner" src="" alt="Activity Banner" style="width: 100%; height: 100%; object-fit: cover;">
-        <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(15,23,42,0.85) 0%, transparent 60%);"></div>
-        <button class="close-btn" id="closeDetailActModalBtn" style="position: absolute; top: 1rem; right: 1rem; background: rgba(0,0,0,0.5); color: white; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">&times;</button>
+        <div
+          style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(15,23,42,0.85) 0%, transparent 60%);">
+        </div>
+        <button class="close-btn" id="closeDetailActModalBtn"
+          style="position: absolute; top: 1rem; right: 1rem; background: rgba(0,0,0,0.5); color: white; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">&times;</button>
         <div style="position: absolute; bottom: 1rem; left: 1.25rem; right: 1.25rem; color: white;">
           <div style="display: flex; gap: 0.5rem; margin-bottom: 0.35rem;">
             <span class="card-badge badge-open" id="detailActStatusBadge">เปิดรับลงทะเบียน</span>
-            <span class="hours-credit-badge" id="detailActHoursBadge"><i class="fa-solid fa-clock"></i> +3 ชม.สะสม</span>
+            <span class="hours-credit-badge" id="detailActHoursBadge"><i class="fa-solid fa-clock"></i> +3
+              ชม.สะสม</span>
           </div>
-          <h2 id="detailActTitle" style="font-size: 1.35rem; font-weight: 700; color: white; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">ชื่อกิจกรรม</h2>
+          <h2 id="detailActTitle"
+            style="font-size: 1.35rem; font-weight: 700; color: white; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+            ชื่อกิจกรรม</h2>
         </div>
       </div>
-      
+
       <div style="padding: 1.5rem;">
-        <div style="display: flex; flex-direction: column; gap: 0.75rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1rem; margin-bottom: 1.25rem; font-size: 0.9rem;">
-          <div style="display: flex; align-items: center; gap: 0.6rem;"><i class="fa-regular fa-calendar-check" style="color: #2563eb; width: 20px;"></i> <span><strong>วันที่จัดกิจกรรม:</strong> <span id="detailActDate">-</span></span></div>
-          <div style="display: flex; align-items: center; gap: 0.6rem;"><i class="fa-regular fa-clock" style="color: #059669; width: 20px;"></i> <span><strong>เวลา:</strong> <span id="detailActTime">-</span></span></div>
-          <div style="display: flex; align-items: center; gap: 0.6rem;"><i class="fa-solid fa-location-dot" style="color: #dc2626; width: 20px;"></i> <span><strong>สถานที่จัดกิจกรรม:</strong> <span id="detailActLocation">-</span></span></div>
-          <div style="display: flex; align-items: center; gap: 0.6rem;"><i class="fa-solid fa-users" style="color: #7c3aed; width: 20px;"></i> <span><strong>ยอดลงทะเบียนปัจจุบัน:</strong> <strong id="detailActQuotaText">0 / 50 คน</strong></span></div>
+        <div
+          style="display: flex; flex-direction: column; gap: 0.75rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1rem; margin-bottom: 1.25rem; font-size: 0.9rem;">
+          <div style="display: flex; align-items: center; gap: 0.6rem;"><i class="fa-regular fa-calendar-check"
+              style="color: #2563eb; width: 20px;"></i> <span><strong>วันที่จัดกิจกรรม:</strong> <span
+                id="detailActDate">-</span></span></div>
+          <div style="display: flex; align-items: center; gap: 0.6rem;"><i class="fa-regular fa-clock"
+              style="color: #059669; width: 20px;"></i> <span><strong>เวลา:</strong> <span
+                id="detailActTime">-</span></span></div>
+          <div style="display: flex; align-items: center; gap: 0.6rem;"><i class="fa-solid fa-location-dot"
+              style="color: #dc2626; width: 20px;"></i> <span><strong>สถานที่จัดกิจกรรม:</strong> <span
+                id="detailActLocation">-</span></span></div>
+          <div style="display: flex; align-items: center; gap: 0.6rem;"><i class="fa-solid fa-users"
+              style="color: #7c3aed; width: 20px;"></i> <span><strong>ยอดลงทะเบียนปัจจุบัน:</strong> <strong
+                id="detailActQuotaText">0 / 50 คน</strong></span></div>
         </div>
 
         <div style="margin-bottom: 1.25rem;">
-          <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-dark); margin-bottom: 0.4rem;"><i class="fa-solid fa-align-left" style="color: var(--primary-blue);"></i> รายละเอียดกิจกรรม</h4>
-          <p id="detailActDesc" style="font-size: 0.88rem; color: var(--text-gray); line-height: 1.6; white-space: pre-line; margin: 0;">รายละเอียดสังเขป...</p>
+          <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-dark); margin-bottom: 0.4rem;"><i
+              class="fa-solid fa-align-left" style="color: var(--primary-blue);"></i> รายละเอียดกิจกรรม</h4>
+          <p id="detailActDesc"
+            style="font-size: 0.88rem; color: var(--text-gray); line-height: 1.6; white-space: pre-line; margin: 0;">
+            รายละเอียดสังเขป...</p>
         </div>
 
         <div id="detailActFooterBox" style="text-align: right; border-top: 1px solid #f1f5f9; padding-top: 1rem;">
@@ -1017,13 +1112,16 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label"><i class="fa-brands fa-google-drive" style="color:#0f9d58;"></i> URL ลิงก์รูปภาพป้ายกิจกรรม (รองรับ Google Drive)</label>
-          <input type="url" class="form-control" id="newActBanner" placeholder="https://drive.google.com/file/d/... หรือ URL รูปภาพทั่วไป">
+          <label class="form-label"><i class="fa-brands fa-google-drive" style="color:#0f9d58;"></i> URL
+            ลิงก์รูปภาพป้ายกิจกรรม (รองรับ Google Drive)</label>
+          <input type="url" class="form-control" id="newActBanner"
+            placeholder="https://drive.google.com/file/d/... หรือ URL รูปภาพทั่วไป">
           <small style="color: var(--text-gray); margin-top: 0.35rem; display: block;">
             💡 สามารถวางลิงก์แชร์จาก Google Drive ได้โดยตรง ระบบจะแปลงเป็นลิงก์ป้ายภาพกิจกรรมให้อัตโนมัติ
           </small>
           <div id="actBannerPreviewBox" style="display: none; margin-top: 0.5rem;">
-            <img id="actBannerImgPreview" src="" alt="Banner Preview" style="width: 100%; height: 120px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-light);">
+            <img id="actBannerImgPreview" src="" alt="Banner Preview"
+              style="width: 100%; height: 120px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-light);">
           </div>
         </div>
 
@@ -1049,7 +1147,8 @@
         <input type="hidden" id="adminAddActTitle">
         <input type="hidden" id="adminAddActHours">
 
-        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 0.85rem 1rem; margin-bottom: 1rem; font-size: 0.88rem; color: #166534;">
+        <div
+          style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 0.85rem 1rem; margin-bottom: 1rem; font-size: 0.88rem; color: #166534;">
           <strong>กิจกรรม:</strong> <span id="adminAddActNameLabel" style="font-weight: 700;">-</span>
         </div>
 
@@ -1081,8 +1180,10 @@
   </div>
 
   <!-- MODAL: DATA LOADING POPUP -->
-  <div class="modal-backdrop" id="dataLoadingModal" style="z-index: 9999; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px);">
-    <div class="modal-content" style="max-width: 420px; text-align: center; padding: 2.25rem 1.5rem; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);">
+  <div class="modal-backdrop" id="dataLoadingModal"
+    style="z-index: 9999; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px);">
+    <div class="modal-content"
+      style="max-width: 420px; text-align: center; padding: 2.25rem 1.5rem; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);">
       <div style="margin-bottom: 1.25rem;">
         <i class="fa-solid fa-cloud-arrow-down fa-bounce" style="font-size: 3rem; color: #2563eb;"></i>
       </div>
@@ -1092,10 +1193,13 @@
       <p style="font-size: 0.88rem; color: var(--text-gray); line-height: 1.5; margin-bottom: 1.25rem;">
         ระบบกำลังดึงข้อมูลกิจกรรม สถิติชั่วโมง และรายชื่อจาก Google Sheets
       </p>
-      
+
       <!-- Progress Bar -->
-      <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 99px; overflow: hidden; position: relative;">
-        <div id="loadingProgressBar" style="width: 60%; height: 100%; background: linear-gradient(90deg, #2563eb, #3b82f6); border-radius: 99px; animation: loadingPulse 1.2s infinite ease-in-out;"></div>
+      <div
+        style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 99px; overflow: hidden; position: relative;">
+        <div id="loadingProgressBar"
+          style="width: 60%; height: 100%; background: linear-gradient(90deg, #2563eb, #3b82f6); border-radius: 99px; animation: loadingPulse 1.2s infinite ease-in-out;">
+        </div>
       </div>
     </div>
   </div>
@@ -1104,14 +1208,19 @@
   <div class="modal-backdrop" id="gasSettingsModal">
     <div class="modal-content" style="max-width: 580px;">
       <div class="modal-header">
-        <h3><i class="fa-brands fa-google-drive" style="color: #0f9d58;"></i> เชื่อมต่อ Google Drive & Sheets Auto Backup</h3>
+        <h3><i class="fa-brands fa-google-drive" style="color: #0f9d58;"></i> เชื่อมต่อ Google Drive & Sheets Auto
+          Backup</h3>
         <button class="close-btn" id="closeGasModalBtn">&times;</button>
       </div>
-      
-      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; font-size: 0.85rem; color: #166534;">
-        <strong style="display: block; margin-bottom: 0.35rem;"><i class="fa-solid fa-circle-info"></i> คำแนะนำการเชื่อมต่อ Google Drive อัตโนมัติ:</strong>
+
+      <div
+        style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; font-size: 0.85rem; color: #166534;">
+        <strong style="display: block; margin-bottom: 0.35rem;"><i class="fa-solid fa-circle-info"></i>
+          คำแนะนำการเชื่อมต่อ Google Drive อัตโนมัติ:</strong>
         <ol style="margin-left: 1.25rem; line-height: 1.6;">
-          <li>คัดลอกซอร์สโค้ดจากไฟล์ <code>google-apps-script/Code.gs</code> ไปวางใน <a href="https://script.google.com" target="_blank" style="color: #15803d; font-weight: 700; text-decoration: underline;">Google Apps Script</a></li>
+          <li>คัดลอกซอร์สโค้ดจากไฟล์ <code>google-apps-script/Code.gs</code> ไปวางใน <a href="https://script.google.com"
+              target="_blank" style="color: #15803d; font-weight: 700; text-decoration: underline;">Google Apps
+              Script</a></li>
           <li>กดปุ่ม <strong>Deploy > New deployment</strong> (เลือกประเภท <code>Web app</code>)</li>
           <li>ตั้งค่า <strong>Execute as: Me</strong> และ <strong>Who has access: Anyone</strong></li>
           <li>นำ Web App URL ที่ได้ (ลงท้ายด้วย <code>/exec</code>) มาวางในช่องด้านล่างนี้</li>
@@ -1120,14 +1229,17 @@
 
       <div class="form-group">
         <label class="form-label">Google Apps Script Web App URL <span style="color:red">*</span></label>
-        <input type="url" class="form-control" id="gasUrlInput" placeholder="https://script.google.com/macros/s/AKfycb.../exec">
+        <input type="url" class="form-control" id="gasUrlInput"
+          placeholder="https://script.google.com/macros/s/AKfycb.../exec">
         <small style="color: var(--text-gray); margin-top: 0.4rem; display: block;">
-          💡 ระบบจะใช้ URL นี้สร้างไฟล์ <code>latest_system_state.json</code> และ <code>backup_state_...json</code> ลงใน Google Drive ของคุณอัตโนมัติ
+          💡 ระบบจะใช้ URL นี้สร้างไฟล์ <code>latest_system_state.json</code> และ <code>backup_state_...json</code> ลงใน
+          Google Drive ของคุณอัตโนมัติ
         </small>
       </div>
-      
+
       <div style="margin-top: 1.25rem; text-align: right;">
-        <button class="btn-register" id="saveGasUrlBtn" style="width: auto; padding: 0.55rem 1.5rem; background: #0f9d58;">
+        <button class="btn-register" id="saveGasUrlBtn"
+          style="width: auto; padding: 0.55rem 1.5rem; background: #0f9d58;">
           <i class="fa-solid fa-link"></i> บันทึกการเชื่อมต่อ Google Drive
         </button>
       </div>
@@ -1138,4 +1250,5 @@
   <script src="js/api.js"></script>
   <script src="js/app.js"></script>
 </body>
+
 </html>
