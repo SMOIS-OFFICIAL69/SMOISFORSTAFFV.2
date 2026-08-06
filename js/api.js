@@ -350,7 +350,7 @@ class SmoStaffAPI {
     list.unshift(userData);
     localStorage.setItem(STORAGE_KEYS.STAFF_USERS, JSON.stringify(list));
 
-    await this.sendGasMutation('createStaffUser', { data: userData }, `studentId=${encodeURIComponent(userData.studentId)}&fullName=${encodeURIComponent(userData.fullName)}&major=${encodeURIComponent(userData.major || '')}&year=${encodeURIComponent(userData.year || '')}&department=${encodeURIComponent(userData.department || '')}&position=${encodeURIComponent(userData.position || '')}&avatar=${encodeURIComponent(userData.avatar || '')}`);
+    await this.sendGasMutation('createStaffUser', { data: userData }, `studentId=${encodeURIComponent(userData.studentId)}&fullName=${encodeURIComponent(userData.fullName)}&major=${encodeURIComponent(userData.major || '')}&year=${encodeURIComponent(userData.year || '')}&department=${encodeURIComponent(userData.department || '')}&position=${encodeURIComponent(userData.position || '')}&targetHours=${encodeURIComponent(userData.targetHours || 200)}&avatar=${encodeURIComponent(userData.avatar || '')}`);
     return userData;
   }
 
@@ -367,7 +367,7 @@ class SmoStaffAPI {
         this.setCurrentStaff(list[idx]);
       }
 
-      await this.sendGasMutation('createStaffUser', { data: list[idx] }, `studentId=${encodeURIComponent(studentId)}&fullName=${encodeURIComponent(list[idx].fullName)}&major=${encodeURIComponent(list[idx].major || '')}&year=${encodeURIComponent(list[idx].year || '')}&department=${encodeURIComponent(list[idx].department || '')}&position=${encodeURIComponent(list[idx].position || '')}&avatar=${encodeURIComponent(list[idx].avatar || '')}`);
+      await this.sendGasMutation('createStaffUser', { data: list[idx] }, `studentId=${encodeURIComponent(studentId)}&fullName=${encodeURIComponent(list[idx].fullName)}&major=${encodeURIComponent(list[idx].major || '')}&year=${encodeURIComponent(list[idx].year || '')}&department=${encodeURIComponent(list[idx].department || '')}&position=${encodeURIComponent(list[idx].position || '')}&targetHours=${encodeURIComponent(list[idx].targetHours || 200)}&avatar=${encodeURIComponent(list[idx].avatar || '')}`);
       return { success: true, user: list[idx] };
     }
     return { success: false };

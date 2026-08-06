@@ -630,13 +630,14 @@ function saveStaffUser(data) {
       sheet.getRange(i + 1, 4).setValue(data.year);
       sheet.getRange(i + 1, 5).setValue(data.department);
       sheet.getRange(i + 1, 6).setValue(data.position);
+      sheet.getRange(i + 1, 7).setValue(Number(data.targetHours || 200));
       if (data.avatar !== undefined && data.avatar !== null && data.avatar !== '') {
         sheet.getRange(i + 1, 8).setValue(data.avatar);
       }
       return true;
     }
   }
-  sheet.appendRow([data.studentId, data.fullName, data.major, data.year, data.department, data.position, data.targetHours || 200, data.avatar || '']);
+  sheet.appendRow([data.studentId, data.fullName, data.major, data.year, data.department, data.position, Number(data.targetHours || 200), data.avatar || '']);
   return true;
 }
 

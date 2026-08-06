@@ -1457,6 +1457,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           document.getElementById('editStaffYear').value = s.year || 'ชั้นปีที่ 3';
           document.getElementById('editStaffDept').value = s.department;
           document.getElementById('editStaffPos').value = s.position;
+          const targetHoursInput = document.getElementById('editStaffTargetHours');
+          if (targetHoursInput) targetHoursInput.value = s.targetHours || 200;
           document.getElementById('editStaffAvatar').value = s.avatar || '';
           editStaffModal.classList.add('active');
         }
@@ -1491,13 +1493,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         const id = document.getElementById('editStaffIdKey').value;
         const avatarVal = document.getElementById('editStaffAvatar').value.trim();
+        const targetHoursVal = parseInt(document.getElementById('editStaffTargetHours').value, 10);
 
         const updated = {
           fullName: document.getElementById('editStaffName').value.trim(),
           major: document.getElementById('editStaffMajor').value.trim(),
           year: document.getElementById('editStaffYear').value,
           department: document.getElementById('editStaffDept').value.trim(),
-          position: document.getElementById('editStaffPos').value.trim()
+          position: document.getElementById('editStaffPos').value.trim(),
+          targetHours: isNaN(targetHoursVal) ? 200 : targetHoursVal
         };
 
         if (avatarVal) {
@@ -1730,6 +1734,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       try {
         const rawAvatar = newStaffAvatar ? newStaffAvatar.value.trim() : '';
+        const targetHoursVal = parseInt(document.getElementById('newStaffTargetHours').value, 10);
         const newUser = {
           studentId: document.getElementById('newStaffId').value.trim(),
           fullName: document.getElementById('newStaffName').value.trim(),
@@ -1738,7 +1743,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           department: document.getElementById('newStaffDept').value.trim(),
           position: document.getElementById('newStaffPos').value.trim(),
           avatar: convertDriveUrlToDirectLink(rawAvatar),
-          targetHours: 200
+          targetHours: isNaN(targetHoursVal) ? 200 : targetHoursVal
         };
         await api.createStaffUser(newUser);
         addStaffModal.classList.remove('active');
