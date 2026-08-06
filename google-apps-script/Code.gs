@@ -102,6 +102,22 @@ function doPost(e) {
       const result = saveAdminUser(postData.data);
       performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
+    } else if (action === 'deleteActivity') {
+      const result = deleteActivityRecord(postData.id);
+      performGoogleDriveBackup();
+      responseData = { status: 'success', result: result };
+    } else if (action === 'deleteStaffUser') {
+      const result = deleteStaffUserRecord(postData.studentId);
+      performGoogleDriveBackup();
+      responseData = { status: 'success', result: result };
+    } else if (action === 'deleteAdminUser') {
+      const result = deleteAdminUserRecord(postData.username);
+      performGoogleDriveBackup();
+      responseData = { status: 'success', result: result };
+    } else if (action === 'deleteRegistration') {
+      const result = deleteRegistrationRecord(postData.regId);
+      performGoogleDriveBackup();
+      responseData = { status: 'success', result: result };
     } else if (action === 'createDriveBackup') {
       const backupResult = performGoogleDriveBackup(postData.data);
       responseData = { 
@@ -221,7 +237,7 @@ function getTargetDriveFolder() {
 }
 
 /**
- * --- HELPERS ---
+ * --- DATA GETTERS & HELPERS ---
  */
 function getActivitiesData() {
   const sheet = getOrCreateSheet(CONFIG.SHEET_ACTIVITIES, ['ID', 'Title', 'Category', 'Description', 'Date', 'Time', 'Location', 'MaxQuota', 'RegisteredCount', 'Hours', 'Status', 'Banner']);
@@ -311,6 +327,7 @@ function getBackupsData() {
   }));
 }
 
+// --- SAVE OPERATIONS ---
 function saveRegistration(data) {
   const sheet = getOrCreateSheet(CONFIG.SHEET_REGISTRATIONS, ['RegID', 'Timestamp', 'StaffID', 'StaffName', 'Major', 'Department', 'Position', 'ActivityID', 'ActivityTitle', 'BaseHours', 'EarnedHours', 'Status', 'CheckInTime']);
   sheet.appendRow([data.regId, data.timestamp, data.staffId, data.staffName, data.major, data.department, data.position, data.activityId, data.activityTitle, data.baseHours || 3, 0, 'pending', '']);
@@ -348,6 +365,55 @@ function saveAdminUser(data) {
   const sheet = getOrCreateSheet(CONFIG.SHEET_ADMIN, ['Username', 'Password', 'FullName', 'Position', 'Role']);
   sheet.appendRow([data.username, data.password, data.fullName, data.position, data.role || 'Admin']);
   return true;
+}
+
+// --- AUTOMATED DELETE OPERATIONS FROM GOOGLE SHEETS DATABASE ---
+function deleteActivityRecord(id) {
+  const sheet = getOrCreateSheet(CONFIG.SHEET_ACTIVITIES, ['ID', 'Title', 'Category', 'Description', 'Date', 'Time', 'Location', 'MaxQuota', 'RegisteredCount', 'Hours', 'Status', 'Banner']);
+  const rows = sheet.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]) === String(id)) {
+      sheet.deleteRow(i + 1);
+      return true;
+    }
+  }
+  return false;
+}
+
+function deleteStaffUserRecord(studentId) {
+  const sheet = getOrCreateSheet(CONFIG.SHEET_STAFF, ['StudentID', 'FullName', 'Major', 'Year', 'Department', 'Position', 'TargetHours']);
+  const rows = sheet.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]) === String(studentId)) {
+      sheet.deleteRow(i + 1);
+      return true;
+    }
+  }
+  return false;
+}
+
+function deleteAdminUserRecord(username) {
+  const sheet = getOrCreateSheet(CONFIG.SHEET_ADMIN, ['Username', 'Password', 'FullName', 'Position', 'Role']);
+  const rows = sheet.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]) === String(username)) {
+      sheet.deleteRow(i + 1);
+      return true;
+    }
+  }
+  return false;
+}
+
+function deleteRegistrationRecord(regId) {
+  const sheet = getOrCreateSheet(CONFIG.SHEET_REGISTRATIONS, ['RegID', 'Timestamp', 'StaffID', 'StaffName', 'Major', 'Department', 'Position', 'ActivityID', 'ActivityTitle', 'BaseHours', 'EarnedHours', 'Status', 'CheckInTime']);
+  const rows = sheet.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]) === String(regId)) {
+      sheet.deleteRow(i + 1);
+      return true;
+    }
+  }
+  return false;
 }
 
 function getOrCreateSheet(sheetName, headers) {

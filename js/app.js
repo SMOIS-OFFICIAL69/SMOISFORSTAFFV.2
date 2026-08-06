@@ -433,7 +433,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
+    const adminRoleBadge = document.getElementById('adminRoleBadge');
     if (adminFullName) adminFullName.textContent = admin.fullName;
+    if (adminRoleBadge) adminRoleBadge.textContent = admin.role || 'Admin';
     if (adminPosition) adminPosition.textContent = admin.position;
   }
 
@@ -676,6 +678,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         staffIdInput.value = staff.studentId;
         staffNameInput.value = staff.fullName;
         deptInput.value = `${staff.major} (${staff.department})`;
+
+        const phoneInputEl = document.getElementById('phoneInput');
+        if (phoneInputEl) {
+          phoneInputEl.value = staff.phone || '';
+        }
+
         registrationModal.classList.add('active');
       });
     });
@@ -774,18 +782,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึก...';
 
     const staff = api.getCurrentStaff();
+    const phoneVal = document.getElementById('phoneInput').value.trim();
+
+    // Auto-save phone number to staff profile if provided
+    if (staff && phoneVal) {
+      staff.phone = phoneVal;
+      api.updateStaffUser(staff.studentId, { phone: phoneVal });
+    }
 
     const payload = {
       activityId: modalActId.value,
       activityTitle: modalActTitle.value,
       hours: parseInt(modalActTitle.getAttribute('data-hours') || 3, 10),
-      staffId: staff.studentId,
-      staffName: staff.fullName,
-      major: staff.major,
-      department: staff.department,
-      position: staff.position,
-      phone: document.getElementById('phoneInput').value.trim(),
-      email: document.getElementById('emailInput').value.trim()
+      staffId: staff ? staff.studentId : '',
+      staffName: staff ? staff.fullName : '',
+      major: staff ? staff.major : '',
+      department: staff ? staff.department : '',
+      position: staff ? staff.position : '',
+      phone: phoneVal
     };
 
     const res = await api.registerStaff(payload);
@@ -793,7 +807,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     btn.innerHTML = '<i class="fa-solid fa-check"></i> ยืนยันการลงทะเบียน';
     registrationModal.classList.remove('active');
 
-    if (res.success) {
+    if (res && res.success) {
       showToast('บันทึกการลงทะเบียนสำเร็จเรียบร้อย! รอเจ้าหน้าที่อนุมัติชั่วโมง', 'success');
       await loadAllData();
       autoDriveBackup('new_registration');

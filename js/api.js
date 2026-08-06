@@ -362,6 +362,17 @@ class SmoStaffAPI {
     let list = this.getStaffUsers();
     list = list.filter(s => s.studentId !== studentId);
     localStorage.setItem(STORAGE_KEYS.STAFF_USERS, JSON.stringify(list));
+
+    const gasUrl = this.getGasUrl();
+    if (gasUrl) {
+      fetch(gasUrl, {
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'deleteStaffUser', studentId: studentId })
+      }).catch(e => console.warn('GAS Delete Staff User error:', e));
+    }
+
     return { success: true };
   }
 
@@ -407,6 +418,17 @@ class SmoStaffAPI {
     let list = this.getAdminUsers();
     list = list.filter(a => a.username !== username);
     localStorage.setItem(STORAGE_KEYS.ADMIN_USERS, JSON.stringify(list));
+
+    const gasUrl = this.getGasUrl();
+    if (gasUrl) {
+      fetch(gasUrl, {
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'deleteAdminUser', username: username })
+      }).catch(e => console.warn('GAS Delete Admin User error:', e));
+    }
+
     return { success: true };
   }
 
@@ -472,6 +494,17 @@ class SmoStaffAPI {
     let activities = JSON.parse(localStorage.getItem(STORAGE_KEYS.ACTIVITIES) || '[]');
     activities = activities.filter(a => a.id !== id);
     localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(activities));
+
+    const gasUrl = this.getGasUrl();
+    if (gasUrl) {
+      fetch(gasUrl, {
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'deleteActivity', id: id })
+      }).catch(e => console.warn('GAS Delete Activity error:', e));
+    }
+
     return { success: true };
   }
 
@@ -582,6 +615,17 @@ class SmoStaffAPI {
     let registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS) || '[]');
     registrations = registrations.filter(r => r.regId !== regId);
     localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(registrations));
+
+    const gasUrl = this.getGasUrl();
+    if (gasUrl) {
+      fetch(gasUrl, {
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'deleteRegistration', regId: regId })
+      }).catch(e => console.warn('GAS Delete Registration error:', e));
+    }
+
     return { success: true };
   }
 
