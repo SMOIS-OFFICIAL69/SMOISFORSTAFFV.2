@@ -477,22 +477,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function loadAllData(showLoadingModal = false) {
     const dataLoadingModal = document.getElementById('dataLoadingModal');
+
+    // 1. Instant 0ms UI Render using local cached data
+    currentActivities = api.getActivities();
+    currentRegistrations = api.getRegistrations();
+    
+    renderStaffHeaderInfo();
+    updateStaffHoursStats();
+    filterAndRenderActivities();
+    renderMySummaryView();
+    if (currentRole === 'admin') renderAdminTables();
+
+    // Fast 300ms max modal dismiss so user is never blocked or delayed
     if (showLoadingModal && dataLoadingModal) {
       dataLoadingModal.classList.add('active');
+      setTimeout(() => {
+        dataLoadingModal.classList.remove('active');
+      }, 300);
     }
 
+    // 2. Fast Non-Blocking Parallel Background Live Refresh
     try {
-      // 1. Instant 0ms UI Render using local cached data
-      currentActivities = api.getActivities();
-      currentRegistrations = api.getRegistrations();
-      
-      renderStaffHeaderInfo();
-      updateStaffHoursStats();
-      filterAndRenderActivities();
-      renderMySummaryView();
-      if (currentRole === 'admin') renderAdminTables();
-
-      // 2. Fast Non-Blocking Parallel Background Live Refresh
       const synced = await api.syncDataFromGoogleSheets();
       if (synced) {
         currentActivities = api.getActivities();
@@ -511,9 +516,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       console.error('Load error:', e);
     } finally {
       if (dataLoadingModal) {
-        setTimeout(() => {
-          dataLoadingModal.classList.remove('active');
-        }, 300);
+        dataLoadingModal.classList.remove('active');
       }
     }
   }
