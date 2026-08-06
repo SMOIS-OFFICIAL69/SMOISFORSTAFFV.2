@@ -366,7 +366,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!staff) {
       // LOGGED OUT / GUEST STATE: Do NOT display numbers or target hours
       if (targetHoursText) targetHoursText.textContent = '-';
-      if (meterSubtitleText) meterSubtitleText.textContent = 'เป้าหมายปีงบประมาณ 2026: - ชั่วโมงกิจกรรม';
+      if (meterSubtitleText) meterSubtitleText.textContent = 'เป้าหมายชั่วโมงกิจกรรม: - ชั่วโมงกิจกรรม';
       if (meterPercentText) meterPercentText.textContent = '-';
       if (meterFillBar) meterFillBar.style.width = '0%';
       if (meterEarnedText) meterEarnedText.textContent = 'สะสมแล้ว - / - ชั่วโมง';
@@ -399,7 +399,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const percent = Math.min(100, Math.round((earned / target) * 100));
 
     if (targetHoursText) targetHoursText.textContent = target;
-    if (meterSubtitleText) meterSubtitleText.textContent = `เป้าหมายปีงบประมาณ 2026: ${target} ชั่วโมงกิจกรรม`;
+    if (meterSubtitleText) meterSubtitleText.textContent = `เป้าหมายชั่วโมงกิจกรรม: ${target} ชั่วโมงกิจกรรม`;
     if (meterPercentText) meterPercentText.textContent = `${percent}%`;
     if (meterFillBar) meterFillBar.style.width = `${percent}%`;
     if (meterEarnedText) meterEarnedText.textContent = `สะสมแล้ว ${earned} / ${target} ชั่วโมง`;
@@ -710,7 +710,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (summaryRegisteredCount) summaryRegisteredCount.textContent = '0';
       if (meterPercentText) meterPercentText.textContent = '0%';
       if (meterFillBar) meterFillBar.style.width = '0%';
-      if (meterEarnedText) meterEarnedText.textContent = 'สะสมแล้ว 0 / 200 ชั่วโมง';
+      if (meterEarnedText) meterEarnedText.textContent = 'สะสมแล้ว - / - ชั่วโมง';
       if (meterRemainingText) meterRemainingText.textContent = 'กรุณาเข้าสู่ระบบ';
       if (historyTableBody) {
         historyTableBody.innerHTML = `
@@ -740,9 +740,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     const regCount = myRegs.length;
-    const target = staff.targetHours || 200;
+    const target = Number(staff.targetHours) || 200;
     const percent = Math.min(100, Math.round((earned / target) * 100));
     const remaining = Math.max(0, target - earned);
+
+    const targetHoursText = document.getElementById('targetHoursText');
+    const meterSubtitleText = document.getElementById('meterSubtitleText');
+
+    if (targetHoursText) targetHoursText.textContent = target;
+    if (meterSubtitleText) meterSubtitleText.textContent = `เป้าหมายชั่วโมงกิจกรรม: ${target} ชั่วโมงกิจกรรม`;
 
     if (summaryEarnedHours) summaryEarnedHours.textContent = earned;
     if (summaryPendingHours) summaryPendingHours.textContent = pending;
