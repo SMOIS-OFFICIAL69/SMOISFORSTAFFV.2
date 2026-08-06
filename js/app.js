@@ -365,6 +365,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (navUserCode) navUserCode.textContent = '';
       if (navUserAvatar) navUserAvatar.innerHTML = '<i class="fa-solid fa-user-slash"></i>';
       if (logoutBtn) logoutBtn.textContent = 'เข้าสู่ระบบ';
+      if (historyUserSubtitle) historyUserSubtitle.textContent = '';
       return;
     }
 
@@ -771,7 +772,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
     const stat = statusFilter ? statusFilter.value : '';
 
-    let list = currentActivities;
+    let list = [...currentActivities];
+
+    // SORT BY NEAREST DATE FIRST (Ascending order of activity date YYYY-MM-DD)
+    list.sort((a, b) => {
+      const timeA = a.date ? new Date(a.date.trim()).getTime() : 9999999999999;
+      const timeB = b.date ? new Date(b.date.trim()).getTime() : 9999999999999;
+      return timeA - timeB;
+    });
 
     if (query) {
       list = list.filter(a => a.title.toLowerCase().includes(query) || a.location.toLowerCase().includes(query) || a.id.toLowerCase().includes(query));
@@ -1392,15 +1400,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     editStaffForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const id = document.getElementById('editStaffIdKey').value;
+      const avatarVal = document.getElementById('editStaffAvatar').value.trim();
+
       const updated = {
         fullName: document.getElementById('editStaffName').value.trim(),
         major: document.getElementById('editStaffMajor').value.trim(),
         year: document.getElementById('editStaffYear').value,
         department: document.getElementById('editStaffDept').value.trim(),
-        position: document.getElementById('editStaffPos').value.trim(),
-        avatar: document.getElementById('editStaffAvatar').value.trim()
+        position: document.getElementById('editStaffPos').value.trim()
       };
-      api.updateStaffUser(id, updated);
+
+      if (avatarVal) {
+        updated.avatar = avatarVal;
+      }
+
+      await api.updateStaffUser(id, updated);
       editStaffModal.classList.remove('active');
       showToast(`แก้ไขข้อมูลผู้ปฏิบัติงานรหัส ${id} สำเร็จแล้ว`, 'success');
       await loadAllData();
@@ -1567,15 +1581,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     editAdminForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const username = document.getElementById('editAdminUsernameKey').value;
+      const avatarVal = document.getElementById('editAdminAvatar').value.trim();
+
       const updated = {
         fullName: document.getElementById('editAdminFullName').value.trim(),
-        position: document.getElementById('editAdminPosition').value.trim(),
-        avatar: document.getElementById('editAdminAvatar').value.trim()
+        position: document.getElementById('editAdminPosition').value.trim()
       };
       const pwd = document.getElementById('editAdminPassword').value.trim();
       if (pwd) updated.password = pwd;
 
-      api.updateAdminUser(username, updated);
+      if (avatarVal) {
+        updated.avatar = avatarVal;
+      }
+
+      await api.updateAdminUser(username, updated);
       document.getElementById('editAdminModal').classList.remove('active');
       showToast(`แก้ไขข้อมูลแอดมิน ${username} สำเร็จแล้ว`, 'success');
       await loadAllData();
