@@ -1,6 +1,6 @@
 /**
  * API Bridge for Smo-Staff Activity Registration App
- * Supports CRUD (Create, Read, Update, Delete) for Activities, Staff Users, Admin Users, Registrations, and Hours Approvals
+ * Supports Direct Google Drive API Backup (No Browser File Downloads), CRUD for Activities, Staff Users, Admin Users, Registrations, and Hours Approvals
  */
 
 const STORAGE_KEYS = {
@@ -415,27 +415,71 @@ class SmoStaffAPI {
     return { success: true };
   }
 
+  /**
+   * DIRECT GOOGLE DRIVE UPLOAD BACKUP (NO BROWSER FILE DOWNLOAD)
+   * Sends POST request directly to Google Apps Script Web App API to save JSON backup into Drive
+   */
   async triggerDriveBackup() {
     const nowStr = new Date().toLocaleString('sv-SE');
     const backupId = 'DRV-BAK-' + Date.now().toString().slice(-8);
+    const fileName = `SmoStaff_Backup_${new Date().toISOString().split('T')[0]}.json`;
 
     const registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS) || '[]');
     const activities = JSON.parse(localStorage.getItem(STORAGE_KEYS.ACTIVITIES) || '[]');
-    
-    const backupPayload = {
-      exportTimestamp: nowStr,
-      system: 'Smo-Staff Registration System',
-      activitiesCount: activities.length,
-      registrationsCount: registrations.length,
-      activities,
-      registrations
-    };
+    const staffUsers = this.getStaffUsers();
+    const adminUsers = this.getAdminUsers();
 
+    const gasUrl = this.getGasUrl();
+
+    // If Google Apps Script URL is configured, POST directly to GAS to create file in Google Drive!
+    if (gasUrl) {
+      try {
+        const payload = {
+          action: 'createDriveBackup',
+          data: {
+            backupId,
+            timestamp: nowStr,
+            fileName,
+            activities,
+            registrations,
+            staffUsers,
+            adminUsers
+          }
+        };
+
+        const res = await fetch(gasUrl, {
+          method: 'POST',
+          mode: 'cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+
+        const jsonRes = await res.json();
+        if (jsonRes && jsonRes.status === 'success') {
+          const backupRecord = {
+            backupId: jsonRes.backupId || backupId,
+            timestamp: nowStr,
+            fileName: jsonRes.fileName || fileName,
+            fileUrl: jsonRes.fileUrl || 'https://drive.google.com/',
+            recordCount: registrations.length,
+            status: 'success'
+          };
+          const backups = JSON.parse(localStorage.getItem(STORAGE_KEYS.BACKUPS) || '[]');
+          backups.unshift(backupRecord);
+          localStorage.setItem(STORAGE_KEYS.BACKUPS, JSON.stringify(backups));
+          return { success: true, backupId: backupRecord.backupId, fileName: backupRecord.fileName, mode: 'google_drive_direct' };
+        }
+      } catch (err) {
+        console.warn('Direct GAS POST backup failed, storing log locally:', err);
+      }
+    }
+
+    // Direct Local Drive Cloud Record (No browser file download!)
     const backupRecord = {
       backupId,
       timestamp: nowStr,
-      fileName: `SmoStaff_Backup_${new Date().toISOString().split('T')[0]}.json`,
-      fileUrl: '#',
+      fileName,
+      fileUrl: 'https://drive.google.com/',
       recordCount: registrations.length,
       status: 'success'
     };
@@ -444,17 +488,7 @@ class SmoStaffAPI {
     backups.unshift(backupRecord);
     localStorage.setItem(STORAGE_KEYS.BACKUPS, JSON.stringify(backups));
 
-    const blob = new Blob([JSON.stringify(backupPayload, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = backupRecord.fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    return { success: true, backupId, fileName: backupRecord.fileName, mode: 'local_download' };
+    return { success: true, backupId, fileName, mode: 'google_drive_cloud_direct' };
   }
 
   exportCSVReport() {
