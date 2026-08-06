@@ -4,6 +4,9 @@
  * ==============================================================================
  * Google Apps Script for Google Sheets Database & Automated Drive Backup Service
  * 
+ * Auto-creates dedicated organized folder path in Drive:
+ * Google Drive > SMOIS-WEB > KKU_FIS_StudentUnion_Backup
+ * 
  * Generates exact files as required:
  * 1. latest_system_state.json (Overwritten with latest snapshot)
  * 2. backup_state_YYYY-MM-DD_HH-mm-ss.json (Historical timestamped backups)
@@ -17,8 +20,9 @@
  */
 
 const CONFIG = {
-  FOLDER_NAME: 'KKU_FIS_StudentUnion_Backup', // โฟลเดอร์จัดเก็บสำรองใน Google Drive
-  DRIVE_FOLDER_ID: '', // ระบุ ID โฟลเดอร์หากมี (ปล่อยว่างไว้ให้สร้างโฟลเดอร์อัตโนมัติได้)
+  PARENT_FOLDER_NAME: 'SMOIS-WEB', // โฟลเดอร์หลัก
+  SUB_FOLDER_NAME: 'KKU_FIS_StudentUnion_Backup', // โฟลเดอร์ย่อยสำหรับเก็บไฟล์สำรองข้อมูล
+  DRIVE_FOLDER_ID: '', // หากมี Folder ID เฉพาะ สามารถระบุตรงนี้ได้
   SHEET_ACTIVITIES: 'Activities',
   SHEET_REGISTRATIONS: 'Registrations',
   SHEET_STAFF: 'StaffUsers',
@@ -117,9 +121,8 @@ function doPost(e) {
 
 /**
  * --- GOOGLE DRIVE BACKUP ENGINE ---
- * Creates two exact files:
- * 1. latest_system_state.json (Overwritten each time)
- * 2. backup_state_YYYY-MM-DD_HH-mm-ss.json (Point-in-time historical file)
+ * Auto-creates dedicated organized folder path in Drive:
+ * Google Drive > SMOIS-WEB > KKU_FIS_StudentUnion_Backup
  */
 function performGoogleDriveBackup(clientPayload) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -185,23 +188,36 @@ function performGoogleDriveBackup(clientPayload) {
 }
 
 /**
- * Get or Create Target Google Drive Folder
+ * Get or Create Dedicated Backup Folder Structure:
+ * Google Drive > SMOIS-WEB > KKU_FIS_StudentUnion_Backup
  */
 function getTargetDriveFolder() {
   if (CONFIG.DRIVE_FOLDER_ID && CONFIG.DRIVE_FOLDER_ID.trim() !== '') {
     try {
       return DriveApp.getFolderById(CONFIG.DRIVE_FOLDER_ID.trim());
     } catch (e) {
-      Logger.log('Folder ID search error, fallback to folder name: ' + e.toString());
+      Logger.log('Folder ID search error: ' + e.toString());
     }
   }
 
-  const folderName = CONFIG.FOLDER_NAME || 'KKU_FIS_StudentUnion_Backup';
-  const folders = DriveApp.getFoldersByName(folderName);
-  if (folders.hasNext()) {
-    return folders.next();
+  // 1. Parent Folder: "SMOIS-WEB"
+  const parentName = CONFIG.PARENT_FOLDER_NAME || 'SMOIS-WEB';
+  let parentFolder;
+  const parentFolders = DriveApp.getFoldersByName(parentName);
+  if (parentFolders.hasNext()) {
+    parentFolder = parentFolders.next();
+  } else {
+    parentFolder = DriveApp.createFolder(parentName);
   }
-  return DriveApp.createFolder(folderName);
+
+  // 2. Subfolder: "KKU_FIS_StudentUnion_Backup" inside "SMOIS-WEB"
+  const subFolderName = CONFIG.SUB_FOLDER_NAME || 'KKU_FIS_StudentUnion_Backup';
+  const subFolders = parentFolder.getFoldersByName(subFolderName);
+  if (subFolders.hasNext()) {
+    return subFolders.next();
+  } else {
+    return parentFolder.createFolder(subFolderName);
+  }
 }
 
 /**

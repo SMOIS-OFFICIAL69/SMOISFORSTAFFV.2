@@ -448,6 +448,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // DATA INITIALIZATION
+  renderStaffHeaderInfo();
   await loadAllData();
 
   async function loadAllData() {
