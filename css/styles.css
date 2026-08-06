@@ -1159,13 +1159,13 @@ html, body {
     max-width: 100% !important;
   }
 
-  /* Navbar Mobile Minimal Header */
+  /* Navbar Mobile Clean 2-Row Layout */
   .app-navbar {
     padding: 0.5rem 0.75rem;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
-    gap: 0.35rem;
+    gap: 0.4rem;
     max-width: 100vw !important;
     box-sizing: border-box !important;
     background: #ffffff;
@@ -1173,6 +1173,8 @@ html, body {
   }
 
   .nav-left {
+    display: flex;
+    align-items: center;
     gap: 0.4rem;
   }
 
@@ -1190,19 +1192,40 @@ html, body {
   }
 
   .nav-right {
+    display: flex;
+    align-items: center;
     gap: 0.35rem;
+  }
+
+  .role-switcher-container {
+    width: 100% !important;
+    display: flex !important;
+    background: #f1f5f9 !important;
+    padding: 3px !important;
+    border-radius: 8px !important;
+    margin-top: 0.2rem !important;
+    order: 3;
+  }
+
+  .role-pill-btn {
+    flex: 1 1 50% !important;
+    text-align: center !important;
+    justify-content: center !important;
+    padding: 0.35rem 0.5rem !important;
+    font-size: 0.78rem !important;
+    border-radius: 6px !important;
   }
 
   .user-profile-pill {
     padding: 0.2rem 0.45rem;
     gap: 0.35rem;
-    max-width: 150px;
+    max-width: 140px;
     background: #f8fafc;
     border: 1px solid #e2e8f0;
   }
 
   .user-name-text {
-    max-width: 75px;
+    max-width: 70px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1219,7 +1242,7 @@ html, body {
     border-radius: 6px;
   }
 
-  /* Subnav Mobile Switcher - Sleek Segmented Control */
+  /* Subnav Mobile Switcher */
   .tabs-subnav {
     margin-bottom: 0.85rem;
   }
@@ -1251,26 +1274,56 @@ html, body {
     box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
   }
 
-  /* Hero Card Minimal Mobile */
+  /* Hero Card Minimal Mobile (Prevent 1-Char Text Squishing) */
   .user-hero-card {
-    padding: 0.85rem;
-    border-radius: 14px;
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    color: white;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 1rem 0.85rem !important;
+    gap: 0.75rem !important;
+    border-radius: 14px !important;
     max-width: 100% !important;
-    margin-bottom: 0.85rem;
+    margin-bottom: 0.85rem !important;
+    box-sizing: border-box !important;
   }
 
   .user-hero-left {
-    flex-direction: row;
-    align-items: center;
-    gap: 0.65rem;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    gap: 0.65rem !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .user-hero-left > div:last-child,
+  .hero-user-details {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  .user-hero-left h2 {
+    font-size: 1.05rem !important;
+    line-height: 1.35 !important;
+    word-break: break-word !important;
+    white-space: normal !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  .user-hero-left p {
+    font-size: 0.82rem !important;
+    line-height: 1.4 !important;
+    word-break: break-word !important;
+    white-space: normal !important;
   }
 
   .user-avatar-hero-box {
     width: 44px;
     height: 44px;
     border-radius: 50%;
+    flex-shrink: 0;
   }
 
   .user-hero-right {
