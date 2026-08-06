@@ -646,7 +646,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // SEARCH & FILTER ACTIVITIES
   if (searchInput) searchInput.addEventListener('input', filterAndRenderActivities);
-  if (categoryFilter) categoryFilter.addEventListener('change', filterAndRenderActivities);
   if (statusFilter) statusFilter.addEventListener('change', filterAndRenderActivities);
 
   function filterAndRenderActivities() {
@@ -654,7 +653,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     activitiesGrid.innerHTML = '';
 
     const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
-    const cat = categoryFilter ? categoryFilter.value : '';
     const stat = statusFilter ? statusFilter.value : '';
 
     let list = currentActivities;
@@ -662,14 +660,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (query) {
       list = list.filter(a => a.title.toLowerCase().includes(query) || a.location.toLowerCase().includes(query) || a.id.toLowerCase().includes(query));
     }
-    if (cat) {
-      list = list.filter(a => a.category === cat);
-    }
     if (stat) {
       list = list.filter(a => a.status === stat);
     }
-
-    if (activitiesCountNum) activitiesCountNum.textContent = list.length;
 
     if (list.length === 0) {
       activitiesGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-gray); padding: 3rem; background: #fff; border-radius: 12px; border: 1px solid var(--border-light);"><i class="fa-solid fa-folder-open" style="font-size: 2.5rem; margin-bottom: 0.75rem; color: #cbd5e1;"></i><p>ไม่พบรายการกิจกรรมตามเงื่อนไขที่ค้นหา</p></div>`;

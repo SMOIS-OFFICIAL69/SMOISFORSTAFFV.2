@@ -428,18 +428,7 @@ class SmoStaffAPI {
   }
 
   // --- ACTIVITIES CRUD ---
-  async getActivities() {
-    const gasUrl = this.getGasUrl();
-    if (gasUrl) {
-      try {
-        const res = await fetch(`${gasUrl}?action=getActivities`);
-        const json = await res.json();
-        if (json && json.status === 'success' && Array.isArray(json.data) && json.data.length > 0) {
-          localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(json.data));
-          return json.data;
-        }
-      } catch (e) { console.warn('Fetch live activities error:', e); }
-    }
+  getActivities() {
     const local = JSON.parse(localStorage.getItem(STORAGE_KEYS.ACTIVITIES) || '[]');
     if (!local || local.length === 0) {
       localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(SEED_ACTIVITIES));
@@ -512,18 +501,7 @@ class SmoStaffAPI {
   }
 
   // --- REGISTRATIONS CRUD ---
-  async getRegistrations() {
-    const gasUrl = this.getGasUrl();
-    if (gasUrl) {
-      try {
-        const res = await fetch(`${gasUrl}?action=getRegistrations`);
-        const json = await res.json();
-        if (json && json.status === 'success' && Array.isArray(json.data) && json.data.length > 0) {
-          localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(json.data));
-          return json.data;
-        }
-      } catch (e) { console.warn('Fetch live registrations error:', e); }
-    }
+  getRegistrations() {
     const local = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS) || '[]');
     if (!local || local.length === 0) {
       localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(SEED_REGISTRATIONS));
