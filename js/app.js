@@ -477,7 +477,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function loadAllData() {
     try {
-      await api.syncDataFromGoogleSheets();
+      // 1. Instant 0ms UI Render using local cached data
       currentActivities = await api.getActivities();
       currentRegistrations = await api.getRegistrations();
       
@@ -486,6 +486,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       filterAndRenderActivities();
       renderMySummaryView();
       if (currentRole === 'admin') renderAdminTables();
+
+      // 2. Fast Non-Blocking Parallel Background Live Refresh
+      const synced = await api.syncDataFromGoogleSheets();
+      if (synced) {
+        currentActivities = await api.getActivities();
+        currentRegistrations = await api.getRegistrations();
+        renderStaffHeaderInfo();
+        updateStaffHoursStats();
+        filterAndRenderActivities();
+        renderMySummaryView();
+        if (currentRole === 'admin') renderAdminTables();
+      }
     } catch (e) { console.error('Load error:', e); }
   }
 

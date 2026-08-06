@@ -202,37 +202,34 @@ class SmoStaffAPI {
     if (!gasUrl) return false;
 
     try {
-      // 1. Fetch Real Live Activities Sheet
-      const actRes = await fetch(`${gasUrl}?action=getActivities`);
-      const actJson = await actRes.json();
+      const [actRes, regRes, staffRes, adminRes, backupRes] = await Promise.all([
+        fetch(`${gasUrl}?action=getActivities`),
+        fetch(`${gasUrl}?action=getRegistrations`),
+        fetch(`${gasUrl}?action=getStaffUsers`),
+        fetch(`${gasUrl}?action=getAdminUsers`),
+        fetch(`${gasUrl}?action=getBackups`)
+      ]);
+
+      const [actJson, regJson, staffJson, adminJson, backupJson] = await Promise.all([
+        actRes.json(),
+        regRes.json(),
+        staffRes.json(),
+        adminRes.json(),
+        backupRes.json()
+      ]);
+
       if (actJson && actJson.status === 'success' && Array.isArray(actJson.data)) {
         localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(actJson.data));
       }
-
-      // 2. Fetch Real Live Registrations Sheet
-      const regRes = await fetch(`${gasUrl}?action=getRegistrations`);
-      const regJson = await regRes.json();
       if (regJson && regJson.status === 'success' && Array.isArray(regJson.data)) {
         localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(regJson.data));
       }
-
-      // 3. Fetch Real Live StaffUsers Sheet
-      const staffRes = await fetch(`${gasUrl}?action=getStaffUsers`);
-      const staffJson = await staffRes.json();
       if (staffJson && staffJson.status === 'success' && Array.isArray(staffJson.data)) {
         localStorage.setItem(STORAGE_KEYS.STAFF_USERS, JSON.stringify(staffJson.data));
       }
-
-      // 4. Fetch Real Live AdminUsers Sheet
-      const adminRes = await fetch(`${gasUrl}?action=getAdminUsers`);
-      const adminJson = await adminRes.json();
       if (adminJson && adminJson.status === 'success' && Array.isArray(adminJson.data)) {
         localStorage.setItem(STORAGE_KEYS.ADMIN_USERS, JSON.stringify(adminJson.data));
       }
-
-      // 5. Fetch Real Live Backups Sheet
-      const backupRes = await fetch(`${gasUrl}?action=getBackups`);
-      const backupJson = await backupRes.json();
       if (backupJson && backupJson.status === 'success' && Array.isArray(backupJson.data)) {
         localStorage.setItem(STORAGE_KEYS.BACKUPS, JSON.stringify(backupJson.data));
       }
