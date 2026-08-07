@@ -905,9 +905,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
             <div style="font-size: 0.8rem; color: var(--text-gray); display: flex; justify-content: space-between; margin-top: 0.25rem; align-items: center;">
               <span>ยอดลงทะเบียน:</span>
-              <button class="view-act-participants-btn" data-id="${act.id}" style="background: transparent; border: none; font-size: inherit; color: var(--primary-blue); font-weight: 700; cursor: pointer; text-decoration: underline;" title="คลิกเพื่อดูรายชื่อผู้ลงทะเบียน">
+              <span style="color: var(--primary-blue); font-weight: 700;">
                 ${act.registeredCount} / ${act.maxQuota} คน <i class="fa-solid fa-users" style="font-size:0.75rem;"></i>
-              </button>
+              </span>
             </div>
           </div>
           <div class="card-footer">
@@ -971,14 +971,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     }
 
-    // Attach Click Event to View Participants on Card
-    document.querySelectorAll('#activitiesGrid .view-act-participants-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const actId = e.currentTarget.getAttribute('data-id');
-        openActivityParticipantsModal(actId);
-      });
-    });
+
 
     // Attach Click Event to Card Image Banner & Title for Full Detail Modal
     document.querySelectorAll('.act-click-trigger').forEach(el => {
@@ -1083,15 +1076,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const quotaEl = document.getElementById('detailActQuotaText');
     if (quotaEl) {
-      quotaEl.innerHTML = `
-        ${act.registeredCount} / ${act.maxQuota} คน 
-        <button class="role-pill-btn view-act-participants-btn" data-id="${act.id}" style="background:#8b5cf6; color:white; padding:0.15rem 0.55rem; font-size:0.72rem; cursor:pointer; margin-left:0.5rem;" title="ดูรายชื่อผู้ลงทะเบียน"><i class="fa-solid fa-users"></i> ดูรายชื่อ</button>
-      `;
-      const viewBtn = quotaEl.querySelector('.view-act-participants-btn');
-      if (viewBtn) {
-        viewBtn.addEventListener('click', () => {
-          openActivityParticipantsModal(act.id);
-        });
+      if (currentRole === 'admin') {
+        quotaEl.innerHTML = `
+          ${act.registeredCount} / ${act.maxQuota} คน 
+          <button class="role-pill-btn view-act-participants-btn" data-id="${act.id}" style="background:#8b5cf6; color:white; padding:0.15rem 0.55rem; font-size:0.72rem; cursor:pointer; margin-left:0.5rem;" title="ดูรายชื่อผู้ลงทะเบียน"><i class="fa-solid fa-users"></i> ดูรายชื่อ</button>
+        `;
+        const viewBtn = quotaEl.querySelector('.view-act-participants-btn');
+        if (viewBtn) {
+          viewBtn.addEventListener('click', () => {
+            openActivityParticipantsModal(act.id);
+          });
+        }
+      } else {
+        quotaEl.textContent = `${act.registeredCount} / ${act.maxQuota} คน`;
       }
     }
 
@@ -1351,6 +1348,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function openActivityParticipantsModal(actId) {
+    if (currentRole !== 'admin') {
+      showToast('ดูรายชื่อผู้ลงทะเบียนได้เฉพาะหน้าผู้ดูแลระบบ (Admin) เท่านั้น', 'warning');
+      return;
+    }
+
     const act = currentActivities.find(a => a.id === actId);
     if (!act) return;
 
