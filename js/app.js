@@ -1331,7 +1331,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Add Staff To Activity Listener
     const addStaffToActModal = document.getElementById('addStaffToActModal');
-    const selectStaffUserForAct = document.getElementById('selectStaffUserForAct');
 
     document.querySelectorAll('.add-staff-to-act-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -1343,22 +1342,12 @@ document.addEventListener('DOMContentLoaded', async () => {
           document.getElementById('adminAddActHours').value = act.hours || 3;
           document.getElementById('adminAddActNameLabel').textContent = `${act.title} (${act.id})`;
 
-          // Populate staff members dropdown from database
-          const staffUsers = api.getStaffUsers();
-          selectStaffUserForAct.innerHTML = '<option value="">-- เลือกผู้ปฏิบัติงาน --</option>';
+          const searchInput = document.getElementById('searchStaffInModalInput');
+          if (searchInput) searchInput.value = '';
+          const selectAllCheck = document.getElementById('selectAllStaffCheck');
+          if (selectAllCheck) selectAllCheck.checked = false;
 
-          staffUsers.forEach(s => {
-            const isRegged = currentRegistrations.some(r => r.staffId === s.studentId && r.activityId === act.id);
-            const label = `${s.studentId} - ${s.fullName} (${s.department || s.major}) ${isRegged ? '⚠️ (ลงทะเบียนแล้ว)' : ''}`;
-            const opt = document.createElement('option');
-            opt.value = s.studentId;
-            opt.textContent = label;
-            if (isRegged) {
-              opt.disabled = true;
-            }
-            selectStaffUserForAct.appendChild(opt);
-          });
-
+          renderStaffCheckboxList(act.id);
           addStaffToActModal.classList.add('active');
         }
       });
@@ -1922,7 +1911,129 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // SUBMIT ADMIN ADD STAFF TO ACTIVITY FORM
+  // HELPER FUNCTIONS FOR STAFF MULTI-SELECT IN MODAL
+  function renderStaffCheckboxList(actId) {
+    const container = document.getElementById('staffCheckboxListContainer');
+    const modalStaffAvailableText = document.getElementById('modalStaffAvailableText');
+    if (!container) return;
+
+    const staffUsers = api.getStaffUsers();
+    container.innerHTML = '';
+
+    if (!staffUsers || staffUsers.length === 0) {
+      container.innerHTML = '<div style="text-align:center; padding: 1rem; color: #94a3b8; font-size: 0.85rem;">ไม่พบข้อมูลผู้ปฏิบัติงานในระบบ</div>';
+      if (modalStaffAvailableText) modalStaffAvailableText.textContent = 'ทั้งหมด 0 คน';
+      updateSelectedStaffCount();
+      return;
+    }
+
+    let totalAvailableCount = 0;
+
+    staffUsers.forEach(s => {
+      const isRegged = currentRegistrations.some(r => r.staffId === s.studentId && r.activityId === actId);
+      if (!isRegged) totalAvailableCount++;
+
+      const itemLabel = document.createElement('label');
+      itemLabel.className = `staff-check-item ${isRegged ? 'disabled' : ''}`;
+      itemLabel.dataset.studentId = s.studentId;
+      itemLabel.dataset.searchText = `${s.studentId} ${s.fullName} ${s.department || ''} ${s.major || ''}`.toLowerCase();
+
+      itemLabel.innerHTML = `
+        <input type="checkbox" class="staff-select-check" value="${s.studentId}" ${isRegged ? 'disabled' : ''}>
+        <div style="display: flex; flex-direction: column; gap: 0.1rem; flex: 1;">
+          <span style="font-weight: 600; color: ${isRegged ? '#94a3b8' : '#1e293b'};">
+            ${s.fullName} <span style="font-weight: 400; color: #64748b; font-size: 0.8rem;">(${s.studentId})</span>
+          </span>
+          <span style="font-size: 0.75rem; color: #64748b;">
+            ${s.department || s.major || '-'} ${isRegged ? '<strong style="color: #d97706; margin-left: 0.4rem;">⚠️ (ลงทะเบียนแล้ว)</strong>' : ''}
+          </span>
+        </div>
+      `;
+
+      container.appendChild(itemLabel);
+    });
+
+    if (modalStaffAvailableText) {
+      modalStaffAvailableText.textContent = `พร้อมเลือก ${totalAvailableCount} / ${staffUsers.length} คน`;
+    }
+
+    container.querySelectorAll('.staff-select-check').forEach(chk => {
+      chk.addEventListener('change', updateSelectedStaffCount);
+    });
+
+    updateSelectedStaffCount();
+  }
+
+  function updateSelectedStaffCount() {
+    const container = document.getElementById('staffCheckboxListContainer');
+    const countBadge = document.getElementById('selectedStaffCountBadge');
+    const countSpan = document.getElementById('submitStaffCountSpan');
+    const selectAllCheck = document.getElementById('selectAllStaffCheck');
+    if (!container) return;
+
+    const visibleAndEnabledCheckboxes = Array.from(
+      container.querySelectorAll('.staff-check-item:not([style*="display: none"]) .staff-select-check:not([disabled])')
+    );
+    const checkedBoxes = Array.from(container.querySelectorAll('.staff-select-check:checked'));
+
+    const checkedCount = checkedBoxes.length;
+
+    if (countBadge) countBadge.textContent = `เลือก ${checkedCount} คน`;
+    if (countSpan) countSpan.textContent = checkedCount;
+
+    if (selectAllCheck) {
+      if (visibleAndEnabledCheckboxes.length > 0 && visibleAndEnabledCheckboxes.every(cb => cb.checked)) {
+        selectAllCheck.checked = true;
+        selectAllCheck.indeterminate = false;
+      } else if (visibleAndEnabledCheckboxes.some(cb => cb.checked)) {
+        selectAllCheck.checked = false;
+        selectAllCheck.indeterminate = true;
+      } else {
+        selectAllCheck.checked = false;
+        selectAllCheck.indeterminate = false;
+      }
+    }
+  }
+
+  // Select All & Search staff in modal listeners
+  const selectAllStaffCheck = document.getElementById('selectAllStaffCheck');
+  if (selectAllStaffCheck) {
+    selectAllStaffCheck.addEventListener('change', (e) => {
+      const isChecked = e.target.checked;
+      const container = document.getElementById('staffCheckboxListContainer');
+      if (!container) return;
+
+      const visibleCheckboxes = container.querySelectorAll(
+        '.staff-check-item:not([style*="display: none"]) .staff-select-check:not([disabled])'
+      );
+      visibleCheckboxes.forEach(cb => {
+        cb.checked = isChecked;
+      });
+      updateSelectedStaffCount();
+    });
+  }
+
+  const searchStaffInModalInput = document.getElementById('searchStaffInModalInput');
+  if (searchStaffInModalInput) {
+    searchStaffInModalInput.addEventListener('input', (e) => {
+      const q = e.target.value.trim().toLowerCase();
+      const container = document.getElementById('staffCheckboxListContainer');
+      if (!container) return;
+
+      const items = container.querySelectorAll('.staff-check-item');
+      items.forEach(item => {
+        const text = item.dataset.searchText || '';
+        if (!q || text.includes(q)) {
+          item.style.display = 'flex';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+      updateSelectedStaffCount();
+    });
+  }
+
+  // SUBMIT ADMIN ADD STAFF TO ACTIVITY FORM (MULTI-SELECT SUPPORT)
   const addStaffToActForm = document.getElementById('addStaffToActForm');
   const addStaffToActModal = document.getElementById('addStaffToActModal');
 
@@ -1930,23 +2041,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     addStaffToActForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const studentId = document.getElementById('selectStaffUserForAct').value;
-      if (!studentId) {
-        showToast('กรุณาเลือกผู้ปฏิบัติงานจากรายการ', 'warning');
+      const container = document.getElementById('staffCheckboxListContainer');
+      const checkedBoxes = container ? Array.from(container.querySelectorAll('.staff-select-check:checked')) : [];
+
+      if (checkedBoxes.length === 0) {
+        showToast('กรุณาติ๊กเลือกผู้ปฏิบัติงานอย่างน้อย 1 คน', 'warning');
         return;
       }
 
-      const staff = api.getStaffUsers().find(s => s.studentId === studentId);
-      if (!staff) {
-        showToast('ไม่พบข้อมูลผู้ปฏิบัติงานรหัสนี้ในระบบ', 'error');
+      const selectedStudentIds = checkedBoxes.map(cb => cb.value);
+      const allStaff = api.getStaffUsers();
+      const selectedStaffList = selectedStudentIds.map(id => allStaff.find(s => s.studentId === id)).filter(Boolean);
+
+      if (selectedStaffList.length === 0) {
+        showToast('ไม่พบข้อมูลผู้ปฏิบัติงานที่เลือกในระบบ', 'error');
         return;
       }
 
-      const submitBtn = addStaffToActForm.querySelector('button[type="submit"]');
-      const originalHtml = submitBtn ? submitBtn.innerHTML : '<i class="fa-solid fa-user-plus"></i> ยืนยันเพิ่มคนเข้ากิจกรรม';
+      const submitBtn = document.getElementById('submitAddStaffToActBtn') || addStaffToActForm.querySelector('button[type="submit"]');
+      const originalHtml = submitBtn ? submitBtn.innerHTML : '<i class="fa-solid fa-user-plus"></i> ยืนยันการเพิ่มเข้ากิจกรรม';
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึกเพิ่มรายชื่อ...';
+        submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึกเพิ่มรายชื่อ (${selectedStaffList.length} คน)...`;
       }
 
       try {
@@ -1955,34 +2071,55 @@ document.addEventListener('DOMContentLoaded', async () => {
         const hours = parseInt(document.getElementById('adminAddActHours').value, 10) || 3;
         const initialStatus = document.getElementById('adminAddActStatus').value;
 
-        const payload = {
-          activityId: actId,
-          activityTitle: actTitle,
-          hours: hours,
-          staffId: staff.studentId,
-          staffName: staff.fullName,
-          major: staff.major,
-          department: staff.department,
-          position: staff.position,
-          phone: staff.phone || ''
-        };
+        let successCount = 0;
+        let failCount = 0;
 
-        const res = await api.registerStaff(payload);
+        for (let i = 0; i < selectedStaffList.length; i++) {
+          const staff = selectedStaffList[i];
+          if (submitBtn && selectedStaffList.length > 1) {
+            submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึก (${i + 1}/${selectedStaffList.length})...`;
+          }
+
+          const payload = {
+            activityId: actId,
+            activityTitle: actTitle,
+            hours: hours,
+            staffId: staff.studentId,
+            staffName: staff.fullName,
+            major: staff.major,
+            department: staff.department,
+            position: staff.position,
+            phone: staff.phone || ''
+          };
+
+          const res = await api.registerStaff(payload);
+          if (res && res.success) {
+            successCount++;
+            if (initialStatus === 'approved' && res.regId) {
+              await api.approveHours(res.regId);
+            }
+          } else {
+            failCount++;
+          }
+        }
+
         if (addStaffToActModal) addStaffToActModal.classList.remove('active');
 
-        if (res && res.success) {
-          if (initialStatus === 'approved' && res.regId) {
-            await api.approveHours(res.regId);
+        if (successCount > 0) {
+          if (selectedStaffList.length === 1) {
+            showToast(`✅ บันทึกเพิ่มคุณ ${selectedStaffList[0].fullName} เข้ากิจกรรมสำเร็จเรียบร้อยแล้ว!`, 'success');
+          } else {
+            showToast(`✅ บันทึกเพิ่มผู้ปฏิบัติงานสำเร็จทั้งหมด ${successCount} คน!`, 'success');
           }
-          showToast(`✅ บันทึกเพิ่มคุณ ${staff.fullName} เข้ากิจกรรมสำเร็จเรียบร้อยแล้ว!`, 'success');
-          loadAllData();
+          await loadAllData();
           renderActivitiesListTable();
           filterAndRenderActivities();
-          autoDriveBackup('admin_add_staff_to_act');
+          autoDriveBackup('admin_bulk_add_staff_to_activity');
         } else {
-          showToast('เกิดข้อผิดพลาด หรือผู้ปฏิบัติงานท่านนี้ถูกเพิ่มลงทะเบียนไว้แล้ว', 'error');
+          showToast('❌ ไม่สามารถเพิ่มผู้ปฏิบัติงานเข้ากิจกรรมได้ กรุณาลองใหม่อีกครั้ง', 'error');
         }
       } catch (err) {
+        console.error('Error adding staff to activity:', err);
         showToast('❌ เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง', 'error');
       } finally {
         if (submitBtn) {

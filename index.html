@@ -1154,7 +1154,7 @@
 
   <!-- MODAL: ADD STAFF USER TO ACTIVITY (ADMIN MANUAL REGISTRATION) -->
   <div class="modal-backdrop" id="addStaffToActModal">
-    <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-content" style="max-width: 540px;">
       <div class="modal-header">
         <h3><i class="fa-solid fa-user-plus" style="color: #10b981;"></i> เพิ่มผู้ปฏิบัติงานเข้ากิจกรรม</h3>
         <button class="close-btn" id="closeAddStaffToActModalBtn">&times;</button>
@@ -1171,12 +1171,31 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">เลือกผู้ปฏิบัติงานจากฐานข้อมูล <span style="color:red">*</span></label>
-          <select class="form-select" id="selectStaffUserForAct" required>
-            <option value="">-- เลือกผู้ปฏิบัติงาน --</option>
-          </select>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <label class="form-label" style="margin-bottom: 0;">เลือกผู้ปฏิบัติงานจากฐานข้อมูล <span style="color:red">*</span></label>
+            <span id="selectedStaffCountBadge" style="font-size: 0.8rem; font-weight: 600; background: #e0f2fe; color: #0369a1; padding: 0.15rem 0.6rem; border-radius: 12px;">เลือก 0 คน</span>
+          </div>
+
+          <!-- Search & Select All Tools -->
+          <div style="margin-bottom: 0.4rem;">
+            <input type="text" id="searchStaffInModalInput" class="form-input" placeholder="🔍 ค้นหารายชื่อ หรือ รหัสนักศึกษา..." style="font-size: 0.85rem; padding: 0.4rem 0.75rem;">
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.4rem 0.6rem; background: #f8fafc; border: 1px solid #e2e8f0; border-bottom: none; border-radius: 6px 6px 0 0;">
+            <label style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--text-dark); user-select: none;">
+              <input type="checkbox" id="selectAllStaffCheck" style="width: 16px; height: 16px; accent-color: #10b981; cursor: pointer;">
+              เลือกทั้งหมด (Select All)
+            </label>
+            <small style="color: var(--text-gray); font-size: 0.78rem;" id="modalStaffAvailableText">ทั้งหมด 0 คน</small>
+          </div>
+
+          <!-- Scrollable Checkbox List -->
+          <div id="staffCheckboxListContainer" style="max-height: 220px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 0 0 6px 6px; background: #ffffff; padding: 0.35rem 0.5rem; display: flex; flex-direction: column; gap: 0.2rem;">
+            <!-- Populated dynamically via JS -->
+          </div>
+
           <small style="color: var(--text-gray); margin-top: 0.35rem; display: block;">
-            💡 เลือกรายชื่อผู้ปฏิบัติงานในระบบเพื่อเพิ่มเข้ากิจกรรมนี้
+            💡 ติ๊กเลือกรายชื่อผู้ปฏิบัติงานที่ต้องการเพิ่มเข้ากิจกรรม (สามารถเลือกทีละหลายคน หรือเลือกทั้งหมดได้)
           </small>
         </div>
 
@@ -1189,8 +1208,8 @@
         </div>
 
         <div style="margin-top: 1.25rem;">
-          <button type="submit" class="btn-register" style="background: #10b981;">
-            <i class="fa-solid fa-user-plus"></i> ยืนยันการเพิ่มเข้ากิจกรรม
+          <button type="submit" id="submitAddStaffToActBtn" class="btn-register" style="background: #10b981; width: 100%;">
+            <i class="fa-solid fa-user-plus"></i> ยืนยันการเพิ่มเข้ากิจกรรม (<span id="submitStaffCountSpan">0</span> คน)
           </button>
         </div>
       </form>

@@ -1671,3 +1671,45 @@ html, body {
   100% { width: 15%; margin-left: 85%; }
 }
 
+/* Staff Checkbox Multi-Select Styles */
+.staff-check-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  font-size: 0.85rem;
+  user-select: none;
+  border: 1px solid transparent;
+}
+
+.staff-check-item:hover {
+  background: #f0fdf4;
+  border-color: #dcfce7;
+}
+
+.staff-check-item.disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  background: #f8fafc;
+}
+
+.staff-check-item.disabled:hover {
+  background: #f8fafc;
+  border-color: transparent;
+}
+
+.staff-check-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #10b981;
+  cursor: pointer;
+}
+
+.staff-check-item.disabled input[type="checkbox"] {
+  cursor: not-allowed;
+}
+
+
