@@ -928,11 +928,21 @@ body {
 #addActivityModal,
 #registrationModal,
 #activityDetailModal,
+#activityParticipantsModal,
 #staffLoginModal,
 #adminLoginModal,
 #gasSettingsModal,
 #dataLoadingModal {
   z-index: 10010 !important;
+}
+
+/* Activity Participants Modal Specific Styling (Top Positioned & Highest Z-Index) */
+#activityParticipantsModal {
+  z-index: 10020 !important;
+  align-items: flex-start;
+  padding-top: 2.25rem;
+  padding-bottom: 2rem;
+  overflow-y: auto;
 }
 
 .modal-backdrop.active {

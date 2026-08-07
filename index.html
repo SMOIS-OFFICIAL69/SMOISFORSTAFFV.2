@@ -894,6 +894,76 @@
     </div>
   </div>
 
+  <!-- MODAL: ACTIVITY PARTICIPANTS LIST MODAL (รายชื่อผู้ลงทะเบียนรายกิจกรรม) -->
+  <div class="modal-backdrop" id="activityParticipantsModal">
+    <div class="modal-content" style="max-width: 960px;">
+      <div class="modal-header" style="align-items: flex-start;">
+        <div>
+          <h3 style="margin-bottom: 0.25rem;"><i class="fa-solid fa-users-rectangle" style="color: #8b5cf6;"></i> รายชื่อผู้ลงทะเบียนเข้าร่วมกิจกรรม</h3>
+          <div style="font-size: 0.92rem; font-weight: 700; color: var(--primary-navy);" id="actPartTitleLabel">กิจกรรม: -</div>
+          <div style="font-size: 0.78rem; color: var(--text-gray); display: flex; gap: 0.85rem; flex-wrap: wrap; margin-top: 0.25rem;">
+            <span><i class="fa-regular fa-calendar-check"></i> <span id="actPartDateLabel">-</span></span>
+            <span><i class="fa-solid fa-location-dot"></i> <span id="actPartLocationLabel">-</span></span>
+            <span><i class="fa-solid fa-clock"></i> <span id="actPartHoursLabel">+0 ชม.</span></span>
+          </div>
+        </div>
+        <button class="close-btn" id="closeActPartModalBtn">&times;</button>
+      </div>
+
+      <!-- TOOLBAR & FILTERS -->
+      <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 0.65rem 0.85rem; border-radius: 8px; border: 1px solid var(--border-light); margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 250px;">
+          <input type="text" id="searchActPartInput" class="form-input" placeholder="🔍 ค้นหารายชื่อ หรือ รหัสนักศึกษา..." style="font-size: 0.85rem; padding: 0.4rem 0.75rem;">
+          <select id="filterActPartStatus" class="form-select" style="font-size: 0.82rem; padding: 0.4rem 0.6rem; width: auto; font-weight: 600;">
+            <option value="">ทั้งหมดทุกสถานะ</option>
+            <option value="approved">🟢 อนุมัติแล้ว (Approved)</option>
+            <option value="pending">🟡 รออนุมัติ (Pending)</option>
+            <option value="rejected">🔴 ปฏิเสธ (Rejected)</option>
+          </select>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+          <button id="addStaffToCurrentActBtn" class="role-pill-btn" style="background: #10b981; color: white; padding: 0.4rem 0.85rem; font-size: 0.8rem; cursor: pointer;">
+            <i class="fa-solid fa-user-plus"></i> เพิ่มผู้ปฏิบัติงาน
+          </button>
+          <button id="exportActPartCsvBtn" class="role-pill-btn" style="background: #db2777; color: white; padding: 0.4rem 0.85rem; font-size: 0.8rem; cursor: pointer;">
+            <i class="fa-solid fa-file-csv"></i> ส่งออก CSV
+          </button>
+        </div>
+      </div>
+
+      <!-- COUNTER BADGE -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; font-size: 0.85rem;">
+        <div>
+          ผู้ลงทะเบียนทั้งหมด: <strong id="actPartRegCountText" style="color: var(--primary-blue);">0 / 0 คน</strong>
+        </div>
+        <div style="font-size: 0.78rem; color: var(--text-gray);">
+          💡 คลิกอนุมัติ/ปฏิเสธ หรือลบรายชื่อได้จากตารางด้านล่าง
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 40px; text-align: center;">#</th>
+              <th>รหัสนักศึกษา</th>
+              <th>ชื่อ-นามสกุล</th>
+              <th>สังกัด / สาขาวิชา</th>
+              <th>เบอร์โทรศัพท์ / อีเมล</th>
+              <th>วันเวลาที่ลงทะเบียน</th>
+              <th>สถานะ</th>
+              <th>ดำเนินการ</th>
+            </tr>
+          </thead>
+          <tbody id="actPartTableBody">
+            <!-- Dynamic Rows -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL EDIT ACTIVITY -->
   <div class="modal-backdrop" id="editActivityModal">
     <div class="modal-content">

@@ -132,6 +132,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   const closeActivitiesListModalBtn = document.getElementById('closeActivitiesListModalBtn');
   const activitiesListTableBody = document.getElementById('activitiesListTableBody');
 
+  const activityParticipantsModal = document.getElementById('activityParticipantsModal');
+  const closeActPartModalBtn = document.getElementById('closeActPartModalBtn');
+  const searchActPartInput = document.getElementById('searchActPartInput');
+  const filterActPartStatus = document.getElementById('filterActPartStatus');
+  const exportActPartCsvBtn = document.getElementById('exportActPartCsvBtn');
+  const addStaffToCurrentActBtn = document.getElementById('addStaffToCurrentActBtn');
+  let activeParticipantActId = null;
+
   const registrationsListModal = document.getElementById('registrationsListModal');
   const closeRegsListModalBtn = document.getElementById('closeRegsListModalBtn');
   const regsListTableBody = document.getElementById('regsListTableBody');
@@ -895,9 +903,11 @@ document.addEventListener('DOMContentLoaded', async () => {
               <div class="info-item"><i class="fa-regular fa-clock"></i> เวลา: ${act.time}</div>
               <div class="info-item"><i class="fa-solid fa-location-dot"></i> สถานที่: ${act.location}</div>
             </div>
-            <div style="font-size: 0.8rem; color: var(--text-gray); display: flex; justify-content: space-between; margin-top: 0.25rem;">
+            <div style="font-size: 0.8rem; color: var(--text-gray); display: flex; justify-content: space-between; margin-top: 0.25rem; align-items: center;">
               <span>ยอดลงทะเบียน:</span>
-              <span><strong>${act.registeredCount}</strong> / ${act.maxQuota} คน</span>
+              <button class="view-act-participants-btn" data-id="${act.id}" style="background: transparent; border: none; font-size: inherit; color: var(--primary-blue); font-weight: 700; cursor: pointer; text-decoration: underline;" title="คลิกเพื่อดูรายชื่อผู้ลงทะเบียน">
+                ${act.registeredCount} / ${act.maxQuota} คน <i class="fa-solid fa-users" style="font-size:0.75rem;"></i>
+              </button>
             </div>
           </div>
           <div class="card-footer">
@@ -960,6 +970,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         activitiesGrid.insertAdjacentHTML('beforeend', renderCardHtml(act));
       });
     }
+
+    // Attach Click Event to View Participants on Card
+    document.querySelectorAll('#activitiesGrid .view-act-participants-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const actId = e.currentTarget.getAttribute('data-id');
+        openActivityParticipantsModal(actId);
+      });
+    });
 
     // Attach Click Event to Card Image Banner & Title for Full Detail Modal
     document.querySelectorAll('.act-click-trigger').forEach(el => {
@@ -1063,7 +1082,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (locEl) locEl.textContent = act.location;
 
     const quotaEl = document.getElementById('detailActQuotaText');
-    if (quotaEl) quotaEl.textContent = `${act.registeredCount} / ${act.maxQuota} คน`;
+    if (quotaEl) {
+      quotaEl.innerHTML = `
+        ${act.registeredCount} / ${act.maxQuota} คน 
+        <button class="role-pill-btn view-act-participants-btn" data-id="${act.id}" style="background:#8b5cf6; color:white; padding:0.15rem 0.55rem; font-size:0.72rem; cursor:pointer; margin-left:0.5rem;" title="ดูรายชื่อผู้ลงทะเบียน"><i class="fa-solid fa-users"></i> ดูรายชื่อ</button>
+      `;
+      const viewBtn = quotaEl.querySelector('.view-act-participants-btn');
+      if (viewBtn) {
+        viewBtn.addEventListener('click', () => {
+          openActivityParticipantsModal(act.id);
+        });
+      }
+    }
 
     const hoursBadge = document.getElementById('detailActHoursBadge');
     if (hoursBadge) hoursBadge.innerHTML = `<i class="fa-solid fa-clock"></i> +${act.hours || 3} ชม.สะสม`;
@@ -1272,6 +1302,265 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  // --- ACTIVITY PARTICIPANTS LIST MODAL LOGIC ---
+  if (closeActPartModalBtn && activityParticipantsModal) {
+    closeActPartModalBtn.addEventListener('click', () => {
+      activityParticipantsModal.classList.remove('active');
+    });
+  }
+
+  if (searchActPartInput) {
+    searchActPartInput.addEventListener('input', () => {
+      if (activeParticipantActId) renderActivityParticipantsTable(activeParticipantActId);
+    });
+  }
+
+  if (filterActPartStatus) {
+    filterActPartStatus.addEventListener('change', () => {
+      if (activeParticipantActId) renderActivityParticipantsTable(activeParticipantActId);
+    });
+  }
+
+  if (exportActPartCsvBtn) {
+    exportActPartCsvBtn.addEventListener('click', () => {
+      if (activeParticipantActId) exportActivityParticipantsCsv(activeParticipantActId);
+    });
+  }
+
+  if (addStaffToCurrentActBtn) {
+    addStaffToCurrentActBtn.addEventListener('click', () => {
+      if (activeParticipantActId) {
+        const act = currentActivities.find(a => a.id === activeParticipantActId);
+        const addStaffToActModal = document.getElementById('addStaffToActModal');
+        if (act && addStaffToActModal) {
+          document.getElementById('adminAddActId').value = act.id;
+          document.getElementById('adminAddActTitle').value = act.title;
+          document.getElementById('adminAddActHours').value = act.hours || 3;
+          document.getElementById('adminAddActNameLabel').textContent = `${act.title} (${act.id})`;
+
+          const searchInput = document.getElementById('searchStaffInModalInput');
+          if (searchInput) searchInput.value = '';
+          const selectAllCheck = document.getElementById('selectAllStaffCheck');
+          if (selectAllCheck) selectAllCheck.checked = false;
+
+          renderStaffCheckboxList(act.id);
+          addStaffToActModal.classList.add('active');
+        }
+      }
+    });
+  }
+
+  function openActivityParticipantsModal(actId) {
+    const act = currentActivities.find(a => a.id === actId);
+    if (!act) return;
+
+    activeParticipantActId = actId;
+
+    const titleLabel = document.getElementById('actPartTitleLabel');
+    const dateLabel = document.getElementById('actPartDateLabel');
+    const locationLabel = document.getElementById('actPartLocationLabel');
+    const hoursLabel = document.getElementById('actPartHoursLabel');
+
+    if (titleLabel) titleLabel.textContent = `กิจกรรม: ${act.title} (${act.id})`;
+    if (dateLabel) dateLabel.textContent = `${act.date} (${act.time})`;
+    if (locationLabel) locationLabel.textContent = act.location;
+    if (hoursLabel) hoursLabel.textContent = `+${act.hours || 3} ชม.`;
+
+    if (searchActPartInput) searchActPartInput.value = '';
+    if (filterActPartStatus) filterActPartStatus.value = '';
+
+    renderActivityParticipantsTable(actId);
+
+    if (activityParticipantsModal) {
+      activityParticipantsModal.scrollTop = 0;
+      const modalContent = activityParticipantsModal.querySelector('.modal-content');
+      if (modalContent) modalContent.scrollTop = 0;
+      activityParticipantsModal.classList.add('active');
+    }
+  }
+
+  function renderActivityParticipantsTable(actId) {
+    const tableBody = document.getElementById('actPartTableBody');
+    const regCountText = document.getElementById('actPartRegCountText');
+    if (!tableBody) return;
+
+    const act = currentActivities.find(a => a.id === actId);
+    const actQuota = act ? act.maxQuota : 0;
+
+    let regs = currentRegistrations.filter(r => r.activityId === actId);
+
+    if (regCountText) {
+      regCountText.textContent = `${regs.length} / ${actQuota} คน`;
+    }
+
+    const query = searchActPartInput ? searchActPartInput.value.trim().toLowerCase() : '';
+    const statusVal = filterActPartStatus ? filterActPartStatus.value : '';
+
+    if (query) {
+      regs = regs.filter(r => 
+        (r.staffId && String(r.staffId).toLowerCase().includes(query)) ||
+        (r.staffName && r.staffName.toLowerCase().includes(query)) ||
+        (r.department && r.department.toLowerCase().includes(query)) ||
+        (r.major && r.major.toLowerCase().includes(query)) ||
+        (r.phone && r.phone.toLowerCase().includes(query)) ||
+        (r.email && r.email.toLowerCase().includes(query))
+      );
+    }
+
+    if (statusVal) {
+      regs = regs.filter(r => r.status === statusVal);
+    }
+
+    tableBody.innerHTML = '';
+
+    if (regs.length === 0) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="8" style="text-align:center; padding:2.5rem; color:var(--text-gray);">
+            <i class="fa-solid fa-user-slash" style="font-size:2rem; margin-bottom:0.5rem; color:#cbd5e1; display:block;"></i>
+            ยังไม่มีผู้ลงทะเบียนกิจกรรมนี้ หรือ ไม่พบข้อมูลตรงตามเงื่อนไขที่ค้นหา
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    regs.forEach((r, idx) => {
+      let statusBadge = '<span class="status-badge status-pending">🟡 รออนุมัติ</span>';
+      if (r.status === 'approved') {
+        statusBadge = '<span class="status-badge status-approved">🟢 อนุมัติแล้ว</span>';
+      } else if (r.status === 'rejected') {
+        statusBadge = '<span class="status-badge status-rejected">🔴 ปฏิเสธ</span>';
+      }
+
+      tableBody.insertAdjacentHTML('beforeend', `
+        <tr>
+          <td style="text-align:center; font-weight:600; color:var(--text-gray);">${idx + 1}</td>
+          <td><strong style="font-family:'Space Grotesk', monospace; color:var(--primary-navy);">${r.staffId}</strong></td>
+          <td>
+            <div style="font-weight:700; color:var(--text-dark);">${r.staffName}</div>
+            <div style="font-size:0.75rem; color:var(--text-gray);">${r.position || 'ผู้ปฏิบัติงาน'}</div>
+          </td>
+          <td>
+            <div style="font-size:0.85rem;">${r.major || r.department || '-'}</div>
+            <div style="font-size:0.75rem; color:var(--text-gray);">${r.department || ''}</div>
+          </td>
+          <td>
+            <div style="font-size:0.8rem;"><i class="fa-solid fa-phone" style="font-size:0.7rem; color:#64748b;"></i> ${r.phone || '-'}</div>
+            <div style="font-size:0.75rem; color:var(--text-gray);"><i class="fa-solid fa-envelope" style="font-size:0.7rem; color:#64748b;"></i> ${r.email || '-'}</div>
+          </td>
+          <td style="font-size:0.8rem; color:var(--text-gray);">${r.timestamp || r.registrationDate || '-'}</td>
+          <td>${statusBadge}</td>
+          <td>
+            <div style="display:flex; align-items:center; gap:0.25rem; flex-wrap:wrap;">
+              ${r.status !== 'approved' ? `
+                <button class="role-pill-btn act-part-approve-btn" data-reg-id="${r.regId}" style="background:#16a34a; color:white; padding:0.2rem 0.5rem; font-size:0.72rem; cursor:pointer;" title="อนุมัติการลงทะเบียน"><i class="fa-solid fa-check"></i> อนุมัติ</button>
+              ` : ''}
+              ${r.status !== 'rejected' ? `
+                <button class="role-pill-btn act-part-reject-btn" data-reg-id="${r.regId}" style="background:#ea580c; color:white; padding:0.2rem 0.5rem; font-size:0.72rem; cursor:pointer;" title="ปฏิเสธการลงทะเบียน"><i class="fa-solid fa-xmark"></i> ปฏิเสธ</button>
+              ` : ''}
+              <button class="role-pill-btn act-part-delete-btn" data-reg-id="${r.regId}" style="background:#ef4444; color:white; padding:0.2rem 0.5rem; font-size:0.72rem; cursor:pointer;" title="ลบรายชื่อออกจากกิจกรรม"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          </td>
+        </tr>
+      `);
+    });
+
+    // Wire Approve Buttons
+    tableBody.querySelectorAll('.act-part-approve-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const regId = e.currentTarget.getAttribute('data-reg-id');
+        const reg = currentRegistrations.find(r => r.regId === regId);
+        if (reg) {
+          reg.status = 'approved';
+          reg.checkInTime = new Date().toLocaleString('th-TH');
+          await api.approveRegistration(regId);
+          showToast(`อนุมัติชั่วโมงกิจกรรมของ "${reg.staffName}" เรียบร้อยแล้ว`, 'success');
+          renderActivityParticipantsTable(actId);
+          renderActivitiesListTable();
+          renderAdminTables();
+          filterAndRenderActivities();
+          autoDriveBackup('approve_participant');
+        }
+      });
+    });
+
+    // Wire Reject Buttons
+    tableBody.querySelectorAll('.act-part-reject-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const regId = e.currentTarget.getAttribute('data-reg-id');
+        const reg = currentRegistrations.find(r => r.regId === regId);
+        if (reg) {
+          reg.status = 'rejected';
+          await api.rejectRegistration(regId);
+          showToast(`ปฏิเสธการลงทะเบียนของ "${reg.staffName}" เรียบร้อยแล้ว`, 'warning');
+          renderActivityParticipantsTable(actId);
+          renderActivitiesListTable();
+          renderAdminTables();
+          filterAndRenderActivities();
+          autoDriveBackup('reject_participant');
+        }
+      });
+    });
+
+    // Wire Delete Buttons
+    tableBody.querySelectorAll('.act-part-delete-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const regId = e.currentTarget.getAttribute('data-reg-id');
+        const reg = currentRegistrations.find(r => r.regId === regId);
+        if (reg && confirm(`คุณต้องการลบ "${reg.staffName}" ออกจากกิจกรรมนี้ใช่หรือไม่?`)) {
+          api.deleteRegistration(regId);
+          currentRegistrations = currentRegistrations.filter(r => r.regId !== regId);
+          showToast(`ลบรายชื่อ "${reg.staffName}" ออกจากกิจกรรมแล้ว`, 'success');
+          renderActivityParticipantsTable(actId);
+          renderActivitiesListTable();
+          renderAdminTables();
+          filterAndRenderActivities();
+          autoDriveBackup('delete_participant');
+        }
+      });
+    });
+  }
+
+  function exportActivityParticipantsCsv(actId) {
+    const act = currentActivities.find(a => a.id === actId);
+    if (!act) return;
+
+    const regs = currentRegistrations.filter(r => r.activityId === actId);
+    if (regs.length === 0) {
+      showToast('ไม่มีข้อมูลรายชื่อผู้ลงทะเบียนส่งออก', 'warning');
+      return;
+    }
+
+    let csvContent = "\uFEFFลำดับ,รหัสนักศึกษา,ชื่อ-นามสกุล,สาขาวิชา/สังกัด,ตำแหน่ง,เบอร์โทร,อีเมล,วันเวลาลงทะเบียน,สถานะ,ชั่วโมง\n";
+
+    regs.forEach((r, idx) => {
+      const row = [
+        idx + 1,
+        `"${r.staffId || ''}"`,
+        `"${r.staffName || ''}"`,
+        `"${r.major || r.department || ''}"`,
+        `"${r.position || ''}"`,
+        `"${r.phone || ''}"`,
+        `"${r.email || ''}"`,
+        `"${r.timestamp || r.registrationDate || ''}"`,
+        `"${r.status === 'approved' ? 'อนุมัติแล้ว' : r.status === 'rejected' ? 'ปฏิเสธ' : 'รออนุมัติ'}"`,
+        `"${r.baseHours || act.hours || 3}"`
+      ];
+      csvContent += row.join(",") + "\n";
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `รายชื่อผู้ลงทะเบียน_${act.id}_${act.title.replace(/\s+/g, '_')}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast(`ส่งออกไฟล์ CSV รายชื่อกิจกรรม "${act.title}" สำเร็จแล้ว`, 'success');
+  }
+
   // RENDER TABLE: ACTIVITIES LIST (WITH REORDER, EDIT & DELETE)
   function renderActivitiesListTable() {
     if (!activitiesListTableBody) return;
@@ -1293,10 +1582,15 @@ document.addEventListener('DOMContentLoaded', async () => {
           </td>
           <td>${a.date} <small style="color:var(--text-gray);">(${a.time})</small></td>
           <td>${a.location}</td>
-          <td><strong>${realCount}</strong> / ${a.maxQuota} คน</td>
+          <td>
+            <button class="role-pill-btn view-act-participants-btn" data-id="${a.id}" style="background:transparent; border:none; padding:0; font-size: inherit; cursor:pointer; color:var(--primary-blue);" title="คลิกเพื่อดูรายชื่อผู้ลงทะเบียน">
+              <strong>${realCount}</strong> / ${a.maxQuota} คน <i class="fa-solid fa-users" style="font-size:0.75rem;"></i>
+            </button>
+          </td>
           <td><strong>+${a.hours || 3} ชม.</strong></td>
           <td>
             <div style="display:flex; align-items:center; gap:0.25rem; flex-wrap:wrap;">
+              <button class="role-pill-btn view-act-participants-btn" data-id="${a.id}" style="background:#8b5cf6; color:white; padding:0.25rem 0.6rem; font-size:0.75rem; cursor:pointer;" title="ดูรายชื่อผู้ลงทะเบียนกิจกรรมนี้"><i class="fa-solid fa-users"></i> ดูรายชื่อ (${realCount})</button>
               <button class="role-pill-btn move-up-act-btn" data-idx="${idx}" ${isFirst ? 'disabled style="opacity:0.35; cursor:not-allowed; background:#94a3b8; color:white; padding:0.25rem 0.5rem; font-size:0.75rem;"' : 'style="background:#0284c7; color:white; padding:0.25rem 0.5rem; font-size:0.75rem; cursor:pointer;"'} title="เลื่อนลำดับขึ้น"><i class="fa-solid fa-arrow-up"></i></button>
               <button class="role-pill-btn move-down-act-btn" data-idx="${idx}" ${isLast ? 'disabled style="opacity:0.35; cursor:not-allowed; background:#94a3b8; color:white; padding:0.25rem 0.5rem; font-size:0.75rem;"' : 'style="background:#0284c7; color:white; padding:0.25rem 0.5rem; font-size:0.75rem; cursor:pointer;"'} title="เลื่อนลำดับลง"><i class="fa-solid fa-arrow-down"></i></button>
               ${a.status === 'open' 
@@ -1309,6 +1603,14 @@ document.addEventListener('DOMContentLoaded', async () => {
           </td>
         </tr>
       `);
+    });
+
+    // View Activity Participants Listener
+    document.querySelectorAll('#activitiesListTableBody .view-act-participants-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.currentTarget.getAttribute('data-id');
+        openActivityParticipantsModal(id);
+      });
     });
 
     // 1-Click Quick Toggle Activity Status Listener
