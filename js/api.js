@@ -161,6 +161,7 @@ const SEED_BACKUPS = [
 
 class SmoStaffAPI {
   constructor() {
+    this.recentDeletedRegIds = new Set();
     this.initLocalStorage();
   }
 
@@ -211,6 +212,32 @@ class SmoStaffAPI {
     });
   }
 
+  mergeRegistrations(gasRegistrations) {
+    if (!Array.isArray(gasRegistrations)) return;
+    const localRegs = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS) || '[]');
+    const filteredGas = gasRegistrations.filter(r => !this.recentDeletedRegIds.has(String(r.regId)));
+    const gasRegIdSet = new Set(filteredGas.map(r => String(r.regId)));
+
+    const merged = [...filteredGas];
+
+    localRegs.forEach(localRec => {
+      if (this.recentDeletedRegIds.has(String(localRec.regId))) return;
+
+      if (!gasRegIdSet.has(String(localRec.regId))) {
+        merged.unshift(localRec);
+      } else {
+        const gasItem = merged.find(g => String(g.regId) === String(localRec.regId));
+        if (gasItem && gasItem.status === 'pending' && localRec.status !== 'pending') {
+          gasItem.status = localRec.status;
+          gasItem.earnedHours = localRec.earnedHours;
+          gasItem.checkInTime = localRec.checkInTime;
+        }
+      }
+    });
+
+    localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(merged));
+  }
+
   async syncDataFromGoogleSheets() {
     const gasUrl = this.getGasUrl();
     if (!gasUrl) return false;
@@ -224,7 +251,7 @@ class SmoStaffAPI {
           localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(this.sanitizeActivities(json.data.activities)));
         }
         if (Array.isArray(json.data.registrations)) {
-          localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(json.data.registrations));
+          this.mergeRegistrations(json.data.registrations);
         }
         if (Array.isArray(json.data.staffUsers)) {
           localStorage.setItem(STORAGE_KEYS.STAFF_USERS, JSON.stringify(json.data.staffUsers));
@@ -263,7 +290,7 @@ class SmoStaffAPI {
         localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(this.sanitizeActivities(actJson.data)));
       }
       if (regJson && regJson.status === 'success' && Array.isArray(regJson.data)) {
-        localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(regJson.data));
+        this.mergeRegistrations(regJson.data);
       }
       if (staffJson && staffJson.status === 'success' && Array.isArray(staffJson.data)) {
         localStorage.setItem(STORAGE_KEYS.STAFF_USERS, JSON.stringify(staffJson.data));
@@ -661,18 +688,86 @@ class SmoStaffAPI {
       rec.status = 'rejected';
       rec.earnedHours = 0;
       localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(registrations));
+      this.sendGasMutation('rejectHours', { regId: regId }, `regId=${encodeURIComponent(regId)}`);
       return { success: true };
     }
     return { success: false };
   }
 
   deleteRegistration(regId) {
+    this.recentDeletedRegIds.add(String(regId));
     let registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS) || '[]');
     registrations = registrations.filter(r => r.regId !== regId);
     localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(registrations));
 
     this.sendGasMutation('deleteRegistration', { regId: regId }, `regId=${encodeURIComponent(regId)}`);
     return { success: true };
+  }
+
+  async bulkApproveHours(regIds) {
+    if (!Array.isArray(regIds) || regIds.length === 0) return { success: false, count: 0 };
+    const nowStr = new Date().toLocaleString('sv-SE');
+    const registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS) || '[]');
+    let count = 0;
+
+    registrations.forEach(r => {
+      if (regIds.includes(r.regId)) {
+        r.status = 'approved';
+        r.earnedHours = r.baseHours || 3;
+        r.checkInTime = nowStr;
+        count++;
+      }
+    });
+
+    localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(registrations));
+
+    for (const regId of regIds) {
+      this.sendGasMutation('approveHours', { regId: regId, checkInTime: nowStr }, `regId=${encodeURIComponent(regId)}&checkInTime=${encodeURIComponent(nowStr)}`);
+    }
+
+    return { success: true, count };
+  }
+
+  async bulkRejectHours(regIds) {
+    if (!Array.isArray(regIds) || regIds.length === 0) return { success: false, count: 0 };
+    const registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS) || '[]');
+    let count = 0;
+
+    registrations.forEach(r => {
+      if (regIds.includes(r.regId)) {
+        r.status = 'rejected';
+        r.earnedHours = 0;
+        count++;
+      }
+    });
+
+    localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(registrations));
+
+    for (const regId of regIds) {
+      this.sendGasMutation('rejectHours', { regId: regId }, `regId=${encodeURIComponent(regId)}`);
+    }
+
+    return { success: true, count };
+  }
+
+  async bulkDeleteRegistrations(regIds) {
+    if (!Array.isArray(regIds) || regIds.length === 0) return { success: false, count: 0 };
+    let registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS) || '[]');
+    const regIdSet = new Set(regIds);
+
+    regIds.forEach(id => this.recentDeletedRegIds.add(String(id)));
+
+    const initialLen = registrations.length;
+    registrations = registrations.filter(r => !regIdSet.has(r.regId));
+    const count = initialLen - registrations.length;
+
+    localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(registrations));
+
+    for (const regId of regIds) {
+      this.sendGasMutation('deleteRegistration', { regId: regId }, `regId=${encodeURIComponent(regId)}`);
+    }
+
+    return { success: true, count };
   }
 
   /**

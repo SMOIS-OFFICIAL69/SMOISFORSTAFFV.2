@@ -105,6 +105,11 @@ function doGet(e) {
       const result = unapproveHoursRecord(regId);
       performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
+    } else if (action === 'rejectHours') {
+      const regId = e.parameter.regId;
+      const result = rejectHoursRecord(regId);
+      performGoogleDriveBackup();
+      responseData = { status: 'success', result: result };
     } else if (action === 'deleteRegistration') {
       const regId = e.parameter.regId;
       const result = deleteRegistrationRecord(regId);
@@ -175,6 +180,10 @@ function doPost(e) {
       responseData = { status: 'success', result: result };
     } else if (action === 'unapproveHours') {
       const result = unapproveHoursRecord(postData.regId);
+      performGoogleDriveBackup();
+      responseData = { status: 'success', result: result };
+    } else if (action === 'rejectHours') {
+      const result = rejectHoursRecord(postData.regId);
       performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'createActivity') {
@@ -621,6 +630,20 @@ function unapproveHoursRecord(regId) {
     if (String(rows[i][0]) === String(regId)) {
       sheet.getRange(i + 1, 11).setValue(0);          // EarnedHours = 0
       sheet.getRange(i + 1, 12).setValue('pending');  // Status = pending
+      sheet.getRange(i + 1, 13).setValue('');         // CheckInTime = empty
+      return true;
+    }
+  }
+  return false;
+}
+
+function rejectHoursRecord(regId) {
+  const sheet = getOrCreateSheet(CONFIG.SHEET_REGISTRATIONS, ['RegID', 'Timestamp', 'StaffID', 'StaffName', 'Major', 'Department', 'Position', 'ActivityID', 'ActivityTitle', 'BaseHours', 'EarnedHours', 'Status', 'CheckInTime']);
+  const rows = sheet.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]) === String(regId)) {
+      sheet.getRange(i + 1, 11).setValue(0);          // EarnedHours = 0
+      sheet.getRange(i + 1, 12).setValue('rejected'); // Status = rejected
       sheet.getRange(i + 1, 13).setValue('');         // CheckInTime = empty
       return true;
     }

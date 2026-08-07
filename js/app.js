@@ -1586,7 +1586,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // RENDER TABLE: REGISTRATIONS LIST (WITH DELETE)
+  // RENDER TABLE: REGISTRATIONS LIST (WITH BULK ACTIONS & DELETE)
   function renderRegistrationsListTable() {
     if (!regsListTableBody) return;
     regsListTableBody.innerHTML = '';
@@ -1597,6 +1597,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       regsListTableBody.insertAdjacentHTML('beforeend', `
         <tr>
+          <td style="text-align:center;">
+            <input type="checkbox" class="modal-select-reg-check" value="${r.regId}" style="width:16px; height:16px; accent-color:#10b981; cursor:pointer;">
+          </td>
           <td><strong style="font-family:'Space Grotesk', monospace;">${r.regId}</strong></td>
           <td>
             <div style="font-weight:700; color:var(--text-dark);">${r.staffName}</div>
@@ -1626,6 +1629,46 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       });
     });
+
+    // Checkbox & Bulk Actions for Registrations Modal
+    const updateModalRegBulkCount = () => {
+      const checkedBoxes = Array.from(document.querySelectorAll('.modal-select-reg-check:checked'));
+      const count = checkedBoxes.length;
+
+      const badge = document.getElementById('selectedModalRegCountBadge');
+      const approveBtn = document.getElementById('bulkApproveModalRegsBtn');
+      const rejectBtn = document.getElementById('bulkRejectModalRegsBtn');
+      const deleteBtn = document.getElementById('bulkDeleteModalRegsBtn');
+      const selectAllCheck = document.getElementById('selectAllModalRegsCheck');
+      const headerCheck = document.getElementById('headerModalRegsSelectAllCheck');
+
+      if (badge) badge.textContent = `เลือก ${count} รายการ`;
+      document.querySelectorAll('.modal-bulk-count-num').forEach(el => el.textContent = count);
+
+      [approveBtn, rejectBtn, deleteBtn].forEach(btn => {
+        if (btn) {
+          btn.disabled = count === 0;
+          btn.style.opacity = count === 0 ? '0.5' : '1';
+        }
+      });
+
+      const allCheckboxes = Array.from(document.querySelectorAll('.modal-select-reg-check'));
+      const isAllChecked = allCheckboxes.length > 0 && allCheckboxes.every(cb => cb.checked);
+      const isSomeChecked = allCheckboxes.some(cb => cb.checked);
+
+      [selectAllCheck, headerCheck].forEach(chk => {
+        if (chk) {
+          chk.checked = isAllChecked;
+          chk.indeterminate = !isAllChecked && isSomeChecked;
+        }
+      });
+    };
+
+    document.querySelectorAll('.modal-select-reg-check').forEach(chk => {
+      chk.addEventListener('change', updateModalRegBulkCount);
+    });
+
+    updateModalRegBulkCount();
   }
 
   // RENDER TABLE: APPROVED HOURS HISTORY
@@ -2204,7 +2247,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const pendingList = currentRegistrations.filter(r => r.status === 'pending');
 
     if (pendingList.length === 0) {
-      adminTableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-gray); padding: 2rem;">🎉 ไม่พบรายการผู้ลงทะเบียนรออนุมัติ (อนุมัติหรือดำเนินการเรียบร้อยแล้วทุกรายการ)</td></tr>`;
+      adminTableBody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-gray); padding: 2rem;">🎉 ไม่พบรายการผู้ลงทะเบียนรออนุมัติ (อนุมัติหรือดำเนินการเรียบร้อยแล้วทุกรายการ)</td></tr>`;
     } else {
       pendingList.forEach(r => {
         const isApproved = r.status === 'approved';
@@ -2212,6 +2255,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const row = `
           <tr>
+            <td style="text-align:center;">
+              <input type="checkbox" class="admin-select-reg-check" value="${r.regId}" style="width:16px; height:16px; accent-color:#10b981; cursor:pointer;">
+            </td>
             <td><strong style="font-family:'Space Grotesk', monospace;">${r.regId}</strong></td>
             <td>
               <div style="font-weight:700; color:var(--text-dark);">${r.staffName}</div>
@@ -2288,14 +2334,192 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.querySelectorAll('.reject-hrs-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
           const id = e.currentTarget.getAttribute('data-id');
+          btn.disabled = true;
+          btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
           await api.rejectHours(id);
-          showToast(`ปฏิเสธรายการ ${id} เรียบร้อย`, 'info');
+          showToast(`ปฏิเสธรายการลงทะเบียน ${id} เรียบร้อยแล้ว`, 'info');
           await loadAllData();
           renderAdminTables();
           autoDriveBackup('hours_rejection');
         });
       });
+
+      // Update selection count for Admin Table
+      const updateAdminBulkCount = () => {
+        const checkedBoxes = Array.from(document.querySelectorAll('.admin-select-reg-check:checked'));
+        const count = checkedBoxes.length;
+
+        const badge = document.getElementById('selectedAdminRegCountBadge');
+        const approveBtn = document.getElementById('bulkApproveHrsBtn');
+        const rejectBtn = document.getElementById('bulkRejectHrsBtn');
+        const selectAllCheck = document.getElementById('selectAllAdminApproveCheck');
+        const headerCheck = document.getElementById('headerAdminSelectAllCheck');
+
+        if (badge) badge.textContent = `เลือก ${count} รายการ`;
+        document.querySelectorAll('.admin-bulk-count-num').forEach(el => el.textContent = count);
+
+        [approveBtn, rejectBtn].forEach(btn => {
+          if (btn) {
+            btn.disabled = count === 0;
+            btn.style.opacity = count === 0 ? '0.5' : '1';
+          }
+        });
+
+        const allCheckboxes = Array.from(document.querySelectorAll('.admin-select-reg-check'));
+        const isAllChecked = allCheckboxes.length > 0 && allCheckboxes.every(cb => cb.checked);
+        const isSomeChecked = allCheckboxes.some(cb => cb.checked);
+
+        [selectAllCheck, headerCheck].forEach(chk => {
+          if (chk) {
+            chk.checked = isAllChecked;
+            chk.indeterminate = !isAllChecked && isSomeChecked;
+          }
+        });
+      };
+
+      document.querySelectorAll('.admin-select-reg-check').forEach(chk => {
+        chk.addEventListener('change', updateAdminBulkCount);
+      });
+
+      updateAdminBulkCount();
     }
+
+  // GLOBAL LISTENERS FOR ADMIN BULK ACTIONS (APPROVAL DASHBOARD)
+  ['selectAllAdminApproveCheck', 'headerAdminSelectAllCheck'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('change', (e) => {
+        const isChecked = e.target.checked;
+        document.querySelectorAll('.admin-select-reg-check').forEach(cb => {
+          cb.checked = isChecked;
+        });
+        const event = new Event('change');
+        const firstChk = document.querySelector('.admin-select-reg-check');
+        if (firstChk) firstChk.dispatchEvent(event);
+      });
+    }
+  });
+
+  const bulkApproveHrsBtn = document.getElementById('bulkApproveHrsBtn');
+  if (bulkApproveHrsBtn) {
+    bulkApproveHrsBtn.addEventListener('click', async () => {
+      const checkedBoxes = Array.from(document.querySelectorAll('.admin-select-reg-check:checked'));
+      const selectedIds = checkedBoxes.map(cb => cb.value);
+      if (selectedIds.length === 0) return;
+
+      if (confirm(`คุณต้องการอนุมัติชั่วโมงกิจกรรมให้กับรายการที่เลือกจำนวน ${selectedIds.length} รายการ ใช่หรือไม่?`)) {
+        bulkApproveHrsBtn.disabled = true;
+        bulkApproveHrsBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังอนุมัติ (${selectedIds.length})...`;
+
+        await api.bulkApproveHours(selectedIds);
+        showToast(`✅ อนุมัติชั่วโมงกิจกรรมสำเร็จรวม ${selectedIds.length} รายการ!`, 'success');
+        await loadAllData();
+        renderAdminTables();
+        renderRegistrationsListTable();
+        autoDriveBackup('bulk_hours_approval');
+      }
+    });
+  }
+
+  const bulkRejectHrsBtn = document.getElementById('bulkRejectHrsBtn');
+  if (bulkRejectHrsBtn) {
+    bulkRejectHrsBtn.addEventListener('click', async () => {
+      const checkedBoxes = Array.from(document.querySelectorAll('.admin-select-reg-check:checked'));
+      const selectedIds = checkedBoxes.map(cb => cb.value);
+      if (selectedIds.length === 0) return;
+
+      if (confirm(`คุณต้องการปฏิเสธรายการลงทะเบียนที่เลือกจำนวน ${selectedIds.length} รายการ ใช่หรือไม่?`)) {
+        bulkRejectHrsBtn.disabled = true;
+        bulkRejectHrsBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึก (${selectedIds.length})...`;
+
+        await api.bulkRejectHours(selectedIds);
+        showToast(`❌ ปฏิเสธรายการลงทะเบียนสำเร็จรวม ${selectedIds.length} รายการ`, 'info');
+        await loadAllData();
+        renderAdminTables();
+        renderRegistrationsListTable();
+        autoDriveBackup('bulk_hours_rejection');
+      }
+    });
+  }
+
+  // GLOBAL LISTENERS FOR REGISTRATIONS MODAL BULK ACTIONS
+  ['selectAllModalRegsCheck', 'headerModalRegsSelectAllCheck'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('change', (e) => {
+        const isChecked = e.target.checked;
+        document.querySelectorAll('.modal-select-reg-check').forEach(cb => {
+          cb.checked = isChecked;
+        });
+        const event = new Event('change');
+        const firstChk = document.querySelector('.modal-select-reg-check');
+        if (firstChk) firstChk.dispatchEvent(event);
+      });
+    }
+  });
+
+  const bulkApproveModalRegsBtn = document.getElementById('bulkApproveModalRegsBtn');
+  if (bulkApproveModalRegsBtn) {
+    bulkApproveModalRegsBtn.addEventListener('click', async () => {
+      const checkedBoxes = Array.from(document.querySelectorAll('.modal-select-reg-check:checked'));
+      const selectedIds = checkedBoxes.map(cb => cb.value);
+      if (selectedIds.length === 0) return;
+
+      if (confirm(`คุณต้องการอนุมัติรายการที่เลือกจำนวน ${selectedIds.length} รายการ ใช่หรือไม่?`)) {
+        bulkApproveModalRegsBtn.disabled = true;
+        bulkApproveModalRegsBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังอนุมัติ (${selectedIds.length})...`;
+
+        await api.bulkApproveHours(selectedIds);
+        showToast(`✅ อนุมัติชั่วโมงกิจกรรมสำเร็จรวม ${selectedIds.length} รายการ!`, 'success');
+        await loadAllData();
+        renderAdminTables();
+        renderRegistrationsListTable();
+        autoDriveBackup('bulk_modal_hours_approval');
+      }
+    });
+  }
+
+  const bulkRejectModalRegsBtn = document.getElementById('bulkRejectModalRegsBtn');
+  if (bulkRejectModalRegsBtn) {
+    bulkRejectModalRegsBtn.addEventListener('click', async () => {
+      const checkedBoxes = Array.from(document.querySelectorAll('.modal-select-reg-check:checked'));
+      const selectedIds = checkedBoxes.map(cb => cb.value);
+      if (selectedIds.length === 0) return;
+
+      if (confirm(`คุณต้องการปฏิเสธรายการที่เลือกจำนวน ${selectedIds.length} รายการ ใช่หรือไม่?`)) {
+        bulkRejectModalRegsBtn.disabled = true;
+        bulkRejectModalRegsBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึก (${selectedIds.length})...`;
+
+        await api.bulkRejectHours(selectedIds);
+        showToast(`❌ ปฏิเสธรายการลงทะเบียนสำเร็จรวม ${selectedIds.length} รายการ`, 'info');
+        await loadAllData();
+        renderAdminTables();
+        renderRegistrationsListTable();
+        autoDriveBackup('bulk_modal_hours_rejection');
+      }
+    });
+  }
+
+  const bulkDeleteModalRegsBtn = document.getElementById('bulkDeleteModalRegsBtn');
+  if (bulkDeleteModalRegsBtn) {
+    bulkDeleteModalRegsBtn.addEventListener('click', async () => {
+      const checkedBoxes = Array.from(document.querySelectorAll('.modal-select-reg-check:checked'));
+      const selectedIds = checkedBoxes.map(cb => cb.value);
+      if (selectedIds.length === 0) return;
+
+      if (confirm(`คุณต้องการลบรายการลงทะเบียนที่เลือกจำนวน ${selectedIds.length} รายการ ใช่หรือไม่?\n(ข้อมูลจะถูกลบออกจากตาราง Google Sheets อัตโนมัติ)`)) {
+        bulkDeleteModalRegsBtn.disabled = true;
+        bulkDeleteModalRegsBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังลบ (${selectedIds.length})...`;
+
+        await api.bulkDeleteRegistrations(selectedIds);
+        showToast(`🗑️ ลบรายการลงทะเบียนสำเร็จรวม ${selectedIds.length} รายการ`, 'success');
+        await loadAllData();
+        renderAdminTables();
+        renderRegistrationsListTable();
+        autoDriveBackup('bulk_modal_delete_registrations');
+      }
+    });
+  }
 
     if (!backupTableBody) return;
     const backups = api.getBackups();

@@ -451,11 +451,34 @@
         </button>
       </div>
 
+      <!-- BULK ACTIONS CONTROL BAR FOR ADMIN APPROVAL DASHBOARD -->
+      <div style="display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border-light); margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <label style="display: flex; align-items: center; gap: 0.45rem; font-weight: 600; font-size: 0.88rem; cursor: pointer; user-select: none;">
+            <input type="checkbox" id="selectAllAdminApproveCheck" style="width: 17px; height: 17px; accent-color: #10b981; cursor: pointer;">
+            เลือกทั้งหมด
+          </label>
+          <span id="selectedAdminRegCountBadge" style="font-size: 0.8rem; font-weight: 600; background: #e0f2fe; color: #0369a1; padding: 0.15rem 0.65rem; border-radius: 12px;">เลือก 0 รายการ</span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+          <button id="bulkApproveHrsBtn" class="role-pill-btn" style="background: #16a34a; color: white; padding: 0.4rem 0.85rem; font-size: 0.82rem; cursor: pointer; opacity: 0.5;" disabled>
+            <i class="fa-solid fa-circle-check"></i> อนุมัติชั่วโมงที่เลือก (<span class="admin-bulk-count-num">0</span>)
+          </button>
+          <button id="bulkRejectHrsBtn" class="role-pill-btn" style="background: #dc2626; color: white; padding: 0.4rem 0.85rem; font-size: 0.82rem; cursor: pointer; opacity: 0.5;" disabled>
+            <i class="fa-solid fa-circle-xmark"></i> ปฏิเสธรายการที่เลือก (<span class="admin-bulk-count-num">0</span>)
+          </button>
+        </div>
+      </div>
+
       <!-- REGISTRATION & HOURS APPROVAL DATA TABLE -->
       <div class="table-responsive" style="margin-bottom: 2rem;">
         <table class="data-table">
           <thead>
             <tr>
+              <th style="width: 42px; text-align: center;">
+                <input type="checkbox" id="headerAdminSelectAllCheck" style="width: 16px; height: 16px; accent-color: #10b981; cursor: pointer;">
+              </th>
               <th>รหัสลงทะเบียน</th>
               <th>ผู้ปฏิบัติงาน</th>
               <th>สาขา / สังกัด</th>
@@ -937,15 +960,42 @@
 
   <!-- MODAL 11: REGISTRATIONS LIST MODAL -->
   <div class="modal-backdrop" id="registrationsListModal">
-    <div class="modal-content" style="max-width: 900px;">
+    <div class="modal-content" style="max-width: 920px;">
       <div class="modal-header">
         <h3><i class="fa-solid fa-file-lines" style="color: #2563eb;"></i> รายการยอดการลงทะเบียนทั้งหมดในระบบ</h3>
         <button class="close-btn" id="closeRegsListModalBtn">&times;</button>
       </div>
+
+      <!-- BULK ACTIONS CONTROL BAR FOR ALL REGISTRATIONS MODAL -->
+      <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 0.65rem 0.85rem; border-radius: 8px; border: 1px solid var(--border-light); margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <label style="display: flex; align-items: center; gap: 0.45rem; font-weight: 600; font-size: 0.85rem; cursor: pointer; user-select: none;">
+            <input type="checkbox" id="selectAllModalRegsCheck" style="width: 16px; height: 16px; accent-color: #10b981; cursor: pointer;">
+            เลือกทั้งหมด
+          </label>
+          <span id="selectedModalRegCountBadge" style="font-size: 0.8rem; font-weight: 600; background: #e0f2fe; color: #0369a1; padding: 0.15rem 0.65rem; border-radius: 12px;">เลือก 0 รายการ</span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+          <button id="bulkApproveModalRegsBtn" class="role-pill-btn" style="background: #16a34a; color: white; padding: 0.35rem 0.75rem; font-size: 0.78rem; cursor: pointer; opacity: 0.5;" disabled>
+            <i class="fa-solid fa-circle-check"></i> อนุมัติ (<span class="modal-bulk-count-num">0</span>)
+          </button>
+          <button id="bulkRejectModalRegsBtn" class="role-pill-btn" style="background: #dc2626; color: white; padding: 0.35rem 0.75rem; font-size: 0.78rem; cursor: pointer; opacity: 0.5;" disabled>
+            <i class="fa-solid fa-circle-xmark"></i> ปฏิเสธ (<span class="modal-bulk-count-num">0</span>)
+          </button>
+          <button id="bulkDeleteModalRegsBtn" class="role-pill-btn" style="background: #64748b; color: white; padding: 0.35rem 0.75rem; font-size: 0.78rem; cursor: pointer; opacity: 0.5;" disabled>
+            <i class="fa-solid fa-trash"></i> ลบรายการ (<span class="modal-bulk-count-num">0</span>)
+          </button>
+        </div>
+      </div>
+
       <div class="table-responsive">
         <table class="data-table">
           <thead>
             <tr>
+              <th style="width: 40px; text-align: center;">
+                <input type="checkbox" id="headerModalRegsSelectAllCheck" style="width: 16px; height: 16px; accent-color: #10b981; cursor: pointer;">
+              </th>
               <th>รหัสลงทะเบียน</th>
               <th>ผู้ปฏิบัติงาน</th>
               <th>กิจกรรม</th>
