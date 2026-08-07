@@ -97,17 +97,17 @@ function doGet(e) {
     if (action === 'approveHours') {
       const regId = e.parameter.regId;
       const checkInTime = e.parameter.checkInTime || Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
-      const result = approveHoursRecord(regId, checkInTime);
+      const result = approveHoursRecord(regId, checkInTime, e.parameter);
       performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'unapproveHours') {
       const regId = e.parameter.regId;
-      const result = unapproveHoursRecord(regId);
+      const result = unapproveHoursRecord(regId, e.parameter);
       performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'rejectHours') {
       const regId = e.parameter.regId;
-      const result = rejectHoursRecord(regId);
+      const result = rejectHoursRecord(regId, e.parameter);
       performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'deleteRegistration') {
@@ -175,15 +175,15 @@ function doPost(e) {
       performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'approveHours') {
-      const result = approveHoursRecord(postData.regId, postData.checkInTime);
+      const result = approveHoursRecord(postData.regId, postData.checkInTime, postData.data || postData.record);
       performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'unapproveHours') {
-      const result = unapproveHoursRecord(postData.regId);
+      const result = unapproveHoursRecord(postData.regId, postData.data || postData.record);
       performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'rejectHours') {
-      const result = rejectHoursRecord(postData.regId);
+      const result = rejectHoursRecord(postData.regId, postData.data || postData.record);
       performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'createActivity') {
@@ -608,45 +608,113 @@ function saveRegistration(data) {
   return true;
 }
 
-function approveHoursRecord(regId, checkInTime) {
+function approveHoursRecord(regId, checkInTime, data) {
   const sheet = getOrCreateSheet(CONFIG.SHEET_REGISTRATIONS, ['RegID', 'Timestamp', 'StaffID', 'StaffName', 'Major', 'Department', 'Position', 'ActivityID', 'ActivityTitle', 'BaseHours', 'EarnedHours', 'Status', 'CheckInTime']);
   const rows = sheet.getDataRange().getValues();
+  const searchId = String(regId || '').trim();
+
   for (let i = 1; i < rows.length; i++) {
-    if (String(rows[i][0]) === String(regId)) {
-      const baseHrs = Number(rows[i][9] || 3);
+    if (String(rows[i][0]).trim() === searchId) {
+      const baseHrs = Number(rows[i][9] || (data ? data.baseHours : 3) || 3);
       sheet.getRange(i + 1, 11).setValue(baseHrs);
       sheet.getRange(i + 1, 12).setValue('approved');
       sheet.getRange(i + 1, 13).setValue(checkInTime || Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss'));
       return true;
     }
   }
+
+  // Self-Healing Fallback: If registration row did not exist in sheet yet, append it as approved!
+  if (data && data.staffId) {
+    const timeStr = checkInTime || Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
+    const baseHrs = Number(data.baseHours || data.hours || 3);
+    sheet.appendRow([
+      data.regId || searchId,
+      data.timestamp || timeStr,
+      data.staffId,
+      data.staffName || '',
+      data.major || '',
+      data.department || '',
+      data.position || '',
+      data.activityId || '',
+      data.activityTitle || '',
+      baseHrs,
+      baseHrs,
+      'approved',
+      timeStr
+    ]);
+    return true;
+  }
   return false;
 }
 
-function unapproveHoursRecord(regId) {
+function unapproveHoursRecord(regId, data) {
   const sheet = getOrCreateSheet(CONFIG.SHEET_REGISTRATIONS, ['RegID', 'Timestamp', 'StaffID', 'StaffName', 'Major', 'Department', 'Position', 'ActivityID', 'ActivityTitle', 'BaseHours', 'EarnedHours', 'Status', 'CheckInTime']);
   const rows = sheet.getDataRange().getValues();
+  const searchId = String(regId || '').trim();
+
   for (let i = 1; i < rows.length; i++) {
-    if (String(rows[i][0]) === String(regId)) {
+    if (String(rows[i][0]).trim() === searchId) {
       sheet.getRange(i + 1, 11).setValue(0);          // EarnedHours = 0
       sheet.getRange(i + 1, 12).setValue('pending');  // Status = pending
       sheet.getRange(i + 1, 13).setValue('');         // CheckInTime = empty
       return true;
     }
   }
+
+  if (data && data.staffId) {
+    const baseHrs = Number(data.baseHours || data.hours || 3);
+    sheet.appendRow([
+      data.regId || searchId,
+      data.timestamp || Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss'),
+      data.staffId,
+      data.staffName || '',
+      data.major || '',
+      data.department || '',
+      data.position || '',
+      data.activityId || '',
+      data.activityTitle || '',
+      baseHrs,
+      0,
+      'pending',
+      ''
+    ]);
+    return true;
+  }
   return false;
 }
 
-function rejectHoursRecord(regId) {
+function rejectHoursRecord(regId, data) {
   const sheet = getOrCreateSheet(CONFIG.SHEET_REGISTRATIONS, ['RegID', 'Timestamp', 'StaffID', 'StaffName', 'Major', 'Department', 'Position', 'ActivityID', 'ActivityTitle', 'BaseHours', 'EarnedHours', 'Status', 'CheckInTime']);
   const rows = sheet.getDataRange().getValues();
+  const searchId = String(regId || '').trim();
+
   for (let i = 1; i < rows.length; i++) {
-    if (String(rows[i][0]) === String(regId)) {
+    if (String(rows[i][0]).trim() === searchId) {
       sheet.getRange(i + 1, 11).setValue(0);          // EarnedHours = 0
       sheet.getRange(i + 1, 12).setValue('rejected'); // Status = rejected
       sheet.getRange(i + 1, 13).setValue('');         // CheckInTime = empty
       return true;
     }
+  }
+
+  if (data && data.staffId) {
+    const baseHrs = Number(data.baseHours || data.hours || 3);
+    sheet.appendRow([
+      data.regId || searchId,
+      data.timestamp || Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss'),
+      data.staffId,
+      data.staffName || '',
+      data.major || '',
+      data.department || '',
+      data.position || '',
+      data.activityId || '',
+      data.activityTitle || '',
+      baseHrs,
+      0,
+      'rejected',
+      ''
+    ]);
+    return true;
   }
   return false;
 }

@@ -625,7 +625,7 @@ class SmoStaffAPI {
     if (!gasUrl) return;
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2500);
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
 
     try {
       await fetch(gasUrl, {
@@ -638,10 +638,10 @@ class SmoStaffAPI {
       clearTimeout(timeoutId);
     } catch (err) {
       clearTimeout(timeoutId);
-      console.warn(`POST ${action} timed out or failed, attempting fast GET query fallback:`, err);
+      console.warn(`POST ${action} timed out or failed, attempting GET query fallback:`, err);
       try {
         const getController = new AbortController();
-        const getTimeoutId = setTimeout(() => getController.abort(), 2500);
+        const getTimeoutId = setTimeout(() => getController.abort(), 8000);
         await fetch(`${gasUrl}?action=${action}&${queryParamsStr}`, { mode: 'no-cors', signal: getController.signal });
         clearTimeout(getTimeoutId);
       } catch (getErr) {
@@ -660,7 +660,11 @@ class SmoStaffAPI {
       rec.checkInTime = nowStr;
       localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(registrations));
 
-      this.sendGasMutation('approveHours', { regId: regId, checkInTime: nowStr }, `regId=${encodeURIComponent(regId)}&checkInTime=${encodeURIComponent(nowStr)}`);
+      await this.sendGasMutation(
+        'approveHours',
+        { regId: regId, checkInTime: nowStr, record: rec },
+        `regId=${encodeURIComponent(regId)}&checkInTime=${encodeURIComponent(nowStr)}&staffId=${encodeURIComponent(rec.staffId)}&staffName=${encodeURIComponent(rec.staffName)}&activityId=${encodeURIComponent(rec.activityId)}&activityTitle=${encodeURIComponent(rec.activityTitle)}&baseHours=${rec.baseHours || 3}`
+      );
       return { success: true, record: rec };
     }
     return { success: false };
@@ -675,7 +679,11 @@ class SmoStaffAPI {
       rec.checkInTime = null;
       localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(registrations));
 
-      this.sendGasMutation('unapproveHours', { regId: regId }, `regId=${encodeURIComponent(regId)}`);
+      await this.sendGasMutation(
+        'unapproveHours',
+        { regId: regId, record: rec },
+        `regId=${encodeURIComponent(regId)}&staffId=${encodeURIComponent(rec.staffId)}&staffName=${encodeURIComponent(rec.staffName)}&activityId=${encodeURIComponent(rec.activityId)}&activityTitle=${encodeURIComponent(rec.activityTitle)}&baseHours=${rec.baseHours || 3}`
+      );
       return { success: true, record: rec };
     }
     return { success: false };
@@ -688,7 +696,11 @@ class SmoStaffAPI {
       rec.status = 'rejected';
       rec.earnedHours = 0;
       localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(registrations));
-      this.sendGasMutation('rejectHours', { regId: regId }, `regId=${encodeURIComponent(regId)}`);
+      await this.sendGasMutation(
+        'rejectHours',
+        { regId: regId, record: rec },
+        `regId=${encodeURIComponent(regId)}&staffId=${encodeURIComponent(rec.staffId)}&staffName=${encodeURIComponent(rec.staffName)}&activityId=${encodeURIComponent(rec.activityId)}&activityTitle=${encodeURIComponent(rec.activityTitle)}&baseHours=${rec.baseHours || 3}`
+      );
       return { success: true };
     }
     return { success: false };
@@ -709,6 +721,7 @@ class SmoStaffAPI {
     const nowStr = new Date().toLocaleString('sv-SE');
     const registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS) || '[]');
     let count = 0;
+    const targetRecords = [];
 
     registrations.forEach(r => {
       if (regIds.includes(r.regId)) {
@@ -716,13 +729,18 @@ class SmoStaffAPI {
         r.earnedHours = r.baseHours || 3;
         r.checkInTime = nowStr;
         count++;
+        targetRecords.push(r);
       }
     });
 
     localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(registrations));
 
-    for (const regId of regIds) {
-      this.sendGasMutation('approveHours', { regId: regId, checkInTime: nowStr }, `regId=${encodeURIComponent(regId)}&checkInTime=${encodeURIComponent(nowStr)}`);
+    for (const rec of targetRecords) {
+      await this.sendGasMutation(
+        'approveHours',
+        { regId: rec.regId, checkInTime: nowStr, record: rec },
+        `regId=${encodeURIComponent(rec.regId)}&checkInTime=${encodeURIComponent(nowStr)}&staffId=${encodeURIComponent(rec.staffId)}&staffName=${encodeURIComponent(rec.staffName)}&activityId=${encodeURIComponent(rec.activityId)}&activityTitle=${encodeURIComponent(rec.activityTitle)}&baseHours=${rec.baseHours || 3}`
+      );
     }
 
     return { success: true, count };
@@ -732,19 +750,25 @@ class SmoStaffAPI {
     if (!Array.isArray(regIds) || regIds.length === 0) return { success: false, count: 0 };
     const registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS) || '[]');
     let count = 0;
+    const targetRecords = [];
 
     registrations.forEach(r => {
       if (regIds.includes(r.regId)) {
         r.status = 'rejected';
         r.earnedHours = 0;
         count++;
+        targetRecords.push(r);
       }
     });
 
     localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(registrations));
 
-    for (const regId of regIds) {
-      this.sendGasMutation('rejectHours', { regId: regId }, `regId=${encodeURIComponent(regId)}`);
+    for (const rec of targetRecords) {
+      await this.sendGasMutation(
+        'rejectHours',
+        { regId: rec.regId, record: rec },
+        `regId=${encodeURIComponent(rec.regId)}&staffId=${encodeURIComponent(rec.staffId)}&staffName=${encodeURIComponent(rec.staffName)}&activityId=${encodeURIComponent(rec.activityId)}&activityTitle=${encodeURIComponent(rec.activityTitle)}&baseHours=${rec.baseHours || 3}`
+      );
     }
 
     return { success: true, count };
