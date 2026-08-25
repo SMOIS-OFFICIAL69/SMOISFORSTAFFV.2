@@ -1471,12 +1471,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Wire Approve Buttons
     tableBody.querySelectorAll('.act-part-approve-btn').forEach(btn => {
       btn.addEventListener('click', async (e) => {
-        const regId = e.currentTarget.getAttribute('data-reg-id');
+        const targetBtn = e.currentTarget;
+        const regId = targetBtn.getAttribute('data-reg-id');
         const reg = currentRegistrations.find(r => r.regId === regId);
         if (reg) {
+          targetBtn.disabled = true;
+          targetBtn.style.opacity = '0.75';
+          targetBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังอนุมัติ...';
           reg.status = 'approved';
           reg.checkInTime = new Date().toLocaleString('th-TH');
-          await api.approveRegistration(regId);
+          await api.approveHours(regId);
           showToast(`อนุมัติชั่วโมงกิจกรรมของ "${reg.staffName}" เรียบร้อยแล้ว`, 'success');
           renderActivityParticipantsTable(actId);
           renderActivitiesListTable();
@@ -1490,11 +1494,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Wire Reject Buttons
     tableBody.querySelectorAll('.act-part-reject-btn').forEach(btn => {
       btn.addEventListener('click', async (e) => {
-        const regId = e.currentTarget.getAttribute('data-reg-id');
+        const targetBtn = e.currentTarget;
+        const regId = targetBtn.getAttribute('data-reg-id');
         const reg = currentRegistrations.find(r => r.regId === regId);
         if (reg) {
+          targetBtn.disabled = true;
+          targetBtn.style.opacity = '0.75';
+          targetBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังปฏิเสธ...';
           reg.status = 'rejected';
-          await api.rejectRegistration(regId);
+          await api.rejectHours(regId);
           showToast(`ปฏิเสธการลงทะเบียนของ "${reg.staffName}" เรียบร้อยแล้ว`, 'warning');
           renderActivityParticipantsTable(actId);
           renderActivitiesListTable();
@@ -1508,9 +1516,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Wire Delete Buttons
     tableBody.querySelectorAll('.act-part-delete-btn').forEach(btn => {
       btn.addEventListener('click', async (e) => {
-        const regId = e.currentTarget.getAttribute('data-reg-id');
+        const targetBtn = e.currentTarget;
+        const regId = targetBtn.getAttribute('data-reg-id');
         const reg = currentRegistrations.find(r => r.regId === regId);
         if (reg && confirm(`คุณต้องการลบ "${reg.staffName}" ออกจากกิจกรรมนี้ใช่หรือไม่?`)) {
+          targetBtn.disabled = true;
+          targetBtn.style.opacity = '0.75';
+          targetBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
           api.deleteRegistration(regId);
           currentRegistrations = currentRegistrations.filter(r => r.regId !== regId);
           showToast(`ลบรายชื่อ "${reg.staffName}" ออกจากกิจกรรมแล้ว`, 'success');
@@ -2591,7 +2603,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         btn.addEventListener('click', async (e) => {
           const id = e.currentTarget.getAttribute('data-id');
           btn.disabled = true;
-          btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+          btn.style.opacity = '0.75';
+          btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังอนุมัติ...';
           await api.approveHours(id);
           showToast(`อนุมัติชั่วโมงกิจกรรมสำเร็จสำหรับรหัส ${id}`, 'success');
           await loadAllData();

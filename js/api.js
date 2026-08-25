@@ -670,6 +670,10 @@ class SmoStaffAPI {
     return { success: false };
   }
 
+  async approveRegistration(regId) {
+    return await this.approveHours(regId);
+  }
+
   async unapproveHours(regId) {
     const registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS) || '[]');
     const rec = registrations.find(r => r.regId === regId);
@@ -704,6 +708,10 @@ class SmoStaffAPI {
       return { success: true };
     }
     return { success: false };
+  }
+
+  async rejectRegistration(regId) {
+    return await this.rejectHours(regId);
   }
 
   deleteRegistration(regId) {
