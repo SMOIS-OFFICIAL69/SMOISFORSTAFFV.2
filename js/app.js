@@ -652,6 +652,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     filterAndRenderActivities();
     renderMySummaryView();
     if (currentRole === 'admin') renderAdminTables();
+    checkAndOpenDeepLinkActivity();
 
     // Keep loading modal active while fetching live data from Google Sheets
     if (showLoadingModal && dataLoadingModal) {
@@ -669,6 +670,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         filterAndRenderActivities();
         renderMySummaryView();
         if (currentRole === 'admin') renderAdminTables();
+        checkAndOpenDeepLinkActivity();
 
         if (showLoadingModal) {
           showToast('⚡ โหลดและอัปเดตข้อมูลสดจากระบบเรียบร้อยแล้ว', 'success');
@@ -1040,15 +1042,137 @@ document.addEventListener('DOMContentLoaded', async () => {
   // --- ACTIVITY DETAIL & POSTER IMAGE PREVIEW MODAL ---
   const activityDetailModal = document.getElementById('activityDetailModal');
   const closeDetailActModalBtn = document.getElementById('closeDetailActModalBtn');
+  const shareDetailActTopBtn = document.getElementById('shareDetailActTopBtn');
+  let currentDetailAct = null;
+
+  function setActivityUrlParam(actId) {
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('activityId', actId);
+      window.history.pushState({ activityId: actId }, '', url.toString());
+    } catch (e) { console.error(e); }
+  }
+
+  function clearActivityUrlParam() {
+    try {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has('activityId') || url.searchParams.has('actId') || url.searchParams.has('id')) {
+        url.searchParams.delete('activityId');
+        url.searchParams.delete('actId');
+        url.searchParams.delete('id');
+        window.history.pushState({}, '', url.toString());
+      }
+    } catch (e) { console.error(e); }
+  }
+
+  function checkAndOpenDeepLinkActivity() {
+    const params = new URLSearchParams(window.location.search);
+    const actId = params.get('activityId') || params.get('actId') || params.get('id');
+    if (actId) {
+      const act = currentActivities.find(a => a.id === actId);
+      if (act && (!activityDetailModal || !activityDetailModal.classList.contains('active'))) {
+        openActivityDetailModal(actId, false);
+      }
+    }
+  }
+
+  function shareActivityLink(act) {
+    if (!act) return;
+    const shareUrl = new URL(window.location.href);
+    shareUrl.searchParams.set('activityId', act.id);
+    shareUrl.searchParams.delete('actId');
+    shareUrl.searchParams.delete('id');
+    const finalUrl = shareUrl.toString();
+
+    if (navigator.share) {
+      navigator.share({
+        title: act.title,
+        text: `กิจกรรม: ${act.title}\nวันที่: ${act.date} เวลา ${act.time}\nสถานที่: ${act.location}`,
+        url: finalUrl
+      }).catch(err => {
+        if (err.name !== 'AbortError') {
+          copyToClipboard(finalUrl);
+        }
+      });
+    } else {
+      copyToClipboard(finalUrl);
+    }
+  }
+
+  function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('📋 คัดลอกลิงก์กิจกรรมเรียบร้อยแล้ว!', 'success');
+      }).catch(() => {
+        fallbackCopyTextToClipboard(text);
+      });
+    } else {
+      fallbackCopyTextToClipboard(text);
+    }
+  }
+
+  function fallbackCopyTextToClipboard(text) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      showToast('📋 คัดลอกลิงก์กิจกรรมเรียบร้อยแล้ว!', 'success');
+    } catch (err) {
+      showToast('❌ ไม่สามารถคัดลอกลิงก์ได้', 'error');
+    }
+    document.body.removeChild(textArea);
+  }
+
   if (closeDetailActModalBtn && activityDetailModal) {
     closeDetailActModalBtn.addEventListener('click', () => {
       activityDetailModal.classList.remove('active');
+      clearActivityUrlParam();
     });
   }
 
-  function openActivityDetailModal(actId) {
+  if (activityDetailModal) {
+    activityDetailModal.addEventListener('click', (e) => {
+      if (e.target === activityDetailModal) {
+        activityDetailModal.classList.remove('active');
+        clearActivityUrlParam();
+      }
+    });
+  }
+
+  if (shareDetailActTopBtn) {
+    shareDetailActTopBtn.addEventListener('click', () => {
+      if (currentDetailAct) {
+        shareActivityLink(currentDetailAct);
+      }
+    });
+  }
+
+  window.addEventListener('popstate', () => {
+    const params = new URLSearchParams(window.location.search);
+    const actId = params.get('activityId') || params.get('actId') || params.get('id');
+    if (actId) {
+      openActivityDetailModal(actId, false);
+    } else {
+      if (activityDetailModal) {
+        activityDetailModal.classList.remove('active');
+      }
+    }
+  });
+
+  function openActivityDetailModal(actId, updateUrl = true) {
     const act = currentActivities.find(a => a.id === actId);
     if (!act || !activityDetailModal) return;
+
+    currentDetailAct = act;
+    if (updateUrl) {
+      setActivityUrlParam(act.id);
+    }
 
     const directBannerUrl = convertDriveUrlToDirectLink(act.banner) || 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=600&q=80';
     const isFull = act.registeredCount >= act.maxQuota || act.status === 'full';
@@ -1104,18 +1228,29 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const footerBox = document.getElementById('detailActFooterBox');
     if (footerBox) {
-      if (isRegistered) {
-        footerBox.innerHTML = `
-          <button class="btn-register cancel-reg-btn-modal" data-act-id="${act.id}" style="background: #ef4444; color: white; padding: 0.6rem 1.5rem; width: auto; display: inline-flex;">
-            <i class="fa-solid fa-user-xmark"></i> ยกเลิกการลงทะเบียน
+      footerBox.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+          <button class="detail-act-share-btn" data-act-id="${act.id}" style="background: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1; padding: 0.6rem 1.1rem; border-radius: 8px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.88rem; transition: background 0.2s;">
+            <i class="fa-solid fa-share-nodes" style="color: #2563eb;"></i> แชร์ลิงก์กิจกรรม
           </button>
-        `;
-      } else {
-        footerBox.innerHTML = `
-          <button class="btn-register open-reg-from-detail-btn" data-id="${act.id}" data-title="${act.title}" data-hours="${act.hours || 3}" ${isFull || isClosed ? 'disabled style="background: #64748b; cursor: not-allowed; opacity: 0.8;"' : ''} style="padding: 0.6rem 1.5rem; width: auto; display: inline-flex;">
-            ${isClosed ? '<i class="fa-solid fa-lock"></i> ปิดรับสมัครแล้ว' : isFull ? 'โควตาเต็มแล้ว' : '<i class="fa-solid fa-pen-to-square"></i> ลงทะเบียนเข้าร่วมกิจกรรมนี้'}
-          </button>
-        `;
+          ${isRegistered ? `
+            <button class="btn-register cancel-reg-btn-modal" data-act-id="${act.id}" style="background: #ef4444; color: white; padding: 0.6rem 1.5rem; width: auto; display: inline-flex;">
+              <i class="fa-solid fa-user-xmark"></i> ยกเลิกการลงทะเบียน
+            </button>
+          ` : `
+            <button class="btn-register open-reg-from-detail-btn" data-id="${act.id}" data-title="${act.title}" data-hours="${act.hours || 3}" ${isFull || isClosed ? 'disabled style="background: #64748b; cursor: not-allowed; opacity: 0.8;"' : ''} style="padding: 0.6rem 1.5rem; width: auto; display: inline-flex;">
+              ${isClosed ? '<i class="fa-solid fa-lock"></i> ปิดรับสมัครแล้ว' : isFull ? 'โควตาเต็มแล้ว' : '<i class="fa-solid fa-pen-to-square"></i> ลงทะเบียนเข้าร่วมกิจกรรมนี้'}
+            </button>
+          `}
+        </div>
+      `;
+
+      // Wire Share Button
+      const shareBtn = footerBox.querySelector('.detail-act-share-btn');
+      if (shareBtn) {
+        shareBtn.addEventListener('click', () => {
+          shareActivityLink(act);
+        });
       }
 
       // Wire Modal Footer Registration Trigger
@@ -1147,6 +1282,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (!reg) return;
           if (confirm(`คุณต้องการยกเลิกการลงทะเบียนกิจกรรม "${act.title}" ใช่หรือไม่?`)) {
             activityDetailModal.classList.remove('active');
+            clearActivityUrlParam();
             api.deleteRegistration(reg.regId);
             act.registeredCount = Math.max(0, (act.registeredCount || 1) - 1);
             if (act.status === 'full' && act.registeredCount < act.maxQuota) act.status = 'open';
