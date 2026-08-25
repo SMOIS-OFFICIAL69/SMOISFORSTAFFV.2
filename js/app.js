@@ -682,6 +682,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (showLoadingModal && dataLoadingModal) {
         dataLoadingModal.classList.remove('active');
       }
+      setTimeout(() => {
+        checkAndOpenDeepLinkActivity();
+      }, 150);
     }
   }
 
@@ -1045,51 +1048,73 @@ document.addEventListener('DOMContentLoaded', async () => {
   const shareDetailActTopBtn = document.getElementById('shareDetailActTopBtn');
   let currentDetailAct = null;
 
+  function getDeepLinkActivityId() {
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      let actId = searchParams.get('activityId') || searchParams.get('actId') || searchParams.get('id') || searchParams.get('act') || searchParams.get('activity');
+      if (actId) return actId.trim();
+
+      const hash = window.location.hash.replace(/^#\/?/, '').trim();
+      if (hash) {
+        if (hash.includes('=')) {
+          const hashParams = new URLSearchParams(hash);
+          actId = hashParams.get('activityId') || hashParams.get('actId') || hashParams.get('id') || hashParams.get('act') || hashParams.get('activity');
+          if (actId) return actId.trim();
+        } else if (hash.length > 2) {
+          return hash.trim();
+        }
+      }
+    } catch (e) { console.error(e); }
+    return null;
+  }
+
   function setActivityUrlParam(actId) {
     try {
-      const url = new URL(window.location.href);
+      const url = new URL(window.location.origin + window.location.pathname);
       url.searchParams.set('activityId', actId);
-      window.history.pushState({ activityId: actId }, '', url.toString());
+      window.history.replaceState({ activityId: actId }, '', url.toString());
     } catch (e) { console.error(e); }
   }
 
   function clearActivityUrlParam() {
     try {
-      const url = new URL(window.location.href);
-      if (url.searchParams.has('activityId') || url.searchParams.has('actId') || url.searchParams.has('id')) {
-        url.searchParams.delete('activityId');
-        url.searchParams.delete('actId');
-        url.searchParams.delete('id');
-        window.history.pushState({}, '', url.toString());
-      }
+      const url = new URL(window.location.origin + window.location.pathname);
+      window.history.replaceState({}, '', url.toString());
     } catch (e) { console.error(e); }
   }
 
   function checkAndOpenDeepLinkActivity() {
-    const params = new URLSearchParams(window.location.search);
-    const actId = params.get('activityId') || params.get('actId') || params.get('id');
-    if (actId) {
-      const act = currentActivities.find(a => a.id === actId);
-      if (act && (!activityDetailModal || !activityDetailModal.classList.contains('active'))) {
-        openActivityDetailModal(actId, false);
-      }
+    const actId = getDeepLinkActivityId();
+    if (!actId) return;
+
+    if (!Array.isArray(currentActivities) || currentActivities.length === 0) return;
+
+    const targetClean = String(actId).trim().toLowerCase();
+    const act = currentActivities.find(a => {
+      if (!a || !a.id) return false;
+      const cleanAId = String(a.id).trim().toLowerCase();
+      return cleanAId === targetClean || cleanAId.endsWith(targetClean) || targetClean.endsWith(cleanAId);
+    });
+
+    if (act) {
+      openActivityDetailModal(act.id, false);
     }
   }
 
   function shareActivityLink(act) {
-    if (!act) return;
-    const shareUrl = new URL(window.location.href);
+    if (!act || !act.id) return;
+    const shareUrl = new URL(window.location.origin + window.location.pathname);
     shareUrl.searchParams.set('activityId', act.id);
-    shareUrl.searchParams.delete('actId');
-    shareUrl.searchParams.delete('id');
     const finalUrl = shareUrl.toString();
 
+    const shareData = {
+      title: act.title || 'รายละเอียดกิจกรรม',
+      text: `📌 กิจกรรม: ${act.title}\n📅 วันที่: ${act.date || '-'} (${act.time || '-'})\n📍 สถานที่: ${act.location || '-'}`,
+      url: finalUrl
+    };
+
     if (navigator.share) {
-      navigator.share({
-        title: act.title,
-        text: `กิจกรรม: ${act.title}\nวันที่: ${act.date} เวลา ${act.time}\nสถานที่: ${act.location}`,
-        url: finalUrl
-      }).catch(err => {
+      navigator.share(shareData).catch(err => {
         if (err.name !== 'AbortError') {
           copyToClipboard(finalUrl);
         }
@@ -1154,8 +1179,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   window.addEventListener('popstate', () => {
-    const params = new URLSearchParams(window.location.search);
-    const actId = params.get('activityId') || params.get('actId') || params.get('id');
+    const actId = getDeepLinkActivityId();
     if (actId) {
       openActivityDetailModal(actId, false);
     } else {
@@ -1166,7 +1190,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   function openActivityDetailModal(actId, updateUrl = true) {
-    const act = currentActivities.find(a => a.id === actId);
+    const targetClean = String(actId).trim().toLowerCase();
+    const act = currentActivities.find(a => {
+      if (!a || !a.id) return false;
+      const cleanAId = String(a.id).trim().toLowerCase();
+      return cleanAId === targetClean || cleanAId.endsWith(targetClean) || targetClean.endsWith(cleanAId);
+    });
+
     if (!act || !activityDetailModal) return;
 
     currentDetailAct = act;
