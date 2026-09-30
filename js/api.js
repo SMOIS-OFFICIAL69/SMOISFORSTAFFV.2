@@ -214,7 +214,7 @@ class SmoStaffAPI {
 
   mergeRegistrations(gasRegistrations) {
     if (!Array.isArray(gasRegistrations)) return;
-    const localRegs = this.safeGetStorage(STORAGE_KEYS.REGISTRATIONS, []);
+    const localRegs = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS) || '[]');
     const filteredGas = gasRegistrations.filter(r => !this.recentDeletedRegIds.has(String(r.regId)));
     const gasRegIdSet = new Set(filteredGas.map(r => String(r.regId)));
 
@@ -235,79 +235,40 @@ class SmoStaffAPI {
       }
     });
 
-    this.safeSetStorage(STORAGE_KEYS.REGISTRATIONS, merged);
-  }
-
-  mergeStaffUsers(gasStaff) {
-    if (!Array.isArray(gasStaff)) return;
-    const local = this.safeGetStorage(STORAGE_KEYS.STAFF_USERS, []);
-    const gasMap = new Map(gasStaff.map(s => [String(s.studentId).trim(), s]));
-
-    local.forEach(loc => {
-      const key = String(loc.studentId).trim();
-      if (!gasMap.has(key)) {
-        gasStaff.unshift(loc);
-        gasMap.set(key, loc);
-      }
-    });
-
-    this.safeSetStorage(STORAGE_KEYS.STAFF_USERS, gasStaff);
-  }
-
-  mergeAdminUsers(gasAdmins) {
-    if (!Array.isArray(gasAdmins)) return;
-    const local = this.safeGetStorage(STORAGE_KEYS.ADMIN_USERS, []);
-    const gasMap = new Map(gasAdmins.map(a => [String(a.username).trim(), a]));
-
-    local.forEach(loc => {
-      const key = String(loc.username).trim();
-      if (!gasMap.has(key)) {
-        gasAdmins.unshift(loc);
-        gasMap.set(key, loc);
-      }
-    });
-
-    this.safeSetStorage(STORAGE_KEYS.ADMIN_USERS, gasAdmins);
+    localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(merged));
   }
 
   async syncDataFromGoogleSheets() {
     const gasUrl = this.getGasUrl();
-    if (!gasUrl || this.isSyncing) return false;
+    if (!gasUrl) return false;
 
-    this.isSyncing = true;
     try {
-      // 0. Flush any pending offline mutations first
-      await this.processPendingMutations();
-
       // 1. Ultra-Fast Single Unified Request (Fetches all 5 tables in 1 HTTP payload)
       const res = await fetch(`${gasUrl}?action=getAllData`);
       const json = await res.json();
       if (json && json.status === 'success' && json.data) {
         if (Array.isArray(json.data.activities)) {
-          this.safeSetStorage(STORAGE_KEYS.ACTIVITIES, this.sanitizeActivities(json.data.activities));
+          localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(this.sanitizeActivities(json.data.activities)));
         }
         if (Array.isArray(json.data.registrations)) {
-          this.mergeRegistrations(json.data.registrations);
+          localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(json.data.registrations));
         }
         if (Array.isArray(json.data.staffUsers)) {
-          this.mergeStaffUsers(json.data.staffUsers);
+          localStorage.setItem(STORAGE_KEYS.STAFF_USERS, JSON.stringify(json.data.staffUsers));
         }
         if (Array.isArray(json.data.adminUsers)) {
-          this.mergeAdminUsers(json.data.adminUsers);
+          localStorage.setItem(STORAGE_KEYS.ADMIN_USERS, JSON.stringify(json.data.adminUsers));
         }
         if (Array.isArray(json.data.backups)) {
-          this.safeSetStorage(STORAGE_KEYS.BACKUPS, json.data.backups);
+          localStorage.setItem(STORAGE_KEYS.BACKUPS, JSON.stringify(json.data.backups));
         }
         return true;
       }
     } catch (err) {
       console.warn('Unified fast sync attempt failed, trying fallback:', err);
-    } finally {
-      this.isSyncing = false;
     }
 
     // Fallback: Parallel requests if deployed Code.gs is older version
-    this.isSyncing = true;
     try {
       const [actRes, regRes, staffRes, adminRes, backupRes] = await Promise.all([
         fetch(`${gasUrl}?action=getActivities`),
@@ -321,57 +282,41 @@ class SmoStaffAPI {
         actRes.json(),
         regRes.json(),
         staffRes.json(),
-        adminJson.json(),
+        adminRes.json(),
         backupRes.json()
       ]);
 
       if (actJson && actJson.status === 'success' && Array.isArray(actJson.data)) {
-        this.safeSetStorage(STORAGE_KEYS.ACTIVITIES, this.sanitizeActivities(actJson.data));
+        localStorage.setItem(STORAGE_KEYS.ACTIVITIES, JSON.stringify(this.sanitizeActivities(actJson.data)));
       }
       if (regJson && regJson.status === 'success' && Array.isArray(regJson.data)) {
-        this.mergeRegistrations(regJson.data);
+        localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(regJson.data));
       }
       if (staffJson && staffJson.status === 'success' && Array.isArray(staffJson.data)) {
-        this.mergeStaffUsers(staffJson.data);
+        localStorage.setItem(STORAGE_KEYS.STAFF_USERS, JSON.stringify(staffJson.data));
       }
       if (adminJson && adminJson.status === 'success' && Array.isArray(adminJson.data)) {
-        this.mergeAdminUsers(adminJson.data);
+        localStorage.setItem(STORAGE_KEYS.ADMIN_USERS, JSON.stringify(adminJson.data));
       }
       if (backupJson && backupJson.status === 'success' && Array.isArray(backupJson.data)) {
-        this.safeSetStorage(STORAGE_KEYS.BACKUPS, backupJson.data);
+        localStorage.setItem(STORAGE_KEYS.BACKUPS, JSON.stringify(backupJson.data));
       }
 
       return true;
     } catch (err) {
       console.warn('Google Sheets live sync error:', err);
       return false;
-    } finally {
-      this.isSyncing = false;
     }
   }
 
   // --- AUTHENTICATION & USERS ---
   getStaffUsers() {
-    const local = this.safeGetStorage(STORAGE_KEYS.STAFF_USERS, []);
-    const registrations = this.safeGetStorage(STORAGE_KEYS.REGISTRATIONS, []);
-
-    const earnedMap = {};
-    registrations.forEach(r => {
-      if (r.status === 'approved') {
-        const sid = String(r.staffId).trim();
-        earnedMap[sid] = (earnedMap[sid] || 0) + Number(r.earnedHours || r.baseHours || 0);
-      }
-    });
-
-    const staffList = (local && local.length > 0) ? local : SEED_STAFF_USERS;
-    return staffList.map(s => {
-      const sid = String(s.studentId).trim();
-      const earned = earnedMap[sid] !== undefined ? earnedMap[sid] : Number(s.earnedHours || 0);
-      return {
-        ...s,
-        earnedHours: earned
-      };
-    });
+    const local = JSON.parse(localStorage.getItem(STORAGE_KEYS.STAFF_USERS) || '[]');
+    if (!local || local.length === 0) {
+      localStorage.setItem(STORAGE_KEYS.STAFF_USERS, JSON.stringify(SEED_STAFF_USERS));
+      return SEED_STAFF_USERS;
+    }
+    return local;
   }
 
   getAdminUsers() {
@@ -782,9 +727,9 @@ class SmoStaffAPI {
   async bulkApproveHours(regIds) {
     if (!Array.isArray(regIds) || regIds.length === 0) return { success: false, count: 0 };
     const nowStr = new Date().toLocaleString('sv-SE');
-    const registrations = this.safeGetStorage(STORAGE_KEYS.REGISTRATIONS, []);
+    const registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS) || '[]');
     let count = 0;
-    const recordsMap = {};
+    const targetRecords = [];
 
     registrations.forEach(r => {
       if (regIds.includes(r.regId)) {
@@ -792,50 +737,54 @@ class SmoStaffAPI {
         r.earnedHours = r.baseHours || 3;
         r.checkInTime = nowStr;
         count++;
-        recordsMap[r.regId] = r;
+        targetRecords.push(r);
       }
     });
 
-    this.safeSetStorage(STORAGE_KEYS.REGISTRATIONS, registrations);
+    localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(registrations));
 
-    // Single Atomic Batch Mutation to Google Apps Script
-    await this.sendGasMutation(
-      'bulkApproveHours',
-      { regIds, checkInTime: nowStr, recordsMap },
-      `regIds=${encodeURIComponent(regIds.join(','))}&checkInTime=${encodeURIComponent(nowStr)}`
-    );
+    for (const rec of targetRecords) {
+      await this.sendGasMutation(
+        'approveHours',
+        { regId: rec.regId, checkInTime: nowStr, record: rec },
+        `regId=${encodeURIComponent(rec.regId)}&checkInTime=${encodeURIComponent(nowStr)}&staffId=${encodeURIComponent(rec.staffId)}&staffName=${encodeURIComponent(rec.staffName)}&activityId=${encodeURIComponent(rec.activityId)}&activityTitle=${encodeURIComponent(rec.activityTitle)}&baseHours=${rec.baseHours || 3}`
+      );
+    }
 
     return { success: true, count };
   }
 
   async bulkRejectHours(regIds) {
     if (!Array.isArray(regIds) || regIds.length === 0) return { success: false, count: 0 };
-    const registrations = this.safeGetStorage(STORAGE_KEYS.REGISTRATIONS, []);
+    const registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS) || '[]');
     let count = 0;
+    const targetRecords = [];
 
     registrations.forEach(r => {
       if (regIds.includes(r.regId)) {
         r.status = 'rejected';
         r.earnedHours = 0;
         count++;
+        targetRecords.push(r);
       }
     });
 
-    this.safeSetStorage(STORAGE_KEYS.REGISTRATIONS, registrations);
+    localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(registrations));
 
-    // Single Atomic Batch Mutation to Google Apps Script
-    await this.sendGasMutation(
-      'bulkRejectHours',
-      { regIds },
-      `regIds=${encodeURIComponent(regIds.join(','))}`
-    );
+    for (const rec of targetRecords) {
+      await this.sendGasMutation(
+        'rejectHours',
+        { regId: rec.regId, record: rec },
+        `regId=${encodeURIComponent(rec.regId)}&staffId=${encodeURIComponent(rec.staffId)}&staffName=${encodeURIComponent(rec.staffName)}&activityId=${encodeURIComponent(rec.activityId)}&activityTitle=${encodeURIComponent(rec.activityTitle)}&baseHours=${rec.baseHours || 3}`
+      );
+    }
 
     return { success: true, count };
   }
 
   async bulkDeleteRegistrations(regIds) {
     if (!Array.isArray(regIds) || regIds.length === 0) return { success: false, count: 0 };
-    let registrations = this.safeGetStorage(STORAGE_KEYS.REGISTRATIONS, []);
+    let registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS) || '[]');
     const regIdSet = new Set(regIds);
 
     regIds.forEach(id => this.recentDeletedRegIds.add(String(id)));
@@ -844,14 +793,11 @@ class SmoStaffAPI {
     registrations = registrations.filter(r => !regIdSet.has(r.regId));
     const count = initialLen - registrations.length;
 
-    this.safeSetStorage(STORAGE_KEYS.REGISTRATIONS, registrations);
+    localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(registrations));
 
-    // Single Atomic Batch Mutation to Google Apps Script
-    await this.sendGasMutation(
-      'bulkDeleteRegistrations',
-      { regIds },
-      `regIds=${encodeURIComponent(regIds.join(','))}`
-    );
+    for (const regId of regIds) {
+      this.sendGasMutation('deleteRegistration', { regId: regId }, `regId=${encodeURIComponent(regId)}`);
+    }
 
     return { success: true, count };
   }
