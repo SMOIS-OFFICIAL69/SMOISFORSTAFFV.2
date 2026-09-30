@@ -98,42 +98,36 @@ function doGet(e) {
       const regId = e.parameter.regId;
       const checkInTime = e.parameter.checkInTime || Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
       const result = approveHoursRecord(regId, checkInTime, e.parameter);
-      performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'unapproveHours') {
       const regId = e.parameter.regId;
       const result = unapproveHoursRecord(regId, e.parameter);
-      performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'rejectHours') {
       const regId = e.parameter.regId;
       const result = rejectHoursRecord(regId, e.parameter);
-      performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'deleteRegistration') {
       const regId = e.parameter.regId;
       const result = deleteRegistrationRecord(regId);
-      performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'deleteActivity') {
       const id = e.parameter.id;
       const result = deleteActivityRecord(id);
-      performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'deleteStaffUser') {
       const studentId = e.parameter.studentId;
       const result = deleteStaffUserRecord(studentId);
-      performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'deleteAdminUser') {
       const username = e.parameter.username;
       const result = deleteAdminUserRecord(username);
-      performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     }
   } catch (err) {
     responseData = { status: 'error', message: err.toString() };
   } finally {
+    SpreadsheetApp.flush();
     lock.releaseLock();
   }
 
@@ -172,51 +166,39 @@ function doPost(e) {
 
     if (action === 'registerStaff') {
       const result = saveRegistration(postData.data);
-      performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'approveHours') {
       const result = approveHoursRecord(postData.regId, postData.checkInTime, postData.data || postData.record);
-      performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'unapproveHours') {
       const result = unapproveHoursRecord(postData.regId, postData.data || postData.record);
-      performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'rejectHours') {
       const result = rejectHoursRecord(postData.regId, postData.data || postData.record);
-      performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'createActivity') {
       const result = createActivityRecord(postData.data);
-      performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'updateActivity' || action === 'saveActivity') {
       const result = saveActivityRecord(postData.data);
-      performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'createStaffUser' || action === 'updateStaffUser' || action === 'saveStaffUser') {
       const result = saveStaffUser(postData.data);
-      performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'createAdminUser' || action === 'updateAdminUser' || action === 'saveAdminUser') {
       const result = saveAdminUser(postData.data);
-      performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'deleteActivity') {
       const result = deleteActivityRecord(postData.id || postData.data);
-      performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'deleteStaffUser') {
       const result = deleteStaffUserRecord(postData.studentId || postData.data);
-      performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'deleteAdminUser') {
       const result = deleteAdminUserRecord(postData.username || postData.data);
-      performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'deleteRegistration') {
       const result = deleteRegistrationRecord(postData.regId || postData.data);
-      performGoogleDriveBackup();
       responseData = { status: 'success', result: result };
     } else if (action === 'createDriveBackup') {
       const backupResult = performGoogleDriveBackup(postData.data);
@@ -230,6 +212,7 @@ function doPost(e) {
   } catch (err) {
     responseData = { status: 'error', message: err.toString() };
   } finally {
+    SpreadsheetApp.flush();
     clearDataCache();
     lock.releaseLock();
   }

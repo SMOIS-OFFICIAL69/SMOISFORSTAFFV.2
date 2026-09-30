@@ -646,7 +646,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 1. Instant 0ms UI Render using local cached data
     currentActivities = api.getActivities();
     currentRegistrations = api.getRegistrations();
-    
+
     renderStaffHeaderInfo();
     updateStaffHoursStats();
     filterAndRenderActivities();
@@ -1212,7 +1212,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const bannerEl = document.getElementById('detailActBanner');
     if (bannerEl) bannerEl.src = directBannerUrl;
-    
+
     const titleEl = document.getElementById('detailActTitle');
     if (titleEl) titleEl.textContent = act.title;
 
@@ -1565,7 +1565,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const statusVal = filterActPartStatus ? filterActPartStatus.value : '';
 
     if (query) {
-      regs = regs.filter(r => 
+      regs = regs.filter(r =>
         (r.staffId && String(r.staffId).toLowerCase().includes(query)) ||
         (r.staffName && r.staffName.toLowerCase().includes(query)) ||
         (r.department && r.department.toLowerCase().includes(query)) ||
@@ -1773,9 +1773,9 @@ document.addEventListener('DOMContentLoaded', async () => {
               <button class="role-pill-btn view-act-participants-btn" data-id="${a.id}" style="background:#8b5cf6; color:white; padding:0.25rem 0.6rem; font-size:0.75rem; cursor:pointer;" title="ดูรายชื่อผู้ลงทะเบียนกิจกรรมนี้"><i class="fa-solid fa-users"></i> ดูรายชื่อ (${realCount})</button>
               <button class="role-pill-btn move-up-act-btn" data-idx="${idx}" ${isFirst ? 'disabled style="opacity:0.35; cursor:not-allowed; background:#94a3b8; color:white; padding:0.25rem 0.5rem; font-size:0.75rem;"' : 'style="background:#0284c7; color:white; padding:0.25rem 0.5rem; font-size:0.75rem; cursor:pointer;"'} title="เลื่อนลำดับขึ้น"><i class="fa-solid fa-arrow-up"></i></button>
               <button class="role-pill-btn move-down-act-btn" data-idx="${idx}" ${isLast ? 'disabled style="opacity:0.35; cursor:not-allowed; background:#94a3b8; color:white; padding:0.25rem 0.5rem; font-size:0.75rem;"' : 'style="background:#0284c7; color:white; padding:0.25rem 0.5rem; font-size:0.75rem; cursor:pointer;"'} title="เลื่อนลำดับลง"><i class="fa-solid fa-arrow-down"></i></button>
-              ${a.status === 'open' 
-                ? `<button class="role-pill-btn toggle-act-status-btn" data-id="${a.id}" data-target-status="closed" style="background:#dc2626; color:white; padding:0.25rem 0.55rem; font-size:0.75rem; cursor:pointer;" title="คลิกเพื่อปิดรับสมัคร"><i class="fa-solid fa-lock"></i> ปิดรับสมัคร</button>` 
-                : `<button class="role-pill-btn toggle-act-status-btn" data-id="${a.id}" data-target-status="open" style="background:#16a34a; color:white; padding:0.25rem 0.55rem; font-size:0.75rem; cursor:pointer;" title="คลิกเพื่อเปิดรับสมัคร"><i class="fa-solid fa-lock-open"></i> เปิดรับสมัคร</button>`}
+              ${a.status === 'open'
+          ? `<button class="role-pill-btn toggle-act-status-btn" data-id="${a.id}" data-target-status="closed" style="background:#dc2626; color:white; padding:0.25rem 0.55rem; font-size:0.75rem; cursor:pointer;" title="คลิกเพื่อปิดรับสมัคร"><i class="fa-solid fa-lock"></i> ปิดรับสมัคร</button>`
+          : `<button class="role-pill-btn toggle-act-status-btn" data-id="${a.id}" data-target-status="open" style="background:#16a34a; color:white; padding:0.25rem 0.55rem; font-size:0.75rem; cursor:pointer;" title="คลิกเพื่อเปิดรับสมัคร"><i class="fa-solid fa-lock-open"></i> เปิดรับสมัคร</button>`}
               <button class="role-pill-btn add-staff-to-act-btn" data-id="${a.id}" style="background:#10b981; color:white; padding:0.25rem 0.6rem; font-size:0.75rem; cursor:pointer;" title="เพิ่มผู้ปฏิบัติงานเข้ากิจกรรมนี้"><i class="fa-solid fa-user-plus"></i> เพิ่มคน</button>
               <button class="role-pill-btn edit-act-btn" data-id="${a.id}" style="background:#2563eb; color:white; padding:0.25rem 0.6rem; font-size:0.75rem; cursor:pointer;" title="แก้ไขกิจกรรม"><i class="fa-solid fa-pen"></i> แก้ไข</button>
               <button class="role-pill-btn delete-act-btn" data-id="${a.id}" style="background:#ef4444; color:white; padding:0.25rem 0.5rem; font-size:0.75rem; cursor:pointer;" title="ลบกิจกรรม"><i class="fa-solid fa-trash"></i> ลบ</button>
@@ -2205,7 +2205,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     adminListTableBody.innerHTML = '';
     admins.forEach(a => {
       const avatarUrl = convertDriveUrlToDirectLink(a.avatar);
-      const avatarHtml = avatarUrl 
+      const avatarHtml = avatarUrl
         ? `<img src="${avatarUrl}" alt="Avatar" style="width:36px; height:36px; border-radius:50%; object-fit:cover;">`
         : `<div style="width:36px; height:36px; border-radius:50%; background:#e0e7ff; color:#3730a3; display:flex; align-items:center; justify-content:center; font-size:0.9rem;"><i class="fa-solid fa-user-shield"></i></div>`;
 
@@ -2753,9 +2753,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             </td>
             <td>
               <div style="display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap;">
-                ${isApproved 
-                  ? `<button class="role-pill-btn unapprove-hrs-btn" data-id="${r.regId}" style="background:#f59e0b; color:white; padding:0.25rem 0.55rem; font-size:0.75rem;" title="ยกเลิกการอนุมัติ ย้อนกลับเป็นรออนุมัติ"><i class="fa-solid fa-rotate-left"></i> ยกเลิกการอนุมัติ</button>` 
-                  : `<button class="role-pill-btn approve-hrs-btn" data-id="${r.regId}" style="background:#16a34a; color:white; padding:0.25rem 0.65rem; font-size:0.75rem;"><i class="fa-solid fa-check"></i> อนุมัติชั่วโมง</button>
+                ${isApproved
+            ? `<button class="role-pill-btn unapprove-hrs-btn" data-id="${r.regId}" style="background:#f59e0b; color:white; padding:0.25rem 0.55rem; font-size:0.75rem;" title="ยกเลิกการอนุมัติ ย้อนกลับเป็นรออนุมัติ"><i class="fa-solid fa-rotate-left"></i> ยกเลิกการอนุมัติ</button>`
+            : `<button class="role-pill-btn approve-hrs-btn" data-id="${r.regId}" style="background:#16a34a; color:white; padding:0.25rem 0.65rem; font-size:0.75rem;"><i class="fa-solid fa-check"></i> อนุมัติชั่วโมง</button>
                      <button class="role-pill-btn reject-hrs-btn" data-id="${r.regId}" style="background:#64748b; color:white; padding:0.25rem 0.55rem; font-size:0.75rem;" title="ปฏิเสธรายการ"><i class="fa-solid fa-xmark"></i></button>`}
                 <button class="role-pill-btn delete-reg-admin-btn" data-id="${r.regId}" data-act-id="${r.activityId}" style="background:#ef4444; color:white; padding:0.25rem 0.55rem; font-size:0.75rem;" title="ลบรายการลงทะเบียนนี้"><i class="fa-solid fa-trash"></i> ลบ</button>
               </div>
@@ -2867,142 +2867,142 @@ document.addEventListener('DOMContentLoaded', async () => {
       updateAdminBulkCount();
     }
 
-  // GLOBAL LISTENERS FOR ADMIN BULK ACTIONS (APPROVAL DASHBOARD)
-  ['selectAllAdminApproveCheck', 'headerAdminSelectAllCheck'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.addEventListener('change', (e) => {
-        const isChecked = e.target.checked;
-        document.querySelectorAll('.admin-select-reg-check').forEach(cb => {
-          cb.checked = isChecked;
+    // GLOBAL LISTENERS FOR ADMIN BULK ACTIONS (APPROVAL DASHBOARD)
+    ['selectAllAdminApproveCheck', 'headerAdminSelectAllCheck'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('change', (e) => {
+          const isChecked = e.target.checked;
+          document.querySelectorAll('.admin-select-reg-check').forEach(cb => {
+            cb.checked = isChecked;
+          });
+          const event = new Event('change');
+          const firstChk = document.querySelector('.admin-select-reg-check');
+          if (firstChk) firstChk.dispatchEvent(event);
         });
-        const event = new Event('change');
-        const firstChk = document.querySelector('.admin-select-reg-check');
-        if (firstChk) firstChk.dispatchEvent(event);
+      }
+    });
+
+    const bulkApproveHrsBtn = document.getElementById('bulkApproveHrsBtn');
+    if (bulkApproveHrsBtn) {
+      bulkApproveHrsBtn.addEventListener('click', async () => {
+        const checkedBoxes = Array.from(document.querySelectorAll('.admin-select-reg-check:checked'));
+        const selectedIds = checkedBoxes.map(cb => cb.value);
+        if (selectedIds.length === 0) return;
+
+        if (confirm(`คุณต้องการอนุมัติชั่วโมงกิจกรรมให้กับรายการที่เลือกจำนวน ${selectedIds.length} รายการ ใช่หรือไม่?`)) {
+          bulkApproveHrsBtn.disabled = true;
+          bulkApproveHrsBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังอนุมัติ (${selectedIds.length})...`;
+
+          await api.bulkApproveHours(selectedIds);
+          showToast(`✅ อนุมัติชั่วโมงกิจกรรมสำเร็จรวม ${selectedIds.length} รายการ!`, 'success');
+          await loadAllData();
+          renderAdminTables();
+          renderRegistrationsListTable();
+          autoDriveBackup('bulk_hours_approval');
+        }
       });
     }
-  });
 
-  const bulkApproveHrsBtn = document.getElementById('bulkApproveHrsBtn');
-  if (bulkApproveHrsBtn) {
-    bulkApproveHrsBtn.addEventListener('click', async () => {
-      const checkedBoxes = Array.from(document.querySelectorAll('.admin-select-reg-check:checked'));
-      const selectedIds = checkedBoxes.map(cb => cb.value);
-      if (selectedIds.length === 0) return;
+    const bulkRejectHrsBtn = document.getElementById('bulkRejectHrsBtn');
+    if (bulkRejectHrsBtn) {
+      bulkRejectHrsBtn.addEventListener('click', async () => {
+        const checkedBoxes = Array.from(document.querySelectorAll('.admin-select-reg-check:checked'));
+        const selectedIds = checkedBoxes.map(cb => cb.value);
+        if (selectedIds.length === 0) return;
 
-      if (confirm(`คุณต้องการอนุมัติชั่วโมงกิจกรรมให้กับรายการที่เลือกจำนวน ${selectedIds.length} รายการ ใช่หรือไม่?`)) {
-        bulkApproveHrsBtn.disabled = true;
-        bulkApproveHrsBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังอนุมัติ (${selectedIds.length})...`;
+        if (confirm(`คุณต้องการปฏิเสธรายการลงทะเบียนที่เลือกจำนวน ${selectedIds.length} รายการ ใช่หรือไม่?`)) {
+          bulkRejectHrsBtn.disabled = true;
+          bulkRejectHrsBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึก (${selectedIds.length})...`;
 
-        await api.bulkApproveHours(selectedIds);
-        showToast(`✅ อนุมัติชั่วโมงกิจกรรมสำเร็จรวม ${selectedIds.length} รายการ!`, 'success');
-        await loadAllData();
-        renderAdminTables();
-        renderRegistrationsListTable();
-        autoDriveBackup('bulk_hours_approval');
-      }
-    });
-  }
-
-  const bulkRejectHrsBtn = document.getElementById('bulkRejectHrsBtn');
-  if (bulkRejectHrsBtn) {
-    bulkRejectHrsBtn.addEventListener('click', async () => {
-      const checkedBoxes = Array.from(document.querySelectorAll('.admin-select-reg-check:checked'));
-      const selectedIds = checkedBoxes.map(cb => cb.value);
-      if (selectedIds.length === 0) return;
-
-      if (confirm(`คุณต้องการปฏิเสธรายการลงทะเบียนที่เลือกจำนวน ${selectedIds.length} รายการ ใช่หรือไม่?`)) {
-        bulkRejectHrsBtn.disabled = true;
-        bulkRejectHrsBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึก (${selectedIds.length})...`;
-
-        await api.bulkRejectHours(selectedIds);
-        showToast(`❌ ปฏิเสธรายการลงทะเบียนสำเร็จรวม ${selectedIds.length} รายการ`, 'info');
-        await loadAllData();
-        renderAdminTables();
-        renderRegistrationsListTable();
-        autoDriveBackup('bulk_hours_rejection');
-      }
-    });
-  }
-
-  // GLOBAL LISTENERS FOR REGISTRATIONS MODAL BULK ACTIONS
-  ['selectAllModalRegsCheck', 'headerModalRegsSelectAllCheck'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.addEventListener('change', (e) => {
-        const isChecked = e.target.checked;
-        document.querySelectorAll('.modal-select-reg-check').forEach(cb => {
-          cb.checked = isChecked;
-        });
-        const event = new Event('change');
-        const firstChk = document.querySelector('.modal-select-reg-check');
-        if (firstChk) firstChk.dispatchEvent(event);
+          await api.bulkRejectHours(selectedIds);
+          showToast(`❌ ปฏิเสธรายการลงทะเบียนสำเร็จรวม ${selectedIds.length} รายการ`, 'info');
+          await loadAllData();
+          renderAdminTables();
+          renderRegistrationsListTable();
+          autoDriveBackup('bulk_hours_rejection');
+        }
       });
     }
-  });
 
-  const bulkApproveModalRegsBtn = document.getElementById('bulkApproveModalRegsBtn');
-  if (bulkApproveModalRegsBtn) {
-    bulkApproveModalRegsBtn.addEventListener('click', async () => {
-      const checkedBoxes = Array.from(document.querySelectorAll('.modal-select-reg-check:checked'));
-      const selectedIds = checkedBoxes.map(cb => cb.value);
-      if (selectedIds.length === 0) return;
-
-      if (confirm(`คุณต้องการอนุมัติรายการที่เลือกจำนวน ${selectedIds.length} รายการ ใช่หรือไม่?`)) {
-        bulkApproveModalRegsBtn.disabled = true;
-        bulkApproveModalRegsBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังอนุมัติ (${selectedIds.length})...`;
-
-        await api.bulkApproveHours(selectedIds);
-        showToast(`✅ อนุมัติชั่วโมงกิจกรรมสำเร็จรวม ${selectedIds.length} รายการ!`, 'success');
-        await loadAllData();
-        renderAdminTables();
-        renderRegistrationsListTable();
-        autoDriveBackup('bulk_modal_hours_approval');
+    // GLOBAL LISTENERS FOR REGISTRATIONS MODAL BULK ACTIONS
+    ['selectAllModalRegsCheck', 'headerModalRegsSelectAllCheck'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('change', (e) => {
+          const isChecked = e.target.checked;
+          document.querySelectorAll('.modal-select-reg-check').forEach(cb => {
+            cb.checked = isChecked;
+          });
+          const event = new Event('change');
+          const firstChk = document.querySelector('.modal-select-reg-check');
+          if (firstChk) firstChk.dispatchEvent(event);
+        });
       }
     });
-  }
 
-  const bulkRejectModalRegsBtn = document.getElementById('bulkRejectModalRegsBtn');
-  if (bulkRejectModalRegsBtn) {
-    bulkRejectModalRegsBtn.addEventListener('click', async () => {
-      const checkedBoxes = Array.from(document.querySelectorAll('.modal-select-reg-check:checked'));
-      const selectedIds = checkedBoxes.map(cb => cb.value);
-      if (selectedIds.length === 0) return;
+    const bulkApproveModalRegsBtn = document.getElementById('bulkApproveModalRegsBtn');
+    if (bulkApproveModalRegsBtn) {
+      bulkApproveModalRegsBtn.addEventListener('click', async () => {
+        const checkedBoxes = Array.from(document.querySelectorAll('.modal-select-reg-check:checked'));
+        const selectedIds = checkedBoxes.map(cb => cb.value);
+        if (selectedIds.length === 0) return;
 
-      if (confirm(`คุณต้องการปฏิเสธรายการที่เลือกจำนวน ${selectedIds.length} รายการ ใช่หรือไม่?`)) {
-        bulkRejectModalRegsBtn.disabled = true;
-        bulkRejectModalRegsBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึก (${selectedIds.length})...`;
+        if (confirm(`คุณต้องการอนุมัติรายการที่เลือกจำนวน ${selectedIds.length} รายการ ใช่หรือไม่?`)) {
+          bulkApproveModalRegsBtn.disabled = true;
+          bulkApproveModalRegsBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังอนุมัติ (${selectedIds.length})...`;
 
-        await api.bulkRejectHours(selectedIds);
-        showToast(`❌ ปฏิเสธรายการลงทะเบียนสำเร็จรวม ${selectedIds.length} รายการ`, 'info');
-        await loadAllData();
-        renderAdminTables();
-        renderRegistrationsListTable();
-        autoDriveBackup('bulk_modal_hours_rejection');
-      }
-    });
-  }
+          await api.bulkApproveHours(selectedIds);
+          showToast(`✅ อนุมัติชั่วโมงกิจกรรมสำเร็จรวม ${selectedIds.length} รายการ!`, 'success');
+          await loadAllData();
+          renderAdminTables();
+          renderRegistrationsListTable();
+          autoDriveBackup('bulk_modal_hours_approval');
+        }
+      });
+    }
 
-  const bulkDeleteModalRegsBtn = document.getElementById('bulkDeleteModalRegsBtn');
-  if (bulkDeleteModalRegsBtn) {
-    bulkDeleteModalRegsBtn.addEventListener('click', async () => {
-      const checkedBoxes = Array.from(document.querySelectorAll('.modal-select-reg-check:checked'));
-      const selectedIds = checkedBoxes.map(cb => cb.value);
-      if (selectedIds.length === 0) return;
+    const bulkRejectModalRegsBtn = document.getElementById('bulkRejectModalRegsBtn');
+    if (bulkRejectModalRegsBtn) {
+      bulkRejectModalRegsBtn.addEventListener('click', async () => {
+        const checkedBoxes = Array.from(document.querySelectorAll('.modal-select-reg-check:checked'));
+        const selectedIds = checkedBoxes.map(cb => cb.value);
+        if (selectedIds.length === 0) return;
 
-      if (confirm(`คุณต้องการลบรายการลงทะเบียนที่เลือกจำนวน ${selectedIds.length} รายการ ใช่หรือไม่?\n(ข้อมูลจะถูกลบออกจากตาราง Google Sheets อัตโนมัติ)`)) {
-        bulkDeleteModalRegsBtn.disabled = true;
-        bulkDeleteModalRegsBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังลบ (${selectedIds.length})...`;
+        if (confirm(`คุณต้องการปฏิเสธรายการที่เลือกจำนวน ${selectedIds.length} รายการ ใช่หรือไม่?`)) {
+          bulkRejectModalRegsBtn.disabled = true;
+          bulkRejectModalRegsBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึก (${selectedIds.length})...`;
 
-        await api.bulkDeleteRegistrations(selectedIds);
-        showToast(`🗑️ ลบรายการลงทะเบียนสำเร็จรวม ${selectedIds.length} รายการ`, 'success');
-        await loadAllData();
-        renderAdminTables();
-        renderRegistrationsListTable();
-        autoDriveBackup('bulk_modal_delete_registrations');
-      }
-    });
-  }
+          await api.bulkRejectHours(selectedIds);
+          showToast(`❌ ปฏิเสธรายการลงทะเบียนสำเร็จรวม ${selectedIds.length} รายการ`, 'info');
+          await loadAllData();
+          renderAdminTables();
+          renderRegistrationsListTable();
+          autoDriveBackup('bulk_modal_hours_rejection');
+        }
+      });
+    }
+
+    const bulkDeleteModalRegsBtn = document.getElementById('bulkDeleteModalRegsBtn');
+    if (bulkDeleteModalRegsBtn) {
+      bulkDeleteModalRegsBtn.addEventListener('click', async () => {
+        const checkedBoxes = Array.from(document.querySelectorAll('.modal-select-reg-check:checked'));
+        const selectedIds = checkedBoxes.map(cb => cb.value);
+        if (selectedIds.length === 0) return;
+
+        if (confirm(`คุณต้องการลบรายการลงทะเบียนที่เลือกจำนวน ${selectedIds.length} รายการ ใช่หรือไม่?\n(ข้อมูลจะถูกลบออกจากตาราง Google Sheets อัตโนมัติ)`)) {
+          bulkDeleteModalRegsBtn.disabled = true;
+          bulkDeleteModalRegsBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังลบ (${selectedIds.length})...`;
+
+          await api.bulkDeleteRegistrations(selectedIds);
+          showToast(`🗑️ ลบรายการลงทะเบียนสำเร็จรวม ${selectedIds.length} รายการ`, 'success');
+          await loadAllData();
+          renderAdminTables();
+          renderRegistrationsListTable();
+          autoDriveBackup('bulk_modal_delete_registrations');
+        }
+      });
+    }
 
     if (!backupTableBody) return;
     const backups = api.getBackups();
@@ -3036,8 +3036,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     const t = document.createElement('div');
     t.className = `toast ${type}`;
-    t.innerHTML = `<i class="fa-solid fa-circle-info"></i> <span>${msg}</span>`;
+    const iconClass = type === 'success' ? 'fa-circle-check' : (type === 'error' ? 'fa-circle-xmark' : (type === 'warning' ? 'fa-triangle-exclamation' : 'fa-circle-info'));
+    t.innerHTML = `<i class="fa-solid ${iconClass}"></i> <span>${msg}</span>`;
     c.appendChild(t);
-    setTimeout(() => t.remove(), 3500);
+    setTimeout(() => {
+      t.classList.add('hide');
+      setTimeout(() => t.remove(), 300);
+    }, 3500);
   }
 });

@@ -727,7 +727,7 @@ class SmoStaffAPI {
   async bulkApproveHours(regIds) {
     if (!Array.isArray(regIds) || regIds.length === 0) return { success: false, count: 0 };
     const nowStr = new Date().toLocaleString('sv-SE');
-    const registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS) || '[]');
+    const registrations = this.safeGetStorage(STORAGE_KEYS.REGISTRATIONS, []);
     let count = 0;
     const targetRecords = [];
 
@@ -741,22 +741,23 @@ class SmoStaffAPI {
       }
     });
 
-    localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(registrations));
+    this.safeSetStorage(STORAGE_KEYS.REGISTRATIONS, registrations);
 
-    for (const rec of targetRecords) {
-      await this.sendGasMutation(
+    // Parallel fast execution
+    await Promise.all(targetRecords.map(rec => 
+      this.sendGasMutation(
         'approveHours',
         { regId: rec.regId, checkInTime: nowStr, record: rec },
         `regId=${encodeURIComponent(rec.regId)}&checkInTime=${encodeURIComponent(nowStr)}&staffId=${encodeURIComponent(rec.staffId)}&staffName=${encodeURIComponent(rec.staffName)}&activityId=${encodeURIComponent(rec.activityId)}&activityTitle=${encodeURIComponent(rec.activityTitle)}&baseHours=${rec.baseHours || 3}`
-      );
-    }
+      )
+    ));
 
     return { success: true, count };
   }
 
   async bulkRejectHours(regIds) {
     if (!Array.isArray(regIds) || regIds.length === 0) return { success: false, count: 0 };
-    const registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS) || '[]');
+    const registrations = this.safeGetStorage(STORAGE_KEYS.REGISTRATIONS, []);
     let count = 0;
     const targetRecords = [];
 
@@ -769,22 +770,23 @@ class SmoStaffAPI {
       }
     });
 
-    localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(registrations));
+    this.safeSetStorage(STORAGE_KEYS.REGISTRATIONS, registrations);
 
-    for (const rec of targetRecords) {
-      await this.sendGasMutation(
+    // Parallel fast execution
+    await Promise.all(targetRecords.map(rec => 
+      this.sendGasMutation(
         'rejectHours',
         { regId: rec.regId, record: rec },
         `regId=${encodeURIComponent(rec.regId)}&staffId=${encodeURIComponent(rec.staffId)}&staffName=${encodeURIComponent(rec.staffName)}&activityId=${encodeURIComponent(rec.activityId)}&activityTitle=${encodeURIComponent(rec.activityTitle)}&baseHours=${rec.baseHours || 3}`
-      );
-    }
+      )
+    ));
 
     return { success: true, count };
   }
 
   async bulkDeleteRegistrations(regIds) {
     if (!Array.isArray(regIds) || regIds.length === 0) return { success: false, count: 0 };
-    let registrations = JSON.parse(localStorage.getItem(STORAGE_KEYS.REGISTRATIONS) || '[]');
+    let registrations = this.safeGetStorage(STORAGE_KEYS.REGISTRATIONS, []);
     const regIdSet = new Set(regIds);
 
     regIds.forEach(id => this.recentDeletedRegIds.add(String(id)));
@@ -793,11 +795,12 @@ class SmoStaffAPI {
     registrations = registrations.filter(r => !regIdSet.has(r.regId));
     const count = initialLen - registrations.length;
 
-    localStorage.setItem(STORAGE_KEYS.REGISTRATIONS, JSON.stringify(registrations));
+    this.safeSetStorage(STORAGE_KEYS.REGISTRATIONS, registrations);
 
-    for (const regId of regIds) {
-      this.sendGasMutation('deleteRegistration', { regId: regId }, `regId=${encodeURIComponent(regId)}`);
-    }
+    // Parallel fast execution
+    await Promise.all(regIds.map(regId => 
+      this.sendGasMutation('deleteRegistration', { regId: regId }, `regId=${encodeURIComponent(regId)}`)
+    ));
 
     return { success: true, count };
   }
