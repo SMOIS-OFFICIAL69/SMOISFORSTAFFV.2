@@ -99,6 +99,10 @@ function doGet(e) {
       const checkInTime = e.parameter.checkInTime || Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
       const result = approveHoursRecord(regId, checkInTime, e.parameter);
       responseData = { status: 'success', result: result };
+    } else if (action === 'bulkApproveHours') {
+      const regIds = (e.parameter.regIds || '').split(',').map(s => s.trim()).filter(Boolean);
+      const result = bulkApproveHoursRecord(regIds, e.parameter.checkInTime);
+      responseData = { status: 'success', result: result };
     } else if (action === 'unapproveHours') {
       const regId = e.parameter.regId;
       const result = unapproveHoursRecord(regId, e.parameter);
@@ -107,9 +111,17 @@ function doGet(e) {
       const regId = e.parameter.regId;
       const result = rejectHoursRecord(regId, e.parameter);
       responseData = { status: 'success', result: result };
+    } else if (action === 'bulkRejectHours') {
+      const regIds = (e.parameter.regIds || '').split(',').map(s => s.trim()).filter(Boolean);
+      const result = bulkRejectHoursRecord(regIds);
+      responseData = { status: 'success', result: result };
     } else if (action === 'deleteRegistration') {
       const regId = e.parameter.regId;
       const result = deleteRegistrationRecord(regId);
+      responseData = { status: 'success', result: result };
+    } else if (action === 'bulkDeleteRegistrations') {
+      const regIds = (e.parameter.regIds || '').split(',').map(s => s.trim()).filter(Boolean);
+      const result = bulkDeleteRegistrationsRecord(regIds);
       responseData = { status: 'success', result: result };
     } else if (action === 'deleteActivity') {
       const id = e.parameter.id;
@@ -170,11 +182,17 @@ function doPost(e) {
     } else if (action === 'approveHours') {
       const result = approveHoursRecord(postData.regId, postData.checkInTime, postData.data || postData.record);
       responseData = { status: 'success', result: result };
+    } else if (action === 'bulkApproveHours') {
+      const result = bulkApproveHoursRecord(postData.regIds, postData.checkInTime, postData.recordsMap);
+      responseData = { status: 'success', result: result };
     } else if (action === 'unapproveHours') {
       const result = unapproveHoursRecord(postData.regId, postData.data || postData.record);
       responseData = { status: 'success', result: result };
     } else if (action === 'rejectHours') {
       const result = rejectHoursRecord(postData.regId, postData.data || postData.record);
+      responseData = { status: 'success', result: result };
+    } else if (action === 'bulkRejectHours') {
+      const result = bulkRejectHoursRecord(postData.regIds);
       responseData = { status: 'success', result: result };
     } else if (action === 'createActivity') {
       const result = createActivityRecord(postData.data);
@@ -199,6 +217,9 @@ function doPost(e) {
       responseData = { status: 'success', result: result };
     } else if (action === 'deleteRegistration') {
       const result = deleteRegistrationRecord(postData.regId || postData.data);
+      responseData = { status: 'success', result: result };
+    } else if (action === 'bulkDeleteRegistrations') {
+      const result = bulkDeleteRegistrationsRecord(postData.regIds);
       responseData = { status: 'success', result: result };
     } else if (action === 'createDriveBackup') {
       const backupResult = performGoogleDriveBackup(postData.data);
@@ -410,20 +431,36 @@ function getAllDataFast() {
     }
   }
 
-  // 3. Process Staff Users
+  // 3. Process Staff Users & earned hours map from Registrations
+  const staffEarnedMap = {};
+  if (regRows.length > 1) {
+    for (let r = 1; r < regRows.length; r++) {
+      const rRow = regRows[r];
+      const sid = String(rRow[2]).trim();
+      const st = String(rRow[11]);
+      const earned = Number(rRow[10] || 0);
+      if (st === 'approved') {
+        staffEarnedMap[sid] = (staffEarnedMap[sid] || 0) + earned;
+      }
+    }
+  }
+
   const staffUsers = [];
   if (staffRows.length > 1) {
     for (let i = 1; i < staffRows.length; i++) {
       const row = staffRows[i];
+      const sid = String(row[0]).trim();
+      const liveEarned = staffEarnedMap[sid] !== undefined ? staffEarnedMap[sid] : Number(row[7] || 0);
       staffUsers.push({
-        studentId: String(row[0]),
+        studentId: sid,
         fullName: String(row[1]),
         major: String(row[2]),
         year: String(row[3]),
         department: String(row[4]),
         position: String(row[5]),
         targetHours: Number(row[6] || 200),
-        avatar: String(row[7] || '')
+        earnedHours: liveEarned,
+        avatar: String(row[8] !== undefined && row[8] !== '' ? row[8] : (row[7] || ''))
       });
     }
   }
@@ -527,20 +564,41 @@ function getRegistrationsData() {
 }
 
 function getStaffUsersData() {
-  const sheet = getOrCreateSheet(CONFIG.SHEET_STAFF, ['StudentID', 'FullName', 'Major', 'Year', 'Department', 'Position', 'TargetHours', 'Avatar']);
+  const sheet = getOrCreateSheet(CONFIG.SHEET_STAFF, ['StudentID', 'FullName', 'Major', 'Year', 'Department', 'Position', 'TargetHours', 'EarnedHours', 'Avatar']);
   const rows = sheet.getDataRange().getValues();
   if (rows.length <= 1) return [];
 
-  return rows.slice(1).map(row => ({
-    studentId: String(row[0]),
-    fullName: String(row[1]),
-    major: String(row[2]),
-    year: String(row[3]),
-    department: String(row[4]),
-    position: String(row[5]),
-    targetHours: Number(row[6] || 200),
-    avatar: String(row[7] || '')
-  }));
+  const regSheet = getOrCreateSheet(CONFIG.SHEET_REGISTRATIONS, ['RegID', 'Timestamp', 'StaffID', 'StaffName', 'Major', 'Department', 'Position', 'ActivityID', 'ActivityTitle', 'BaseHours', 'EarnedHours', 'Status', 'CheckInTime']);
+  const regRows = regSheet.getDataRange().getValues();
+  const staffEarnedMap = {};
+
+  if (regRows.length > 1) {
+    for (let r = 1; r < regRows.length; r++) {
+      const rRow = regRows[r];
+      const sid = String(rRow[2]).trim();
+      const st = String(rRow[11]);
+      const earned = Number(rRow[10] || 0);
+      if (st === 'approved') {
+        staffEarnedMap[sid] = (staffEarnedMap[sid] || 0) + earned;
+      }
+    }
+  }
+
+  return rows.slice(1).map(row => {
+    const sid = String(row[0]).trim();
+    const liveEarned = staffEarnedMap[sid] !== undefined ? staffEarnedMap[sid] : Number(row[7] || 0);
+    return {
+      studentId: sid,
+      fullName: String(row[1]),
+      major: String(row[2]),
+      year: String(row[3]),
+      department: String(row[4]),
+      position: String(row[5]),
+      targetHours: Number(row[6] || 200),
+      earnedHours: liveEarned,
+      avatar: String(row[8] !== undefined && row[8] !== '' ? row[8] : (row[7] || ''))
+    };
+  });
 }
 
 function getAdminUsersData() {
@@ -703,6 +761,116 @@ function rejectHoursRecord(regId, data) {
 }
 
 /**
+ * --- ATOMIC BULK OPERATIONS (PROCESSED IN 1 FAST BATCH MEMORY PASS) ---
+ */
+function bulkApproveHoursRecord(regIds, checkInTime, recordsMap) {
+  if (!Array.isArray(regIds) || regIds.length === 0) return { success: false, count: 0 };
+
+  const sheet = getOrCreateSheet(CONFIG.SHEET_REGISTRATIONS, ['RegID', 'Timestamp', 'StaffID', 'StaffName', 'Major', 'Department', 'Position', 'ActivityID', 'ActivityTitle', 'BaseHours', 'EarnedHours', 'Status', 'CheckInTime']);
+  const values = sheet.getDataRange().getValues();
+  if (values.length <= 1) return { success: false, count: 0 };
+
+  const idSet = new Set(regIds.map(id => String(id).trim()));
+  const foundSet = new Set();
+  const defaultCheckIn = checkInTime || Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
+  let count = 0;
+
+  for (let i = 1; i < values.length; i++) {
+    const rowId = String(values[i][0]).trim();
+    if (idSet.has(rowId)) {
+      foundSet.add(rowId);
+      const baseHrs = Number(values[i][9] || 3);
+      values[i][10] = baseHrs;        // EarnedHours
+      values[i][11] = 'approved';     // Status
+      values[i][12] = defaultCheckIn; // CheckInTime
+      count++;
+    }
+  }
+
+  // Self-healing: append if record was not present in sheet yet
+  if (recordsMap) {
+    regIds.forEach(regId => {
+      const strId = String(regId).trim();
+      if (!foundSet.has(strId) && recordsMap[strId]) {
+        const rec = recordsMap[strId];
+        const baseHrs = Number(rec.baseHours || rec.hours || 3);
+        values.push([
+          rec.regId || strId,
+          rec.timestamp || defaultCheckIn,
+          rec.staffId || '',
+          rec.staffName || '',
+          rec.major || '',
+          rec.department || '',
+          rec.position || '',
+          rec.activityId || '',
+          rec.activityTitle || '',
+          baseHrs,
+          baseHrs,
+          'approved',
+          defaultCheckIn
+        ]);
+        count++;
+      }
+    });
+  }
+
+  sheet.getRange(1, 1, values.length, values[0].length).setValues(values);
+  SpreadsheetApp.flush();
+  return { success: true, count: count };
+}
+
+function bulkRejectHoursRecord(regIds) {
+  if (!Array.isArray(regIds) || regIds.length === 0) return { success: false, count: 0 };
+
+  const sheet = getOrCreateSheet(CONFIG.SHEET_REGISTRATIONS, ['RegID', 'Timestamp', 'StaffID', 'StaffName', 'Major', 'Department', 'Position', 'ActivityID', 'ActivityTitle', 'BaseHours', 'EarnedHours', 'Status', 'CheckInTime']);
+  const values = sheet.getDataRange().getValues();
+  if (values.length <= 1) return { success: false, count: 0 };
+
+  const idSet = new Set(regIds.map(id => String(id).trim()));
+  let count = 0;
+
+  for (let i = 1; i < values.length; i++) {
+    const rowId = String(values[i][0]).trim();
+    if (idSet.has(rowId)) {
+      values[i][10] = 0;           // EarnedHours = 0
+      values[i][11] = 'rejected';  // Status = rejected
+      values[i][12] = '';          // CheckInTime = empty
+      count++;
+    }
+  }
+
+  sheet.getRange(1, 1, values.length, values[0].length).setValues(values);
+  SpreadsheetApp.flush();
+  return { success: true, count: count };
+}
+
+function bulkDeleteRegistrationsRecord(regIds) {
+  if (!Array.isArray(regIds) || regIds.length === 0) return { success: false, count: 0 };
+
+  const sheet = getOrCreateSheet(CONFIG.SHEET_REGISTRATIONS, ['RegID', 'Timestamp', 'StaffID', 'StaffName', 'Major', 'Department', 'Position', 'ActivityID', 'ActivityTitle', 'BaseHours', 'EarnedHours', 'Status', 'CheckInTime']);
+  const values = sheet.getDataRange().getValues();
+  if (values.length <= 1) return { success: false, count: 0 };
+
+  const idSet = new Set(regIds.map(id => String(id).trim()));
+  const filtered = [values[0]]; // keep headers
+  let count = 0;
+
+  for (let i = 1; i < values.length; i++) {
+    const rowId = String(values[i][0]).trim();
+    if (idSet.has(rowId)) {
+      count++;
+    } else {
+      filtered.push(values[i]);
+    }
+  }
+
+  sheet.clearContents();
+  sheet.getRange(1, 1, filtered.length, filtered[0].length).setValues(filtered);
+  SpreadsheetApp.flush();
+  return { success: true, count: count };
+}
+
+/**
  * Deduplicate any existing duplicate activity IDs in Google Sheet (Self-healing database mechanism)
  */
 function fixDuplicateActivityIdsInSheet() {
@@ -826,23 +994,45 @@ function saveActivity(data) {
 }
 
 function saveStaffUser(data) {
-  const sheet = getOrCreateSheet(CONFIG.SHEET_STAFF, ['StudentID', 'FullName', 'Major', 'Year', 'Department', 'Position', 'TargetHours', 'Avatar']);
+  if (!data || !data.studentId) return false;
+  const sheet = getOrCreateSheet(CONFIG.SHEET_STAFF, ['StudentID', 'FullName', 'Major', 'Year', 'Department', 'Position', 'TargetHours', 'EarnedHours', 'Avatar']);
   const rows = sheet.getDataRange().getValues();
+
+  // Compute live earned hours from Registrations
+  const regSheet = getOrCreateSheet(CONFIG.SHEET_REGISTRATIONS, ['RegID', 'Timestamp', 'StaffID', 'StaffName', 'Major', 'Department', 'Position', 'ActivityID', 'ActivityTitle', 'BaseHours', 'EarnedHours', 'Status', 'CheckInTime']);
+  const regRows = regSheet.getDataRange().getValues();
+  let calculatedEarned = 0;
+  const targetSid = String(data.studentId).trim();
+
+  if (regRows.length > 1) {
+    for (let r = 1; r < regRows.length; r++) {
+      if (String(regRows[r][2]).trim() === targetSid && String(regRows[r][11]) === 'approved') {
+        calculatedEarned += Number(regRows[r][10] || 0);
+      }
+    }
+  }
+
+  const earnedHrs = data.earnedHours !== undefined ? Number(data.earnedHours) : calculatedEarned;
+
   for (let i = 1; i < rows.length; i++) {
-    if (String(rows[i][0]) === String(data.studentId)) {
+    if (String(rows[i][0]).trim() === targetSid) {
       sheet.getRange(i + 1, 2).setValue(data.fullName);
       sheet.getRange(i + 1, 3).setValue(data.major);
       sheet.getRange(i + 1, 4).setValue(data.year);
       sheet.getRange(i + 1, 5).setValue(data.department);
       sheet.getRange(i + 1, 6).setValue(data.position);
       sheet.getRange(i + 1, 7).setValue(Number(data.targetHours || 200));
+      sheet.getRange(i + 1, 8).setValue(earnedHrs);
       if (data.avatar !== undefined && data.avatar !== null && data.avatar !== '') {
-        sheet.getRange(i + 1, 8).setValue(data.avatar);
+        sheet.getRange(i + 1, 9).setValue(data.avatar);
       }
+      SpreadsheetApp.flush();
       return true;
     }
   }
-  sheet.appendRow([data.studentId, data.fullName, data.major, data.year, data.department, data.position, Number(data.targetHours || 200), data.avatar || '']);
+
+  sheet.appendRow([data.studentId, data.fullName, data.major, data.year, data.department, data.position, Number(data.targetHours || 200), earnedHrs, data.avatar || '']);
+  SpreadsheetApp.flush();
   return true;
 }
 

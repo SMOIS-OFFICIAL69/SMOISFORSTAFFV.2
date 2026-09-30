@@ -185,6 +185,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     autoDriveBackup('scheduled_cron_15m');
   }, 15 * 60 * 1000);
 
+  // --- MULTI-DEVICE REALTIME SYNC (EVERY 10 SECONDS & TAB VISIBILITY FOCUS) ---
+  setInterval(async () => {
+    if (document.visibilityState === 'visible' && !api.isSyncing) {
+      const updated = await api.syncDataFromGoogleSheets();
+      if (updated && typeof loadAllData === 'function') {
+        loadAllData();
+      }
+    }
+  }, 10000);
+
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState === 'visible' && !api.isSyncing) {
+      await api.syncDataFromGoogleSheets();
+      if (typeof loadAllData === 'function') loadAllData();
+    }
+  });
+
   // --- LIVE DRIVE IMAGE PREVIEW LISTENERS ---
   if (newActBanner) {
     newActBanner.addEventListener('input', () => {
@@ -1963,10 +1980,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         ? `<img src="${avatarUrl}" alt="Avatar" style="width:36px; height:36px; border-radius:50%; object-fit:cover;">`
         : `<div style="width:36px; height:36px; border-radius:50%; background:#f0fdf4; color:#16a34a; display:flex; align-items:center; justify-content:center; font-size:0.9rem;"><i class="fa-solid fa-user-graduate"></i></div>`;
 
-      let earned = s.studentId === '673450351-6' ? 2 : 0;
+      let earned = 0;
       currentRegistrations.forEach(r => {
         if (r.staffId === s.studentId && r.status === 'approved') {
-          earned += (r.earnedHours || r.baseHours || 3);
+          earned += Number(r.earnedHours || r.baseHours || 0);
         }
       });
 
