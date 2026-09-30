@@ -140,6 +140,7 @@ function doGet(e) {
     responseData = { status: 'error', message: err.toString() };
   } finally {
     SpreadsheetApp.flush();
+    clearDataCache();
     lock.releaseLock();
   }
 
@@ -356,11 +357,20 @@ function onChange(e) {
 
 function clearDataCache() {
   try {
-    CacheService.getScriptCache().remove('ALL_DATA_FAST');
+    const cache = CacheService.getScriptCache();
+    cache.remove('ALL_DATA_FAST');
   } catch (e) {}
 }
 
 function getAllDataFast() {
+  const cache = CacheService.getScriptCache();
+  try {
+    const cached = cache.get('ALL_DATA_FAST');
+    if (cached) {
+      return JSON.parse(cached);
+    }
+  } catch (e) {}
+
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheets = ss.getSheets();
   const map = {};
@@ -483,7 +493,10 @@ function getAllDataFast() {
 
   const result = { activities, registrations, staffUsers, adminUsers, backups };
   try {
-    cache.put('ALL_DATA_FAST', JSON.stringify(result), 30);
+    const jsonStr = JSON.stringify(result);
+    if (jsonStr.length < 95000) {
+      cache.put('ALL_DATA_FAST', jsonStr, 120);
+    }
   } catch (e) {}
 
   return result;

@@ -372,7 +372,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         switchToStaffView();
         loadAllData();
       } else {
-        showToast('ไม่พบข้อมูลรหัสนักศึกษานี้ในระบบ (กรุณาตรวจสอบรหัสนักศึกษาอีกครั้ง)', 'error');
+        showToast(res.message || 'ไม่พบข้อมูลรหัสนักศึกษานี้ในระบบฐานข้อมูล (กรุณาติดต่อเจ้าหน้าที่เพื่อเพิ่มข้อมูล)', 'error');
       }
     });
   }

@@ -354,25 +354,17 @@ class SmoStaffAPI {
 
   loginStaff(studentId) {
     const staffList = this.getStaffUsers();
-    const found = staffList.find(s => s.studentId.trim() === studentId.trim());
+    const cleanId = String(studentId || '').trim();
+    const found = staffList.find(s => String(s.studentId).trim() === cleanId);
     if (found) {
       this.setCurrentStaff(found);
       return { success: true, user: found };
     }
 
-    const newUser = {
-      studentId: studentId.trim(),
-      fullName: 'ผู้ปฏิบัติงานกิจกรรม',
-      major: 'สาขาวิชาทั่วไป',
-      year: 'ชั้นปีที่ 1',
-      department: 'สโมสรนักศึกษา',
-      position: 'ผู้ปฏิบัติงานกิจกรรม',
-      avatar: '',
-      targetHours: 200
+    return {
+      success: false,
+      message: `ไม่พบข้อมูลรหัสนักศึกษา "${cleanId}" ในระบบฐานข้อมูล (กรุณาติดต่อเจ้าหน้าที่เพื่อเพิ่มข้อมูลลงในระบบก่อนเข้าสู่ระบบ)`
     };
-    this.createStaffUser(newUser);
-    this.setCurrentStaff(newUser);
-    return { success: true, user: newUser };
   }
 
   loginAdmin(username, password) {
@@ -625,12 +617,12 @@ class SmoStaffAPI {
     if (!gasUrl) return;
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
 
     try {
       await fetch(gasUrl, {
         method: 'POST',
-        mode: 'cors',
+        mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: action, ...postPayload }),
         signal: controller.signal
@@ -638,10 +630,10 @@ class SmoStaffAPI {
       clearTimeout(timeoutId);
     } catch (err) {
       clearTimeout(timeoutId);
-      console.warn(`POST ${action} timed out or failed, attempting GET query fallback:`, err);
+      console.warn(`POST ${action} failed, attempting GET query fallback:`, err);
       try {
         const getController = new AbortController();
-        const getTimeoutId = setTimeout(() => getController.abort(), 8000);
+        const getTimeoutId = setTimeout(() => getController.abort(), 4000);
         await fetch(`${gasUrl}?action=${action}&${queryParamsStr}`, { mode: 'no-cors', signal: getController.signal });
         clearTimeout(getTimeoutId);
       } catch (getErr) {
